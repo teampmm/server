@@ -177,7 +177,7 @@ class Bill_Model extends CI_Model
         foreach ($vote_rows as $row){
             if ($row->vote_status==0){
                 $politician_idx=(int)$row->politician_idx;
-               array_push($agreement_array,$this->votePerson($politician_idx));
+                array_push($agreement_array,$this->votePerson($politician_idx));
 
             }else if ($row->vote_status==1){
                 $politician_idx=(int)$row->politician_idx;
@@ -201,12 +201,14 @@ class Bill_Model extends CI_Model
 
     }
     //input으로 찬성,반대,기권,불참 한 사람들의 배열이 들어옴
-    //해당 인덱스를 가지고 상세한 정보 반환
+    //해당 인덱스를 가지고 의원의 이름 , 정당 을 반환
     private  function votePerson($index){
         $politician_row=$this->db->query("select party_idx,kr_name from Politician where idx=$index")->row();
         $data['idx']=$index;
         $data['party_idx']=$politician_row->party_idx;
         $data['kr_name']=$politician_row->kr_name;
+        $party_name=$this->db->query("select party_name from Party where idx=".$data['party_idx'])->row();
+        $data['party_name']=$party_name->party_name;
         return $data;
     }
 }

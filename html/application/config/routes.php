@@ -32,10 +32,8 @@ $route['politician/(:any)']='politician/requestData/$1';
 $route['bill/(:num)']='bill/page/$1';
 //법안 상세보기
 $route['billinfo/(:num)']='bill/billinfo/$1';
-#로그인 테스트중 = 종영
-//$route['login/(:any)']='user/login_test/$1';
-#닉네임 테스트중 = 종영
-//$route['nick/(:any)']='login/nick_test/$1';
+//법안 상세보기 = 법안에 좋아요 , 싫어요 확인
+$route['billinfo/evaluation/(:num)']='bill/billUserEvaluation/$1';
 
 
 //$route['main_exam/(:num)']='main_exam/get/$1';

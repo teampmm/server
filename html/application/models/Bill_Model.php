@@ -11,9 +11,9 @@ class Bill_Model extends CI_Model
         parent::__construct();
     }
 
-    //법안 모아보기 페이지 데이터
 
-    /* 출력데이터
+    /*법안 모아보기 페이지 데이터
+    /출력데이터
 {
     "total": 10,                                                            //총 페이지수 페이징을 위함
     "info": [
@@ -38,8 +38,6 @@ class Bill_Model extends CI_Model
     }
  }
      * */
-
-
     function billPageList($index)
     {
         //모아보기 메인 == index로 들어왔을때
@@ -200,6 +198,8 @@ class Bill_Model extends CI_Model
 
 
     }
+
+
     //input으로 찬성,반대,기권,불참 한 사람들의 배열이 들어옴
     //해당 인덱스를 가지고 의원의 이름 , 정당 을 반환
     private  function votePerson($index){
@@ -210,5 +210,18 @@ class Bill_Model extends CI_Model
         $party_name=$this->db->query("select party_name from Party where idx=".$data['party_idx'])->row();
         $data['party_name']=$party_name->party_name;
         return $data;
+    }
+
+    //법안에 대한 좋아요 싫어요 보여주는 메소드
+    //나중에 토큰값으로 사용자 확인후 사용자가 좋아요를 눌렀는지 싫어요를 눌렀는지 서버에서 판단해서 반환값 보내야함
+    public function billUserStatus($index){
+        $agreement_count=$this->db->query("select count(bill_idx) as agreement from UserEvaluationBill where bill_idx =$index and status =0")->row();
+        $opposition_count=$this->db->query("select count(bill_idx) as opposition from UserEvaluationBill where bill_idx =$index and status =1")->row();
+        $result=array();
+        $result['agreement_total']=$agreement_count->agreement;
+        $result['opposition_total']=$opposition_count->opposition;
+        $result['user_check']='나중에 사용자 정보 확인해서 사용자가 찬성했는지 반대했는지 아무것도 누르지 않았는지 알려줘야함';
+        echo json_encode($result);
+
     }
 }

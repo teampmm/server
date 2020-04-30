@@ -28,6 +28,10 @@ class Bill extends CI_Controller
         $result=$this->Bill_Model->billInfoData($index);
         print_r($result);
     }
-
+    public function billUserEvaluation($index){
+        $this->load->model('Bill_Model');
+        $result=$this->Bill_Model->billUserStatus($index);
+        print_r($result);
+    }
 
 }

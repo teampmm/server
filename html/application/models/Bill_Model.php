@@ -81,6 +81,7 @@ class Bill_Model extends CI_Model
         return json_encode($result);
     }
 
+    //법안 상세보기에 들어갈 데이터
     function billInfoData($index)
     {
         $result = array();
@@ -141,12 +142,12 @@ class Bill_Model extends CI_Model
     {
         $proposer = $this->db->query("select politician_idx,representative from Proposer where bill_idx=$bill_idx")->result();
         $proposer_array = array();
-        foreach ($proposer as $proposerRow) {
+        foreach ($proposer as $proposer_row) {
             $proposer_data = array();
-            $politicians = $this->db->query("select idx,party_idx,kr_name from Politician where idx=$proposerRow->politician_idx")->row();
+            $politicians = $this->db->query("select idx,party_idx,kr_name from Politician where idx=$proposer_row->politician_idx")->row();
             $proposer_data['idx'] = $politicians->idx;
             $proposer_data['kr_name'] = $politicians->kr_name;
-            $proposer_data['representative'] = $proposerRow->representative;
+            $proposer_data['representative'] = $proposer_row->representative;
             //정당인덱스로 정당 이름 찾기
             $party = $this->db->query("select idx,party_name from Party where idx=$politicians->party_idx")->row();
             $proposer_data['party_idx'] = $party->idx;
@@ -162,23 +163,38 @@ class Bill_Model extends CI_Model
     private function billIndexToBillVote($index){
         $result=array();
 //        $total_array=array();
-        $vote_row=$this->db->query("select * from BillVote where bill_idx=$index")->row();
-        $result['total']=$vote_row->total.'투표참여한 총 인원';
+        $vote_rows=$this->db->query("select politician_idx,vote_status from BillVote where bill_idx=$index")->result();
+        $result['total']=count($vote_rows).'투표참여한 총 인원';
 
-        //찬성한사람
-        $agreement=explode("|",$vote_row->agreement);
-        $result['찬']=$this->votePerson($agreement);
-        //반대한사람
-        $opposition=explode("|",$vote_row->opposition);
-        $result['반']=$this->votePerson($opposition);
-        //기권한사람
-        $abstention=explode("|",$vote_row->abstention);
-        $result['기']=$this->votePerson($abstention);
-        //불참한사람
-        $absence=explode("|",$vote_row->absence);
-        $result['불']=$this->votePerson($absence);
+        //찬성한 사람들을 담는 배열
+        $agreement_array=array();
+        //반대한 사람들을 담는 배열
+        $opposition_array=array();
+        //기권한 사람들을 담는 배열
+        $abstention_array=array();
+        //불참한 사람들을 담는 배열
+        $absence_array=array();
+        foreach ($vote_rows as $row){
+            if ($row->vote_status==0){
+                $politician_idx=(int)$row->politician_idx;
+               array_push($agreement_array,$this->votePerson($politician_idx));
 
+            }else if ($row->vote_status==1){
+                $politician_idx=(int)$row->politician_idx;
+                array_push($opposition_array,$this->votePerson($politician_idx));
+            }else if ($row->vote_status==2){
+                $politician_idx=(int)$row->politician_idx;
+                array_push($abstention_array,$this->votePerson($politician_idx));
+            }else{
+                $politician_idx=(int)$row->politician_idx;
+                array_push($absence_array,$this->votePerson($politician_idx));
+            }
 
+        }
+        $result['찬']=$agreement_array;
+        $result['반']=$opposition_array;
+        $result['기']=$abstention_array;
+        $result['불']=$absence_array;
 
         return $result;
 
@@ -186,23 +202,11 @@ class Bill_Model extends CI_Model
     }
     //input으로 찬성,반대,기권,불참 한 사람들의 배열이 들어옴
     //해당 인덱스를 가지고 상세한 정보 반환
-    private  function votePerson($input){
-        $result_array=array();
-        foreach ($input as $key => $value) {
-            if ($key==count($input)-1){
-                break;
-            }
-            else{
-                $politician_data=array();
-                $value=(int)$value;
-
-                $politician_info=$this->db->query("select idx,party_idx,kr_name from Politician where idx=$value")->row();
-                $politician_data['idx']=$politician_info->idx;
-                $politician_data['party_idx']=$politician_info->party_idx;
-                $politician_data['kr_name']=$politician_info->kr_name;
-                array_push($result_array,$politician_data);
-            }
-        }
-        return $result_array;
+    private  function votePerson($index){
+        $politician_row=$this->db->query("select party_idx,kr_name from Politician where idx=$index")->row();
+        $data['idx']=$index;
+        $data['party_idx']=$politician_row->party_idx;
+        $data['kr_name']=$politician_row->kr_name;
+        return $data;
     }
 }

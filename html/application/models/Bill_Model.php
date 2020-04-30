@@ -50,31 +50,31 @@ class Bill_Model extends CI_Model
         }
         $result = array();
         //법안 모아보기 정보
-        $billInfo = $this->db->query("select  idx,name,committee_idx,progress_status,proposal_date,proclamation_number from Bill order by proposal_date desc limit $index, 10")->result();
+        $bill_info = $this->db->query("select  idx,name,committee_idx,progress_status,proposal_date,proclamation_number from Bill order by proposal_date desc limit $index, 10")->result();
         //페이징을 위한 총 페이지수
-        $billTotalRows = $this->db->query("select count(idx) as total from Bill ")->row();
-        $result['total_page'] = ceil($billTotalRows->total / 10);
+        $bill_total_rows = $this->db->query("select count(idx) as total from Bill ")->row();
+        $result['total_page'] = ceil($bill_total_rows->total / 10);
         $bill_array = array();
-        foreach ($billInfo as $row) {
+        foreach ($bill_info as $row) {
 
-            $billData = array();
-            $billData['bill_idx'] = $row->idx;
-            $billData['name'] = '법안명' . $row->name;
-            $billData['progress_status'] = '법안진행상태' . $row->progress_status;
-            $billData['proposal_date'] = '날짜' . $row->proposal_date;
-            $billData['proclamation_number'] = '공포번호' . $row->proclamation_number;
+            $bill_data = array();
+            $bill_data['bill_idx'] = $row->idx;
+            $bill_data['name'] = '법안명' . $row->name;
+            $bill_data['progress_status'] = '법안진행상태' . $row->progress_status;
+            $bill_data['proposal_date'] = '날짜' . $row->proposal_date;
+            $bill_data['proclamation_number'] = '공포번호' . $row->proclamation_number;
             //법안을 발의한 위원회
-            $billData['committee_idx'] = '위원회idx' . $row->committee_idx;
+            $bill_data['committee_idx'] = '위원회idx' . $row->committee_idx;
             //위원회 idx로 위원회 이름 얻기
             $committee = $this->db->query("select name from Committee where idx =$row->committee_idx")->row();
-            $billData['committee_name'] = '위원회이름' . $committee->name;
+            $bill_data['committee_name'] = '위원회이름' . $committee->name;
 
 
             //법안인덱스로 -> 법안을 발의한 정치인들의 정보를 반한다  //정치인 idx , 정치인 이름 , 대표발의여부 , 정당인덱스, 정당이름
-            $billData['proposers'] = $this->billIndexToPoliticians($row->idx);
+            $bill_data['proposers'] = $this->billIndexToPoliticians($row->idx);
 
 
-            array_push($bill_array, $billData);
+            array_push($bill_array, $bill_data);
 
         }
         $result['info'] = $bill_array;
@@ -87,48 +87,48 @@ class Bill_Model extends CI_Model
         //데이터 1개만 가져옴 나중에 row로 바꿔야할듯
         $bill_rows = $this->db->query("select * from Bill where idx=$index")->result();
         foreach ($bill_rows as $row) {
-            $billData = array();
-            $billData['idx'] = $row->idx;
-            $billData['bill_name'] = $row->name;
+            $bill_data = array();
+            $bill_data['idx'] = $row->idx;
+            $bill_data['bill_name'] = $row->name;
             //위원회 idx
-            $billData['committee_idx'] = $row->committee_idx;
+            $bill_data['committee_idx'] = $row->committee_idx;
             //위원회 idx로 위원회 이름 얻기
             $committee = $this->db->query("select name from Committee where idx =$row->committee_idx")->row();
-            $billData['committee_name'] = $committee->name;
+            $bill_data['committee_name'] = $committee->name;
 
             //법안인덱스로 -> 법안을 발의한 정치인들의 정보를 반한다  //정치인 idx , 정치인 이름 , 대표발의여부 , 정당인덱스, 정당이름
-            $billData['proposers'] = $this->billIndexToPoliticians($row->idx);
+            $bill_data['proposers'] = $this->billIndexToPoliticians($row->idx);
             //법안인덱스로 해당 법안에 참여한 인원은 몇명이고 찬성,반대,기권,불참한 정치인들의 idx를 가져옴
             $result['bill_Vote']=$this->billIndexToBillVote($row->idx);
             //예고기간 시작,종료
-            $billData['notice_period_start'] = $row->notice_period_start;
-            $billData['notice_period_end'] = $row->notice_period_end;
+            $bill_data['notice_period_start'] = $row->notice_period_start;
+            $bill_data['notice_period_end'] = $row->notice_period_end;
             //진행상태
-            $billData['progress_status'] = $row->progress_status;
+            $bill_data['progress_status'] = $row->progress_status;
             //회부일
-            $billData['reject_day'] = $row->reject_day;
+            $bill_data['reject_day'] = $row->reject_day;
             //상정일
-            $billData['pass_day'] = $row->pass_day;
+            $bill_data['pass_day'] = $row->pass_day;
             //처리일
-            $billData['disposal_day'] = $row->disposal_day;
+            $bill_data['disposal_day'] = $row->disposal_day;
             //공포일
-            $billData['proclamation_day'] = $row->proclamation_day;
+            $bill_data['proclamation_day'] = $row->proclamation_day;
             //원문 hwp링크주소
-            $billData['hwp_url'] = $row->hwp_url;
+            $bill_data['hwp_url'] = $row->hwp_url;
             //원문 pdf링크주소
-            $billData['pdf_url'] = $row->pdf_url;
+            $bill_data['pdf_url'] = $row->pdf_url;
             //공포 법률 링크주소
-            $billData['proclamation_law_url'] = $row->proclamation_law_url;
+            $bill_data['proclamation_law_url'] = $row->proclamation_law_url;
             //요약내용
-            $billData['summary_content'] = $row->summary_content;
+            $bill_data['summary_content'] = $row->summary_content;
             //공포번호
-            $billData['proclamation_number'] = $row->proclamation_number;
+            $bill_data['proclamation_number'] = $row->proclamation_number;
             //제안날짜
-            $billData['proposal_date'] = $row->proposal_date;
+            $bill_data['proposal_date'] = $row->proposal_date;
             //법안번호
-            $billData['bill_number'] = $row->proposal_date;
+            $bill_data['bill_number'] = $row->proposal_date;
 
-            $result['bill_info'] = $billData;
+            $result['bill_info'] = $bill_data;
 
 
         }
@@ -140,21 +140,21 @@ class Bill_Model extends CI_Model
     private  function billIndexToPoliticians($bill_idx)
     {
         $proposer = $this->db->query("select politician_idx,representative from Proposer where bill_idx=$bill_idx")->result();
-        $proposerArray = array();
+        $proposer_array = array();
         foreach ($proposer as $proposerRow) {
-            $proposerData = array();
+            $proposer_data = array();
             $politicians = $this->db->query("select idx,party_idx,kr_name from Politician where idx=$proposerRow->politician_idx")->row();
-            $proposerData['idx'] = $politicians->idx;
-            $proposerData['kr_name'] = $politicians->kr_name;
-            $proposerData['representative'] = $proposerRow->representative;
+            $proposer_data['idx'] = $politicians->idx;
+            $proposer_data['kr_name'] = $politicians->kr_name;
+            $proposer_data['representative'] = $proposerRow->representative;
             //정당인덱스로 정당 이름 찾기
             $party = $this->db->query("select idx,party_name from Party where idx=$politicians->party_idx")->row();
-            $proposerData['party_idx'] = $party->idx;
-            $proposerData['party_name'] = $party->party_name;
+            $proposer_data['party_idx'] = $party->idx;
+            $proposer_data['party_name'] = $party->party_name;
 
-            array_push($proposerArray, $proposerData);
+            array_push($proposer_array, $proposer_data);
         }
-        return $proposerArray;
+        return $proposer_array;
     }
 
 
@@ -162,20 +162,20 @@ class Bill_Model extends CI_Model
     private function billIndexToBillVote($index){
         $result=array();
 //        $total_array=array();
-        $VoteRow=$this->db->query("select * from BillVote where bill_idx=$index")->row();
-        $result['total']=$VoteRow->total.'투표참여한 총 인원';
+        $vote_row=$this->db->query("select * from BillVote where bill_idx=$index")->row();
+        $result['total']=$vote_row->total.'투표참여한 총 인원';
 
         //찬성한사람
-        $agreement=explode("|",$VoteRow->agreement);
+        $agreement=explode("|",$vote_row->agreement);
         $result['찬']=$this->votePerson($agreement);
         //반대한사람
-        $opposition=explode("|",$VoteRow->opposition);
+        $opposition=explode("|",$vote_row->opposition);
         $result['반']=$this->votePerson($opposition);
         //기권한사람
-        $abstention=explode("|",$VoteRow->abstention);
+        $abstention=explode("|",$vote_row->abstention);
         $result['기']=$this->votePerson($abstention);
         //불참한사람
-        $absence=explode("|",$VoteRow->absence);
+        $absence=explode("|",$vote_row->absence);
         $result['불']=$this->votePerson($absence);
 
 

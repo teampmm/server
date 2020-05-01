@@ -18,14 +18,11 @@ class User_Model extends CI_Model
 
         $input_data = array(
             'idx' => null,
-            'bookmark_politician_idx' => null,
-            'bookmark_bill_idx' => null,
             'name' => $data['name'],
             'age' => $data['age'],
             'nick_name' => $data['nick_name'],
             'sex' => $data['sex'],
-            'email_id' => $data['email_id'],
-            'email_address' => $data['email_address'],
+            'id' => $data['id'],
             'pw' => hash('sha256', $data['pw']),
             'phone' => $data['phone'],
             'residence' => $data['residence'],
@@ -114,11 +111,11 @@ class User_Model extends CI_Model
     public function getNickCheck($data)
     {
         // client가 보낸 사용자 닉네임
-        $nickname = $data['nick_name'];
+        $nick_name = $data['nick_name'];
 
         // client로 부터 입력 받은 닉네임이 있는지 조회 - 중복체크를 위함.
         $query = $this->db->query("select count(idx) as 'count' from User where 
-                nick_name='$nickname'"
+                nick_name='$nick_name'"
         )->row();
 
         // 닉네임 중복
@@ -172,13 +169,13 @@ class User_Model extends CI_Model
             $mail->addAddress($user_email, "받는사람 이름");
 
             // 첨부파일
-            // $mail->addAttachment("./test1.zip");
+//             $mail->addAttachment("a.jpg");
             // $mail->addAttachment("./test2.jpg");
 
             // 메일 내용
             $mail->isHTML(true); // HTML 태그 사용 여부
             $mail->Subject = "TeamPmm 회원가입 인증 메일입니다";  // 메일 제목
-            $mail->Body = "이메일 내용";     // 메일 내용
+            $mail->Body = "";     // 메일 내용
 
             // Gmail로 메일을 발송하기 위해서는 CA인증이 필요하다.
             // CA 인증을 받지 못한 경우에는 아래 설정하여 인증체크를 해지하여야 한다.

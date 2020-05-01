@@ -117,12 +117,14 @@
                 return json_encode($response_data);
             }
         }
+
+        //핸드폰 인증을 하기전에 우선 가입이 되어있는지 확인
         public function phoneCheck($phone){
             $count=$this->db->query("select count(idx) as 'count' from User where phone=".$phone)->row();
             if($count->count==0){
-                return '가입가능';
+                return 0;
             }else{
-                return '가입불가능';
+                return 1;
             }
         }
 

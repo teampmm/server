@@ -1,8 +1,7 @@
 <?php
 
 defined('BASEPATH') or exit('No direct script access allowed');
-header('Access-Control-Allow-Origin: *');
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+
 class User extends CI_Controller
 {
     public $http_method;
@@ -23,23 +22,19 @@ class User extends CI_Controller
         if ($this->http_method == "POST") {
             // postman에서 데이터를 body - x-www-form-urlencoded로 보내는 방법
             $json_data = $this->input->post('user_info', true);
+//            echo $json_data;
+//            return '';
             $json_data = json_decode($json_data, true);
 
             // 클라이언트가 보낸 정보에서 name 값을 찾는 코드
             // print_r($json_data['name']);
 
-            $this->load->model("User_Model");
+            $this->load->model("UserModel");
             // db에 사용자를 추가한다.
-            $result = $this->User_Model->putUser($json_data);
+            $result = $this->UserModel->putUser($json_data);
 
-            print_r($result);
-            /** postman에서 데이터를 body - raw로 보내는 방법
-             * $this->output->set_content_type('application/json');
-             * $json = file_get_contents("php://input");
-             * $json = stripslashes($json);
-             * $json = json_decode($json);
-             * print_r(var_dump($json->name));
-             */
+            echo $result;
+
         }
     }
 
@@ -53,9 +48,9 @@ class User extends CI_Controller
         // 사용자가 닉네임 중복 체크 요청 - nick_name 가지고있다.
         $json_data = $this->input->get('nick_name_request', true);
         $json_data = json_decode($json_data, true);
-        $this->load->model('User_Model');
-        $result = $this->User_Model->getNickCheck($json_data);
-        print_r($result);
+        $this->load->model('UserModel');
+        $result = $this->UserModel->getNickCheck($json_data);
+	    echo($result);
     }
 
     // 로그인 요청 메서드
@@ -66,9 +61,9 @@ class User extends CI_Controller
         $json_data = json_decode($json_data, true);
 
         // 사용자가 보낸 id, pw 정보를 db에 있는 id, pw와 비교한다.
-        $this->load->model('User_Model');
-        $result = $this->User_Model->getLoginStatus($json_data);
-        print_r($result);
+        $this->load->model('UserModel');
+        $result = $this->UserModel->getLoginStatus($json_data);
+	    echo($result);
     }
 
     // 클라이언트가 사용자에 대한 데이터를 요청할때
@@ -97,41 +92,45 @@ class User extends CI_Controller
         }
     }
 
-    //회원가입시 핸드폰 인증을 받는과정
-    function sms($client_data)
-    {
-        if ($this->http_method == 'POST') {
-            if ($client_data == 'phone') {
+	//회원가입시 핸드폰 인증을 받는과정
+	function sms($client_data){
+		if($this->http_method=='POST') {
+			if ($client_data == 'phone') {
 
-                require_once "/home/ubuntu/db/sms/lib/lib.php";
-                require_once "/home/ubuntu/db/sms/class/Clientapi.class.php";
-                $smsobj = new Clientapi();
-                $smsobj->init();
-                $user_phone = $this->input->post('user_phone', true);
-
-
-                //이미 같은 핸드폰 번호로 회원가입이 되어있는지 확인
-                $this->load->model('User_Model');
-                $check_code = $this->User_Model->phoneCheck($user_phone);
+				require_once "/home/ubuntu/db/sms/lib/lib.php";
+				require_once "/home/ubuntu/db/sms/class/Clientapi.class.php";
+				$smsobj = new Clientapi();
+				$smsobj->init();
+				$user_phone = $this->input->post('user_phone', true);
 
 
-                if ($check_code == 0) {
-                    //인증코드는 4글자의 숫자
-                    $auth_code = sprintf('%04d', rand(0000, 9999));
-                    $result_code = $smsobj->gd_sms_signal('sms', 'send', $user_phone, '01077024277', iconv('utf8', 'euckr', '인증번호는 ' . $auth_code . ' 입니다'), '', '', '', '', '4');
-                    //sms보내기 정상적으로 왼료되면 0000코드 반환
-                    if ($result_code == 0000) {
-                        //클라이언트에는 인증 코드가 아닌 인증 코드를 sha256으로 변환한 코드를 준다
-                        echo hash('sha256', $auth_code);
-                    } else {
-                        echo "다음에 다시 시도";
-                    }
-                } else {
-                    echo "이미 가입한 아이디";
-                }
-            }
-        }
-    }
+				//이미 같은 핸드폰 번호로 회원가입이 되어있는지 확인
+				$this->load->model('UserModel');
+				$check_code = $this->UserModel->phoneCheck($user_phone);
+
+				// 가입 가능
+				if ($check_code==0){
+					//인증코드는 4글자의 숫자
+					$auth_code=sprintf('%04d',rand(0000,9999));
+					$result_code= $smsobj->gd_sms_signal('sms', 'send', $user_phone, '01077024277', iconv('utf8', 'euckr', '인증번호는 '.$auth_code.' 입니다'), '', '', '', '', '4');
+					//sms보내기 정상적으로 왼료되면 0000코드 반환
+					if($result_code==0000){
+						//클라이언트에는 인증 코드가 아닌 인증 코드를 sha256으로 변환한 코드를 준다
+						$response_code['result']=hash('sha256',$auth_code);
+						echo json_encode($response_code);
+					}else{
+					    $response_code['result']='다음에 다시시도 서버에러';
+                        echo json_encode($response_code);
+					}
+				}
+				// 가입 불가능
+				else{
+                    $response_code['result']="이미 가입한 아이디";
+                    echo json_encode($response_code);
+				}
+			}
+		}
+	}
 }
 
 
@@ -148,9 +147,9 @@ class User extends CI_Controller
 //    $json_data = json_decode($json_data, True);
 //
 //    // 해당 이메일로 인증 코드를 보낸다.
-//    $this->load->model('User_Model');
-//    $result = $this->User_Model->sendEmailCode($json_data);
-//    print_r($result);
+//    $this->load->model('UserModel');
+//    $result = $this->UserModel->sendEmailCode($json_data);
+//    echo($result);
 //}
 
 //-------------------------------------------------------------------------
@@ -163,7 +162,7 @@ class User extends CI_Controller
 //	$json_data = json_decode($json_data, true);
 //
 //	// db에 사용자가 보낸 이메일이 있는지 확인한다. ( 중복체크 과정 ).
-//	$this->load->model('User_Model');
-//	$result = $this->User_Model->getEmailCheck($json_data);
-//	print_r($result);
+//	$this->load->model('UserModel');
+//	$result = $this->UserModel->getEmailCheck($json_data);
+//	echo($result);
 //}

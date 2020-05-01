@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SshConfigs">
+    <configs>
+      <sshConfig host="52.78.106.225" id="101d9e30-78e2-4e1a-ada9-529d08d9870a" keyPath="C:\Users\ehdgn\Desktop\개인키\teampmm_key\teampmm.ppk" port="22" nameFormat="DESCRIPTIVE" username="ubuntu" />
+    </configs>
+  </component>
+</project>

@@ -95,6 +95,34 @@ class User extends CI_Controller
 			}
 		}
 	}
+
+	function sms($client_data){
+	    if($this->http_method=='POST') {
+            if ($client_data == 'phone') {
+
+                require_once "/home/ubuntu/db/sms/lib/lib.php";
+                require_once "/home/ubuntu/db/sms/class/Clientapi.class.php";
+                $smsobj = new Clientapi();
+                $smsobj->init();
+                $user_phone = $this->input->post('user_phone', true);
+
+
+                $this->load->model('User_Model');
+                $check_code = $this->User_Model->phoneCheck($user_phone);
+                if ($check_code==0){
+                    $auth_code=sprintf('%04d',rand(0000,9999));
+                    $result_code= $smsobj->gd_sms_signal('sms', 'send', $user_phone, '01077024277', iconv('utf8', 'euckr', '인증번호는 '.$auth_code.' 입니다'), '', '', '', '', '4');
+                    if($result_code==0000){
+                        echo hash('sha256',$auth_code);
+                    }else{
+                        echo"다음에 다시 시도";
+                    }
+                }else{
+                    echo "이미 가입한 아이디";
+                }
+            }
+        }
+    }
 }
 
 

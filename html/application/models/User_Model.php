@@ -117,6 +117,14 @@
                 return json_encode($response_data);
             }
         }
+        public function phoneCheck($phone){
+            $count=$this->db->query("select count(idx) as 'count' from User where phone=".$phone)->row();
+            if($count->count==0){
+                return '가입가능';
+            }else{
+                return '가입불가능';
+            }
+        }
 
 
     }

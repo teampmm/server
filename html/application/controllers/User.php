@@ -46,6 +46,16 @@ class User extends CI_Controller
 		$result = $this->UserModel->getNickCheck($json_data);
 		echo $result;
 	}
+	// 아이디 중복 체크 메서드
+	public function getIdCheck()
+	{
+		// 사용자가 아이디 중복 체크 요청 - nick_name 가지고있다.
+		$json_data = $this->input->get('id_request', true);
+		$json_data = json_decode($json_data, true);
+		$this->load->model('UserModel');
+		$result = $this->UserModel->getIdCheck($json_data);
+		echo $result;
+	}
 
 	// 로그인 요청 메서드
 	public function loginRequest()
@@ -70,6 +80,11 @@ class User extends CI_Controller
 				// 사용자 닉네임 중복체크
 				$this->getNickNameCheck();
 			}
+			else if ($client_data == 'id') {
+				// 사용자 닉네임 중복체크
+				$this->getIdCheck();
+			}
+
 		}
 		else if($this->http_method == "POST"){
 			// 클라이언트가 로그인 요청

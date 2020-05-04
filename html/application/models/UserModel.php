@@ -21,7 +21,7 @@ class UserModel extends CI_Model
 		$pw = $data['pw'];
 
 		$query = $this->db->query("select count(idx) as idx from User where 
-				id ='$id' or nick_name ='$nick_name' or phone=$phone")->row();
+				id ='$id' or nick_name ='$nick_name' or phone='$phone'")->row();
 		if ($query->idx >= 1) {
 			$response_data['result'] = "이미 가입된 계정입니다";
 			return json_encode($response_data);
@@ -122,6 +122,30 @@ class UserModel extends CI_Model
 		} // 닉네임 중복이 아님
 		else {
 			$response_data['result'] = "닉네임중복아님-가입가능";
+			return json_encode($response_data);
+		}
+	}
+
+	public function getIdCheck($data)
+	{
+		// client가 보낸 사용자 아이디
+		$id = $data['id'];
+
+		// client로 부터 입력 받은 아이디가 있는지 조회 - 중복체크를 위함.
+		$query = $this->db->query("select count(idx) as 'count' from User where 
+                id='$id'"
+		)->row();
+
+		// 클라에게 보낼 응답 데이터
+		$response_data = array();
+
+		// 닉네임 중복
+		if ($query->count == 1) {
+			$response_data['result'] = "아이디중복-가입불가능";
+			return json_encode($response_data);
+		} // 닉네임 중복이 아님
+		else {
+			$response_data['result'] = "아이디중복아님-가입가능";
 			return json_encode($response_data);
 		}
 	}

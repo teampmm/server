@@ -52,7 +52,7 @@ class UserModel extends CI_Model
 
 			// 회원 정보 추가 성공
 			if ($result == 1) {
-				$response_data['result'] = "성공";
+				$response_data['result'] = "회원가입 성공";
 				return json_encode($response_data);
 			} // 회원 정보 추가 실패
 			else {

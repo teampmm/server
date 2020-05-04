@@ -21,7 +21,7 @@ class UserModel extends CI_Model
 		$query = $this->db->query("select count(idx) as idx from User where 
 				id ='$id' or nick_name ='$nick_name' or phone=$phone")->row();
 		if ($query->idx >= 1) {
-			$response_data['result'] = "이미 가입된 계정입니다 ";
+			$response_data['result'] = "이미 가입된 계정입니다";
 			return json_encode($response_data);
 		} else {
 			$input_data = array(
@@ -45,7 +45,6 @@ class UserModel extends CI_Model
 
 			// insert ( '테이블명', 배열 데이터 )
 			$result = $this->db->insert('User', $input_data);
-//		$resuult = $this->db->query("insert into values")
 
 			$response_data = array();
 
@@ -116,11 +115,11 @@ class UserModel extends CI_Model
 
 		// 닉네임 중복
 		if ($query->count == 1) {
-			$response_data['result'] = "실패";
+			$response_data['result'] = "닉네임중복-가입불가능";
 			return json_encode($response_data);
 		} // 닉네임 중복이 아님
 		else {
-			$response_data['result'] = "성공";
+			$response_data['result'] = "닉네임중복아님-가입가능";
 			return json_encode($response_data);
 		}
 	}

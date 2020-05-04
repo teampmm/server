@@ -221,7 +221,19 @@ class BillModel extends CI_Model
         $result['agreement_total']=$agreement_count->agreement;
         $result['opposition_total']=$opposition_count->opposition;
         $result['user_check']='나중에 사용자 정보 확인해서 사용자가 찬성했는지 반대했는지 아무것도 누르지 않았는지 알려줘야함';
-        echo json_encode($result);
+        return json_encode($result);
+
+    }
+
+    //법안 상세보기에 들어가면 댓글을 볼수있음
+    public function billCommentList($index){
+        $rows=$this->db->query("select * from Comment where bill_idx=$index")->result();
+        $a=array();
+        foreach ($rows as $row){
+            array_push($a,$row);
+        }
+        return json_encode($a);
+
 
     }
 }

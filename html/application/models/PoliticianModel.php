@@ -95,10 +95,6 @@ class PoliticianModel extends CI_Model
 			    }
 
 		    }
-		    $response_data['card_idx'] = $current_rand_idx;
-		    $response_data['card_num'] = count($card_list);
-		    $response_data['card_list'] = $card_list;
-			return json_encode($response_data);
 	    }
 
 	    // 요청한 페이지가 2페이지 이상이고, 현재 보고있는 idx를 받아야함.
@@ -144,14 +140,13 @@ class PoliticianModel extends CI_Model
 			    }
 
 		    }
-		    $response_data['card_idx'] = $current_rand_idx;
-		    $response_data['card_num'] = count($card_list);
-		    $response_data['card_list'] = $card_list;
-		    return json_encode($response_data);
 	    }
-
-
-
+	    $response_data['card_idx'] = $current_rand_idx;
+	    $response_data['card_num'] = count($card_list);
+	    $response_data['current_page'] = $request_page_idx;
+	    $response_data['total_page'] = ceil($total_card/$per_page_data);
+	    $response_data['card_list'] = $card_list;
+	    return json_encode($response_data);
     }
 
 

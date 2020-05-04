@@ -244,6 +244,9 @@ class BillModel extends CI_Model
             $data['comment_idx']=$row->idx;
             $data['content']=$row->content;
             $data['create_at']=$row->create_at;
+            //댓글에 대한 좋아요와 싫어요 갯수 and (사용자가 좋아요 or 싫어요를 클릭 했는지 여부)
+            $data['agreement']=(int)$this->db->query("select count(idx) as count from CommentRating where comment_idx=$row->idx and status=0")->row()->count;
+            $data['opposition']=(int)$this->db->query("select count(idx) as count from CommentRating where comment_idx=$row->idx and status=1 ")->row()->count;
             //대댓글이 몇개있는지 카운트로 알려줌
             $data['child']=(int)$this->db->query("select count(idx) as count from SubComment where comment_idx=$row->idx")->row()->count;
             
@@ -252,8 +255,8 @@ class BillModel extends CI_Model
         }
         $result=array();
         //페이징  (총 페이지 수)
-        $result['agreement_total_page']=ceil($this->db->query("select count(idx) as count from Comment where bill_idx=$index and status=$status")->row()->count/10);
-        $result['agreement_list']=$sub_comment_array;
+        $result['comment_total_page']=ceil($this->db->query("select count(idx) as count from Comment where bill_idx=$index and status=$status")->row()->count/10);
+        $result['comment_list']=$sub_comment_array;
 
 
         return json_encode($result);
@@ -269,8 +272,12 @@ class BillModel extends CI_Model
         $json_tmp=array();
         foreach ($rows as $row){
             $data['user_idx']=$row->user_idx;
+            $data['sub_comment_idx']=$row->idx;
             $data['user_nick_name']=$this->db->query("select nick_name from User where idx=$row->user_idx")->row()->nick_name;
             $data['content']=$row->content;
+            $data['agreement']=(int)$this->db->query("select count(idx) as count from CommentRating where sub_comment_idx=$row->idx and status=0")->row()->count;
+            $data['opposition']=(int)$this->db->query("select count(idx) as count from CommentRating where sub_comment_idx=$row->idx and status=1 ")->row()->count;
+            //답글에 대한 답글일경우 부모 유저를 링크해준다
             if ($row->parent_user_idx != null){
                 $data['parent_user_idx']=$row->parent_user_idx;
                 $data['parent_user_nick_name']=$this->db->query("select nick_name from User where idx=$row->parent_user_idx")->row()->nick_name;

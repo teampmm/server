@@ -159,73 +159,75 @@ class PoliticianModel extends CI_Model
                 idx, party_idx,history, category, profile_image_url
                 FROM Politician where kr_name = '$politician_name'")->row();
 
-
-        // 정치인 인덱스
-        $politician_idx = $politician_select_result->party_idx;
-
-        // 정치인 테이블에서 정당 인덱스로 정당 테이블에 있는 정당 이름 조회
-        $party_select_result = $this->db->query("SELECT party_name FROM Party where idx = '$politician_idx'")->row();
-
-        // 정당 이름
-        $party_name = $party_select_result->party_name;
-
-        $response_data['kr_name'] = $politician_name;
-        $response_data['party_name'] = $party_name;
-        $response_data['history'] = $politician_select_result->history;
-        $response_data['category'] = $politician_select_result->category;
-        $response_data['profile_image_url'] = $politician_select_result->profile_image_url;
-
-        // 정치인 테이블에서 정치인 인덱스로 정치인 공약 모음 테이블에 있는 공약을 조회
-        // 공약 이행률 계산
-        // 공약 전체 갯수 : 공약 데이터중 정치인 테이블에서 정치인 인덱스가 포함된 데이터 찾기
-        // 공약 이행 갯수 : 공약 이행 과정 - 완전이행 된것만 찾음
-        // 공약 이행률 = (공약 이행 갯수 / 공약 전체 갯수) * 100
-        $politician_pledge_select_result = $this->db->query("SELECT pledge_implement_status FROM PoliticianPledge where politician_idx = '$politician_idx'")->result();
-
-        // 공약 전체 갯수
-        $pledge_total = count($politician_pledge_select_result);
-
-        $success_pledge = 0;    // 완전이행
-        $part_success_pledge = 0; // 부분이행
-        $retreat_pledge = 0; // 퇴각이행
-        $not_execute_pledge = 0; // 미이행
-        $impossible_judge = 0; // 판단불가
-
-        foreach ($politician_pledge_select_result as $row) {
-            $pledge_status = $row->pledge_implement_status;
-
-            if ($pledge_status == "완전이행") {
-                $success_pledge++;
-            } else if ($pledge_status == "부분이행") {
-                $part_success_pledge++;
-            } else if ($pledge_status == "퇴각이행") {
-                $retreat_pledge++;
-            } else if ($pledge_status == "미이행") {
-                $not_execute_pledge++;
-            } else if ($pledge_status == "판단불가") {
-                $impossible_judge++;
-            }
+        // 정치인 조회 결과가 없음
+        if($politician_select_result == null){
+	        $response_data['result'] = "정치인 정보가 없습니다.";
+        	return json_encode($response_data);
         }
 
+        // 정치인 조회 결과가 있음
+		else{
+			// 정치인 인덱스
+			$politician_idx = $politician_select_result->party_idx;
 
-        // 공약 이행 데이터
-        $pledge_data = array();
+			// 정치인 테이블에서 정당 인덱스로 정당 테이블에 있는 정당 이름 조회
+			$party_select_result = $this->db->query("SELECT party_name FROM Party where idx = '$politician_idx'")->row();
 
-        $pledge_data['total_pledge_num'] = $pledge_total;
-        $pledge_data['success_pledge_num'] = $success_pledge;
-        $pledge_data['part_success_pledge_num'] = $part_success_pledge;
-        $pledge_data['retreat_pledge_num'] = $retreat_pledge;
-        $pledge_data['not_execute_pledge_num'] = $not_execute_pledge;
-        $pledge_data['impossible_judge_num'] = $impossible_judge;
+			// 정당 이름
+			$party_name = $party_select_result->party_name;
 
-        $response_data['pledge_data'] = $pledge_data;
+			$response_data['kr_name'] = $politician_name;
+			$response_data['party_name'] = $party_name;
+			$response_data['history'] = $politician_select_result->history;
+			$response_data['category'] = $politician_select_result->category;
+			$response_data['profile_image_url'] = $politician_select_result->profile_image_url;
 
+			// 정치인 테이블에서 정치인 인덱스로 정치인 공약 모음 테이블에 있는 공약을 조회
+			// 공약 이행률 계산
+			// 공약 전체 갯수 : 공약 데이터중 정치인 테이블에서 정치인 인덱스가 포함된 데이터 찾기
+			// 공약 이행 갯수 : 공약 이행 과정 - 완전이행 된것만 찾음
+			// 공약 이행률 = (공약 이행 갯수 / 공약 전체 갯수) * 100
+			$politician_pledge_select_result = $this->db->query("SELECT pledge_implement_status FROM PoliticianPledge where politician_idx = '$politician_idx'")->result();
 
-        // 공약 완전이행 갯수
-//        $pledge_success_count =
-        return json_encode($response_data);
+			// 공약 전체 갯수
+			$pledge_total = count($politician_pledge_select_result);
 
+			$success_pledge = 0;    // 완전이행
+			$part_success_pledge = 0; // 부분이행
+			$retreat_pledge = 0; // 퇴각이행
+			$not_execute_pledge = 0; // 미이행
+			$impossible_judge = 0; // 판단불가
 
+			foreach ($politician_pledge_select_result as $row) {
+				$pledge_status = $row->pledge_implement_status;
+
+				if ($pledge_status == "완전이행") {
+					$success_pledge++;
+				} else if ($pledge_status == "부분이행") {
+					$part_success_pledge++;
+				} else if ($pledge_status == "퇴각이행") {
+					$retreat_pledge++;
+				} else if ($pledge_status == "미이행") {
+					$not_execute_pledge++;
+				} else if ($pledge_status == "판단불가") {
+					$impossible_judge++;
+				}
+			}
+
+			// 공약 이행 데이터
+			$pledge_data = array();
+
+			$pledge_data['total_pledge_num'] = $pledge_total;
+			$pledge_data['success_pledge_num'] = $success_pledge;
+			$pledge_data['part_success_pledge_num'] = $part_success_pledge;
+			$pledge_data['retreat_pledge_num'] = $retreat_pledge;
+			$pledge_data['not_execute_pledge_num'] = $not_execute_pledge;
+			$pledge_data['impossible_judge_num'] = $impossible_judge;
+
+			$response_data['pledge_data'] = $pledge_data;
+
+			return json_encode($response_data);
+		}
     }
 
     // 정치인 관련 뉴스정보 요청

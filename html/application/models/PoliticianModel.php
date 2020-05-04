@@ -235,6 +235,9 @@ class PoliticianModel extends CI_Model
     // output : 뉴스제목, 뉴스날짜, 뉴스 링크 경로
     public function getNews($data)
     {
+	    // 클라에게 보내줄 응답 데이터
+	    $response_data = array();
+
         // 정치인 이름
         $politician_name = $data['kr_name'];
 
@@ -242,6 +245,12 @@ class PoliticianModel extends CI_Model
         $politician_select_result = $this->db->query("SELECT
                 idx
                 FROM Politician where kr_name = '$politician_name'")->row();
+
+	    // 정치인 조회 결과가 없음
+	    if($politician_select_result == null){
+		    $response_data['result'] = "정치인 정보가 없습니다.";
+		    return json_encode($response_data);
+	    }
 
         // 정치인 인덱스
         $politician_idx = $politician_select_result->idx;
@@ -251,8 +260,6 @@ class PoliticianModel extends CI_Model
                 title, `date`, url
                 FROM News where politician_idx = '$politician_idx'")->result();
 
-        // 클라에게 보내줄 응답 데이터
-        $response_data = array();
         $result_num = count($politician_select_result);
         $response_data['result_num'] = $result_num;
         $response_data['data'] = $politician_select_result;
@@ -293,7 +300,6 @@ class PoliticianModel extends CI_Model
         $result_num = count($politician_pledge_select_result);
         $response_data['result_num'] = $result_num;
         $response_data['data'] = $politician_pledge_select_result;
-
 
         return json_encode($response_data);
     }

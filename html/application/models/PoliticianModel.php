@@ -306,11 +306,19 @@ class PoliticianModel extends CI_Model
                 idx, affiliation_committee, history, elect_generation, elect_area, office_number
                 FROM Politician where kr_name = '$politician_name'")->row();
 
-        // 클라에게 보내줄 응답 데이터
-        $response_data = array();
-        $response_data['data'] = $politician_select_result;
+	    // 클라에게 보내줄 응답 데이터
+	    $response_data = array();
 
-        return json_encode($response_data);
+	    // 정치인 조회 결과가 없음
+	    if($politician_select_result == null){
+		    $response_data['result'] = "정치인 정보가 없습니다.";
+	    }
+	    // 정치인 조회 결과가 있음음
+	    else{
+		    $response_data['result'] = $politician_select_result;
+	    }
+	    return json_encode($response_data);
+
     }
 
 }

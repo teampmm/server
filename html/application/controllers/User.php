@@ -22,12 +22,7 @@ class User extends CI_Controller
 		if ($this->http_method == "POST") {
 			// postman에서 데이터를 body - x-www-form-urlencoded로 보내는 방법
 			$json_data = $this->input->post('user_info', true);
-//            echo $json_data;
-//            return '';
 			$json_data = json_decode($json_data, true);
-
-			// 클라이언트가 보낸 정보에서 name 값을 찾는 코드
-			// print_r($json_data['name']);
 
 			$this->load->model("UserModel");
 			// db에 사용자를 추가한다.

@@ -44,7 +44,7 @@ class User extends CI_Controller
 		$json_data = json_decode($json_data, true);
 		$this->load->model('UserModel');
 		$result = $this->UserModel->getNickCheck($json_data);
-		echo($result);
+		echo $result;
 	}
 
 	// 로그인 요청 메서드
@@ -57,7 +57,7 @@ class User extends CI_Controller
 		// 사용자가 보낸 id, pw 정보를 db에 있는 id, pw와 비교한다.
 		$this->load->model('UserModel');
 		$result = $this->UserModel->getLoginStatus($json_data);
-		echo($result);
+		echo $result;
 	}
 
 	// 클라이언트가 사용자에 대한 데이터를 요청할때

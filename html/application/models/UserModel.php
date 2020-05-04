@@ -16,7 +16,7 @@ class UserModel extends CI_Model
 		$id = $data['id'];
 		$nick_name = $data['nick_name'];
 		$phone = $data['phone'];
-		
+
 		// 클라이언트에서 hash 암호화 된 상태로 서버에게 전달해줌
 		$pw = $data['pw'];
 
@@ -66,11 +66,11 @@ class UserModel extends CI_Model
 	// 사용자가 로그인 요청 - email정보와, 패스워드 정보를 입력으로 받는다.
 	public function getLoginStatus($data)
 	{
-		// client가 보낸 사용자 이메일
+		// client가 보낸 사용자 id
 		$id = $data['id'];
 
-		// 사용자 비밀번호 sha256으로 암호화
-		$pw = hash('sha256', $data['pw']);
+		// 사용자 패스워드는 암호화 된 채로 들어온다.
+		$pw = $data['pw'];
 
 		// client로 부터 입력받은 id, pw에 대한 사용자 정보가 일치 하는지 조회
 		$query = $this->db->query("select count(idx) as 'count' from User where 
@@ -89,12 +89,12 @@ class UserModel extends CI_Model
 			// 이제부터 클라이언트는 api 요청 시 서버로 부터 받은 토큰을 사용 하여 필요한 데이터를 주고 받는다.
 			$token = $pmm_jwt->createToken($data);
 
-			$response_data['result'] = "성공";
+			$response_data['result'] = "로그인 성공";
 			$response_data['token'] = $token;
 			return json_encode($response_data);
 		} // 사용자 정보가 불일치
 		else {
-			$response_data['result'] = "실패";
+			$response_data['result'] = "가입된 계정이 없거나, 비밀번호가 틀렸습니다";
 			return json_encode($response_data);
 		}
 	}

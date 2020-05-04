@@ -16,7 +16,9 @@ class UserModel extends CI_Model
 		$id = $data['id'];
 		$nick_name = $data['nick_name'];
 		$phone = $data['phone'];
-
+		
+		// 클라이언트에서 hash 암호화 된 상태로 서버에게 전달해줌
+		$pw = $data['pw'];
 
 		$query = $this->db->query("select count(idx) as idx from User where 
 				id ='$id' or nick_name ='$nick_name' or phone=$phone")->row();
@@ -28,11 +30,11 @@ class UserModel extends CI_Model
 				'idx'               => null,
 				'name'              => $data['name'],
 				'age'               => $data['age'],
-				'nick_name'         => $data['nick_name'],
+				'nick_name'         => $nick_name,
 				'sex'               => $data['sex'],
-				'id'                => $data['id'],
-				'pw'                => hash('sha256', $data['pw']),
-				'phone'             => $data['phone'],
+				'id'                => $id,
+				'pw'                => $pw,
+				'phone'             => $phone,
 				'residence'         => $data['residence'],
 				'social_login'      => $data['social_login'],
 				'create_at'         => date("Y-m-d H:i:s"),

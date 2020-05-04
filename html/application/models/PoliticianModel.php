@@ -3,129 +3,260 @@
 class PoliticianModel extends CI_Model
 {
 
-    private $total_card;
-    private $total_card_idx;
-    private $per_page_data;
+//    private $total_card; // 정치인의 수
+//    private $total_card_idx;
 
     function __construct()//생성자, 제일 먼저 실행되는 일종의 초기화
     {
         parent::__construct();
 
-        $this->total_card_idx = (array)$this->total_card_idx;
-
-        // db에 있는 정치인 카드의 수
-        $result = $this->db->query("select count(idx) as `count` from Politician")->row();
-        $this->total_card = $result->count;
-
-        // 정치인 인덱스를 저장
-        for ($x = 0; $x < $this->total_card; $x++)
-            array_push($this->total_card_idx, $x + 1);
+//        $this->total_card_idx = (array)$this->total_card_idx;
+//
+//        // db에 있는 정치인 카드의 수
+//        $result = $this->db->query("select count(idx) as `count` from Politician")->row();
+//        $this->total_card = $result->count;
+//
+//        // 정치인 인덱스를 저장
+//        for ($x = 0; $x < $this->total_card; $x++)
+//            array_push($this->total_card_idx, $x + 1);
 
     }
 
+    public function getPoliticianCard($data){
 
-    // 정치인 모아보기 카드페이지에 따라서 카드정보 반환
-    // input : 받은 카드의 인덱스 - 초기값 []
-    // output : enable_scrool(스크롤 여부), 받은 카드의 인덱스, 카드정보(카드인덱스, 정치인이름, 정당인덱스
-    public function getPoliticianCard($data)
-    {
-        // 최종 클라이언트에게 보낼 응답 데이터
-        $response_data = array();
+    	// 응답 데이터
+	    $response_data = array();
 
-        $send_card_idx = array();
+	    // 한 페이지에 보여줄 카드의 갯수
+	    $per_page_data = 8;
 
-        // 페이지당 정치인 카드의 수
-        $this->per_page_data = 8;
+	    // 총 카드의 수
+	    $total_card = $this->db->query("select count(idx) as `count` from Politician")->row();
+		$total_card = $total_card->count;
 
-        // 클라이언트 사용한 카드의 인덱스
-        $used_card_idx = $data['used_card_idx'];
+	    // 사용자가 가지고 있는 랜덤 카드 인덱스 - RandomCard 인덱스
+    	$current_rand_idx = $data['idx'];
 
-        // 정치인 카드 인덱스에서 사용한 카드와 중복되지 않는 카드 리스트를 만든다..
-        // array_diff는 값을 제외시키는 함수
-        $temp_array = array_diff($this->total_card_idx, $used_card_idx);
+	    // 사용자가 요청한 페이지 - RandomCard 인덱스
+	    $request_page_idx = $data['page'];
 
-        if (count($temp_array) == 0) {
+	    if ($current_rand_idx == null){
+		    // rand_idx 할당
+		    $current_rand_idx = mt_rand(1, $total_card);
+	    }
+	    // 카드 데이터 가져오기 - 1,4,2,56,7,4 ...
+	    $card_data = $this->db->query("select card_number from RandomCard where idx = '$current_rand_idx'")->row();
 
-            $response_data['enable_scroll'] = false;
-            $response_data['card_list'] = "no data";
-        } else {
-            // 사용한 카드의 수 + 페이지에 보여줄 카드의 수가 총 카드의 수 보다 많은 경우
-            if (count($temp_array) < $this->per_page_data) {
+	    // 문자열 제일 앞, 뒤에 있는 큰따옴표 제거
+	    $card_data = str_replace( "\"","", $card_data->card_number); // 쌍따옴표 제거
 
-                $temp_array = $this->arraySort($temp_array);
-                for ($x = 0; $x < (int)count($temp_array); $x++)
-                    $send_card_idx[$x] = (string)((int)$temp_array[$x]);
+	    // 카드 데이터 -> 카드 배열로 변환
+	    $card_array = explode(",", $card_data);
 
-                $response_data['enable_scroll'] = false;
-            } // 사용한 카드의 수 + 페이지에 보여줄 카드의 수가 총 카드의 수 보다 적은 경우
-            else {
-                // 중복 되지 않은 카드 리스트에서 페이지에 표시될 카드의 수 만큼 뽑는다.
-                $send_card_idx = array_rand($temp_array, $this->per_page_data);
+	    // 카드 모음 리스트
+	    $card_list = array();
 
-                // 랜덤하게 뽑은 카드 한장을 사용한 카드 리스트로 넣는다.
-                array_push($used_card_idx, $send_card_idx);
+	    // 첫 페이지 요청
+	    if($request_page_idx == 1){
+	    	// rand_idx 할당 및 rand_idx에 해당하는 카드를 per_page_data 만큼 반환
 
-                // db에 idx가 1부터 시작이기에 모든 카드의 인덱스에 +1을 해줌
-                for ($x = 0; $x < (int)count($send_card_idx); $x++)
-                    $send_card_idx[$x] = (string)((int)$send_card_idx[$x] + 1);
+		    for ($i = 0; $i < $per_page_data; $i++){
 
-                $response_data['enable_scroll'] = true;
-            }
-
-
-
-            // 클라이언트에게 보낼 카드리스트 인덱스로 카드 모아보기 정보를 검색한다.
-            // 카드 모아보기에 필요한 데이터
-            // 정치인 사진 경로
-            // 정치인 이름
-            // 정치인 정당 인덱스
-            // 당선 지역
-            // 카테고리
-            $politician_pledge_result = $this->db->query("SELECT
+			    // 클라이언트에게 보낼 카드리스트 인덱스로 카드 모아보기 정보를 검색한다.
+			    // 카드 모아보기에 필요한 데이터
+			    // 정치인 사진 경로
+			    // 정치인 이름
+			    // 정치인 정당 인덱스
+			    // 당선 지역
+			    // 카테고리
+			    $politician_pledge_result = $this->db->query("SELECT
                 idx, kr_name, party_idx, profile_image_url, elect_area, category
-                FROM Politician where idx IN (" . implode(',', $send_card_idx) . ")")->result();
+                FROM Politician where idx = '$card_array[$i]'")->result();
 
-            // 카드 모음 리스트
-            $card_list = array();
+			    foreach ($politician_pledge_result as $row) {
 
-            foreach ($politician_pledge_result as $row) {
+				    // 카드 하나에 들어있는 데이터
+				    $card_data = array();
 
-                // 카드 하나에 들어있는 데이터
-                $card_data = array();
-
-                // 정당 인덱스로 정당의 이름을 조회
-                $party_select_result = $this->db->query("SELECT
+				    // 정당 인덱스로 정당의 이름을 조회
+				    $party_select_result = $this->db->query("SELECT
                     party_name
                     FROM Party where idx = '$row->party_idx'")->row();
 
-                // 정치인 카드에 들어갈 정보
-                $card_data['kr_name'] = $row->kr_name;
-                $card_data['party_name'] = $party_select_result->party_name;
-                $card_data['elect_area'] = $row->elect_area;
-                $card_data['profile_image_url'] = $row->profile_image_url;
-                $card_data['category'] = $row->category;
+				    // 정치인 카드에 들어갈 정보
+				    $card_data['kr_name'] = $row->kr_name;
+				    $card_data['party_name'] = $party_select_result->party_name;
+				    $card_data['elect_area'] = $row->elect_area;
+				    $card_data['profile_image_url'] = $row->profile_image_url;
+				    $card_data['category'] = $row->category;
 
-                // 정치인 카드 리스트에 추가
-                array_push($card_list,$card_data);
-            }
+				    // 정치인 카드 리스트에 추가
+				    array_push($card_list,$card_data);
+			    }
+
+		    }
+		    $response_data['card_idx'] = $current_rand_idx;
+		    $response_data['card_num'] = count($card_list);
+		    $response_data['card_list'] = $card_list;
+			return json_encode($response_data);
+	    }
+
+	    // 요청한 페이지가 2페이지 이상이고, 현재 보고있는 idx를 받아야함.
+	    else{
+
+		    for ($i = $per_page_data * ($request_page_idx-1); $i < $per_page_data * ($request_page_idx-1) + $per_page_data; $i++){
+
+		    	// 정치인 카드 갯수가 모자란다면 반복을 종료
+		    	if($i >= count($card_array)){
+			    	break;
+			    }
+
+		    	// 클라이언트에게 보낼 카드리스트 인덱스로 카드 모아보기 정보를 검색한다.
+			    // 카드 모아보기에 필요한 데이터
+			    // 정치인 사진 경로
+			    // 정치인 이름
+			    // 정치인 정당 인덱스
+			    // 당선 지역
+			    // 카테고리
+			    $politician_pledge_result = $this->db->query("SELECT
+                idx, kr_name, party_idx, profile_image_url, elect_area, category
+                FROM Politician where idx = '$card_array[$i]'")->result();
+
+			    foreach ($politician_pledge_result as $row) {
+
+				    // 카드 하나에 들어있는 데이터
+				    $card_data = array();
+
+				    // 정당 인덱스로 정당의 이름을 조회
+				    $party_select_result = $this->db->query("SELECT
+                    party_name
+                    FROM Party where idx = '$row->party_idx'")->row();
+
+				    // 정치인 카드에 들어갈 정보
+				    $card_data['kr_name'] = $row->kr_name;
+				    $card_data['party_name'] = $party_select_result->party_name;
+				    $card_data['elect_area'] = $row->elect_area;
+				    $card_data['profile_image_url'] = $row->profile_image_url;
+				    $card_data['category'] = $row->category;
+
+				    // 정치인 카드 리스트에 추가
+				    array_push($card_list,$card_data);
+			    }
+
+		    }
+		    $response_data['card_idx'] = $current_rand_idx;
+		    $response_data['card_num'] = count($card_list);
+		    $response_data['card_list'] = $card_list;
+		    return json_encode($response_data);
+	    }
 
 
-//            // 정당 인덱스로 정당 찾기
-//            $asd_result = $this->db->query("SELECT
-//                party_name
-//                FROM Party where idx = '$result->party_idx'")->result();
-//
-//            return $asd_result;
-
-            // 클라이언트에게 보낼 메세지 여기서 작성
-            $response_data['send_card_idx'] = $send_card_idx;
-            $response_data['card_list'] = $card_list;
-        }
-
-
-        return json_encode($response_data);
 
     }
+
+
+//    // 정치인 모아보기 카드페이지에 따라서 카드정보 반환
+//    // input : 받은 카드의 인덱스 - 초기값 []
+//    // output : enable_scrool(스크롤 여부), 받은 카드의 인덱스, 카드정보(카드인덱스, 정치인이름, 정당인덱스
+//    public function getPoliticianCard($data)
+//    {
+//        // 최종 클라이언트에게 보낼 응답 데이터
+//        $response_data = array();
+//
+//        $send_card_idx = array();
+//
+//        // 페이지당 정치인 카드의 수
+//        $this->per_page_data = 8;
+//
+//        // 클라이언트 사용한 카드의 인덱스
+//        $used_card_idx = $data['used_card_idx'];
+//
+//        // 정치인 카드 인덱스에서 사용한 카드와 중복되지 않는 카드 리스트를 만든다..
+//        // array_diff는 값을 제외시키는 함수
+//        $temp_array = array_diff($this->total_card_idx, $used_card_idx);
+//
+//        if (count($temp_array) == 0) {
+//
+//            $response_data['enable_scroll'] = false;
+//            $response_data['card_list'] = "no data";
+//        } else {
+//            // 사용한 카드의 수 + 페이지에 보여줄 카드의 수가 총 카드의 수 보다 많은 경우
+//            if (count($temp_array) < $this->per_page_data) {
+//
+//                $temp_array = $this->arraySort($temp_array);
+//                for ($x = 0; $x < (int)count($temp_array); $x++)
+//                    $send_card_idx[$x] = (string)((int)$temp_array[$x]);
+//
+//                $response_data['enable_scroll'] = false;
+//            } // 사용한 카드의 수 + 페이지에 보여줄 카드의 수가 총 카드의 수 보다 적은 경우
+//            else {
+//                // 중복 되지 않은 카드 리스트에서 페이지에 표시될 카드의 수 만큼 뽑는다.
+//                $send_card_idx = array_rand($temp_array, $this->per_page_data);
+//
+//                // 랜덤하게 뽑은 카드 한장을 사용한 카드 리스트로 넣는다.
+//                array_push($used_card_idx, $send_card_idx);
+//
+//                // db에 idx가 1부터 시작이기에 모든 카드의 인덱스에 +1을 해줌
+//                for ($x = 0; $x < (int)count($send_card_idx); $x++)
+//                    $send_card_idx[$x] = (string)((int)$send_card_idx[$x] + 1);
+//
+//                $response_data['enable_scroll'] = true;
+//            }
+//
+//
+//
+//            // 클라이언트에게 보낼 카드리스트 인덱스로 카드 모아보기 정보를 검색한다.
+//            // 카드 모아보기에 필요한 데이터
+//            // 정치인 사진 경로
+//            // 정치인 이름
+//            // 정치인 정당 인덱스
+//            // 당선 지역
+//            // 카테고리
+//            $politician_pledge_result = $this->db->query("SELECT
+//                idx, kr_name, party_idx, profile_image_url, elect_area, category
+//                FROM Politician where idx IN (" . implode(',', $send_card_idx) . ")")->result();
+//
+//            // 카드 모음 리스트
+//            $card_list = array();
+//
+//            foreach ($politician_pledge_result as $row) {
+//
+//                // 카드 하나에 들어있는 데이터
+//                $card_data = array();
+//
+//                // 정당 인덱스로 정당의 이름을 조회
+//                $party_select_result = $this->db->query("SELECT
+//                    party_name
+//                    FROM Party where idx = '$row->party_idx'")->row();
+//
+//                // 정치인 카드에 들어갈 정보
+//                $card_data['kr_name'] = $row->kr_name;
+//                $card_data['party_name'] = $party_select_result->party_name;
+//                $card_data['elect_area'] = $row->elect_area;
+//                $card_data['profile_image_url'] = $row->profile_image_url;
+//                $card_data['category'] = $row->category;
+//
+//                // 정치인 카드 리스트에 추가
+//                array_push($card_list,$card_data);
+//            }
+//
+//
+////            // 정당 인덱스로 정당 찾기
+////            $asd_result = $this->db->query("SELECT
+////                party_name
+////                FROM Party where idx = '$result->party_idx'")->result();
+////
+////            return $asd_result;
+//
+//            // 클라이언트에게 보낼 메세지 여기서 작성
+//            $response_data['send_card_idx'] = $send_card_idx;
+//            $response_data['card_list'] = $card_list;
+//        }
+//
+//
+//        return json_encode($response_data);
+//
+//    }
 
     // 배열 재 정렬
     public function arraySort($array)

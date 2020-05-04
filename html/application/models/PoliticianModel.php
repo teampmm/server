@@ -274,7 +274,13 @@ class PoliticianModel extends CI_Model
                 idx
                 FROM Politician where kr_name = '$politician_name'")->row();
 
-        // 정치인 인덱스
+	    // 정치인 조회 결과가 없음
+	    if($politician_select_result == null){
+		    $response_data['result'] = "정치인 정보가 없습니다.";
+		    return json_encode($response_data);
+	    }
+
+	    // 정치인 인덱스
         $politician_idx = $politician_select_result->idx;
 
         // 정치인 인덱스로 정치인 공약 모음 - 공약 내용, 공약 대수, 공약 이행 상태 조회하기

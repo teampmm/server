@@ -48,7 +48,7 @@ class BillModel extends CI_Model
         }
         $result = array();
         //법안 모아보기 정보
-        $bill_info = $this->db->query("select  idx,name,committee_idx,progress_status,proposal_date,proclamation_number from Bill order by proposal_date desc limit $index, 10")->result();
+        $bill_info = $this->db->query("select  idx,name,committee_idx,progress_status,proposal_date,proclamation_number from Bill order by idx desc limit $index, 10")->result();
         //페이징을 위한 총 페이지수
         $bill_total_rows = $this->db->query("select count(idx) as total from Bill ")->row();
         $result['total_page'] = ceil($bill_total_rows->total / 10);
@@ -226,14 +226,66 @@ class BillModel extends CI_Model
     }
 
     //법안 상세보기에 들어가면 댓글을 볼수있음
-    public function billCommentList($index){
-        $rows=$this->db->query("select * from Comment where bill_idx=$index")->result();
-        $a=array();
-        foreach ($rows as $row){
-            array_push($a,$row);
+    //찬성에 쓴 댓글 , 반대에 쓴 댓글
+    //해당 댓글에 달린 답글갯수
+    public function billCommentList($index,$comment_page,$status){
+        if($status=='agreement'){
+            $status=0;
+        }else{
+            $status=1;
         }
-        return json_encode($a);
+        $page=($comment_page-1)*10;
+        $rows=$this->db->query("select * from Comment where bill_idx=$index and status=$status order by create_at asc limit $page , 10 ")->result();
+        $sub_comment_array=array();
+        foreach ($rows as $row){
+            //댓글 목록
+            $data['user_idx']=$row->user_idx;
+            $data['nick_name']=$this->db->query("select * from User where idx=$row->user_idx")->row()->nick_name;
+            $data['comment_idx']=$row->idx;
+            $data['content']=$row->content;
+            $data['create_at']=$row->create_at;
+            //대댓글이 몇개있는지 카운트로 알려줌
+            $data['child']=(int)$this->db->query("select count(idx) as count from SubComment where comment_idx=$row->idx")->row()->count;
+            
+            array_push($sub_comment_array,$data);
+
+        }
+        $result=array();
+        //페이징  (총 페이지 수)
+        $result['agreement_total_page']=ceil($this->db->query("select count(idx) as count from Comment where bill_idx=$index and status=$status")->row()->count/10);
+        $result['agreement_list']=$sub_comment_array;
 
 
+        return json_encode($result);
+
+
+    }
+    //대댓글에 대한 정보 and 페이징
+    public function billSubCommentList($index,$sub_comment_page){
+        //페이지는 무조건 1부터시작
+        $sub_comment_page=($sub_comment_page-1)*10;
+        $rows = $this->db->query("select * from SubComment where comment_idx=$index  order by create_at asc limit $sub_comment_page , 10")->result();
+        $result_array=array();
+        $json_tmp=array();
+        foreach ($rows as $row){
+            $data['user_idx']=$row->user_idx;
+            $data['user_nick_name']=$this->db->query("select nick_name from User where idx=$row->user_idx")->row()->nick_name;
+            $data['content']=$row->content;
+            if ($row->parent_user_idx != null){
+                $data['parent_user_idx']=$row->parent_user_idx;
+                $data['parent_user_nick_name']=$this->db->query("select nick_name from User where idx=$row->parent_user_idx")->row()->nick_name;
+
+            }
+            array_push($json_tmp,$data);
+        }
+        $result_array['comment']=$json_tmp;
+        $next=$this->db->query("select count(idx) as count from SubComment  where comment_idx=$index ")->row();
+        if(($sub_comment_page+1)*10 < $next->count){
+            $result_array['next_page']=true;
+        }else{
+
+            $result_array['next_page']=false;
+        }
+        return json_encode($result_array);
     }
 }

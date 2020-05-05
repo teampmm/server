@@ -193,6 +193,26 @@ class UserModel extends CI_Model
         }
 
     }
+    public function putKakaoUser($info){
+        $userinfo = json_decode($info, true);
+        $name=$userinfo['name'];
+        $age=(int)$userinfo['age'];
+        $nick_name=$userinfo['nick_name'];
+        $sex=$userinfo['sex'];
+        $phone=$userinfo['phone'];
+        $residence=$userinfo['residence'];
+        $category=null;
+        $device_id=null;
+        $device_model=null;
+        $device_os=null;
+        $app_version=null;
+
+        $uid=$userinfo['kakao_uid'];
+
+        $this->db->query("update User set name='$name' , age=$age , nick_name='$nick_name' , sex='$sex' , phone='$phone' , residence='$residence' ,category =null , create_at=NOW(),update_at=NOW(),delete_at=NOW(),recently_login_at=NOW(),
+        device_id=null,device_model=null,device_os=null,app_version=null where id='$uid'");
+        return 'zz';
+    }
 
 
 }

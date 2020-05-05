@@ -12,8 +12,32 @@ class BillModel extends CI_Model
     }
 
 
-
-    //법안 모아보기
+    /*법안 모아보기 페이지 데이터
+    /출력데이터
+{
+    "total": 10,                                                            //총 페이지수 페이징을 위함
+    "info": [
+        {
+            "bill_idx": "14",                                               //법안의 인덱스
+            "name": "name 014",                                               //법안명
+            "progress_status": "progress_status 014",                       //법안 진행 상태
+            "proposal_date": "2020-04-29 01:49:06",                         //제안 날짜
+            "committee_idx": "idx14",                                       //위원회 idx
+            "committee_name": "name 014",                                   //위원회 이름
+            "proclamation_number":"123123",                                 //공포번호
+            "proposer": [                                                   //발의에 참여한 사람들 리스트
+                {
+                    "idx": "14",                                            //정치인 idx
+                    "kr_name": "kr_name 014",                               //정치인 이름
+                    "representative": "14",                                 //1이면 대표발의 0이면 공동발의
+                    "party_idx": "14",                                      //정당idx
+                    "party_name": "party_name 014"                          //정당이름
+               }
+            ]
+        }, ...........
+    }
+ }
+     * */
     function billPageList($index)
     {
         //모아보기 메인 == index로 들어왔을때

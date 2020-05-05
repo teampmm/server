@@ -91,8 +91,11 @@ class User extends CI_Controller
 			if ($client_data == "login") {
 				$this->loginRequest();
 			}
-			else if ($client_data == 'kakao_auth'){
+			else if ($client_data == 'kakao_login'){
 			    $this->kakaoLogin();
+            }else if ($client_data=='kakao_sign'){
+                $this->kakaoSign();
+
             }
 		}
 		else if ($this->http_method == "PATCH"){
@@ -145,10 +148,18 @@ class User extends CI_Controller
 			}
 		}
 	}
+	//카카오 로그인 체크
 	public function kakaoLogin(){
 	    $uid=$this->input->post('kakao_uid');
 	    $this->load->model('UserModel');
 	    echo $this->UserModel->kakaoCheck($uid);
+
+    }
+    //카카오 로그인 동의 후 pmm 가입 
+    public function kakaoSign(){
+        $info=$this->input->post('kakao_sign');
+        $this->load->model('UserModel');
+        echo $this->UserModel->putKakaoUser($info);
 
     }
 }

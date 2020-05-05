@@ -342,7 +342,12 @@ class PoliticianModel extends CI_Model
     }
 
     // 정치인 응원하기 댓글
+	// input : 정치인 이름
+	// output : 댓글
     public function getComments($data){
+
+	    // 정치인 이름
+	    $politician_name = $data['kr_name'];
 
     }
 

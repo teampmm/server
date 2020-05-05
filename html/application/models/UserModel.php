@@ -175,24 +175,27 @@ class UserModel extends CI_Model
 	    if ($result->count ==1){
 	        //카카오 동의만 받고 가입을 진행하지 않은 상태
 	        //pmm자체 회원가입 페이지로 넘어가야함
+            //pmm자체 회원가입으로 넘어가야함 = 1
             if($result->name ==null){
-	            return 'pmm자체 회원가입으로 넘어가야함';
+	            return '1';
             }
 	        //카카오 동의후 pmm회원가입까지 완료한 상태
-            //카카오 로그인 완료
+            //카카오 로그인 완료 = 0
             else{
-                return '로그인 완료';
+                return '0';
 
             }
         }
 	    //첫가입
+        //카카오 정보 저장 완료 회원가입으로 넘어가야함 = 2
 	    else{
 	        $this->db->query("INSERT INTO User (social_login,id) VALUES ('K','$uid')");
-            return'카카오 정보 저장 완료 회원가입으로 넘어가야함';
+            return'2';
 
         }
 
     }
+    //카카오 동의후 회원가입을 위한 메서드
     public function putKakaoUser($info){
         $userinfo = json_decode($info, true);
         $name=$userinfo['name'];
@@ -209,9 +212,9 @@ class UserModel extends CI_Model
 
         $uid=$userinfo['kakao_uid'];
 
-        $this->db->query("update User set name='$name' , age=$age , nick_name='$nick_name' , sex='$sex' , phone='$phone' , residence='$residence' ,category =null , create_at=NOW(),update_at=NOW(),delete_at=NOW(),recently_login_at=NOW(),
+        $result_code=$this->db->query("update User set name='$name' , age=$age , nick_name='$nick_name' , sex='$sex' , phone='$phone' , residence='$residence' ,category =null , create_at=NOW(),update_at=NOW(),delete_at=NOW(),recently_login_at=NOW(),
         device_id=null,device_model=null,device_os=null,app_version=null where id='$uid'");
-        return 'zz';
+        return $result_code;
     }
 
 

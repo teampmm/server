@@ -85,6 +85,17 @@ class Politician extends CI_Controller
         $result = $this->PoliticianModel->getDetailInfo($json_data);
         print_r($result);
     }
+    // 정치인 응원하기 댓글 가져오기
+    public function getComments(){
+        // 정치인 상세 정보 요청
+        $json_data = $this->input->get('comments_request', True);
+        $json_data = json_decode($json_data, True);
+
+        // db에 사용자가 보낸 이메일이 있는지 확인한다. ( 중복체크 과정 ).
+        $this->load->model('PoliticianModel');
+        $result = $this->PoliticianModel->getComments($json_data);
+        print_r($result);
+    }
 
     // 클라이언트가 사용자에 대한 데이터를 요청할때
     // request url : {서버 ip}/politician/{data}
@@ -117,6 +128,12 @@ class Politician extends CI_Controller
             else if($client_data == "detail_info"){
                 $this->getDetailInfo();
             }
+
+            // 클라이언트가 정치인 응원하기 댓글 요청
+            else if($client_data == "comments"){
+                $this->getComments();
+            }
+
 
         } else if ($this->http_method == "POST") {
 

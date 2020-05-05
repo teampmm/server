@@ -13,7 +13,7 @@ class Bill extends CI_Controller
 		// 클라에서 요청한 (GET, POST, PATCH, DELETE) HTTP 메서드 확인
 		$this->http_method = $_SERVER["REQUEST_METHOD"];
 	}
- 
+
 	public function index()
 	{
 		$result = $this->page(null);

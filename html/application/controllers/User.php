@@ -91,6 +91,9 @@ class User extends CI_Controller
 			if ($client_data == "login") {
 				$this->loginRequest();
 			}
+			else if ($client_data == 'kakao_auth'){
+			    $this->kakaoLogin();
+            }
 		}
 		else if ($this->http_method == "PATCH"){
 			print_r("PATCH");
@@ -142,6 +145,12 @@ class User extends CI_Controller
 			}
 		}
 	}
+	public function kakaoLogin(){
+	    $uid=$this->input->post('kakao_uid');
+	    $this->load->model('UserModel');
+	    echo $this->UserModel->kakaoCheck($uid);
+
+    }
 }
 
 

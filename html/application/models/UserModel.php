@@ -165,6 +165,34 @@ class UserModel extends CI_Model
 			return 1;
 		}
 	}
+	//카카오 로그인일때 db와 uid를 비교한다
+    //경우 1 . 처음 회원가입
+    //경우 2 . 카카오 동의만 받고 회원가입을 진행 하지 않음
+    //경우 3 . 카카오 로그인으로 회원가입 진행
+    public function kakaoCheck($uid){
+	    $result=$this->db->query("select *,count(idx)as count from User where id=$uid and social_login='K'")->row();
+	    //이미 테이블에 카카오 uid가 저장되어있는경우
+	    if ($result->count ==1){
+	        //카카오 동의만 받고 가입을 진행하지 않은 상태
+	        //pmm자체 회원가입 페이지로 넘어가야함
+            if($result->name ==null){
+	            return 'pmm자체 회원가입으로 넘어가야함';
+            }
+	        //카카오 동의후 pmm회원가입까지 완료한 상태
+            //카카오 로그인 완료
+            else{
+                return '로그인 완료';
+
+            }
+        }
+	    //첫가입
+	    else{
+	        $this->db->query("INSERT INTO User (social_login,id) VALUES ('K','$uid')");
+            return'카카오 정보 저장 완료 회원가입으로 넘어가야함';
+
+        }
+
+    }
 
 
 }

@@ -14,14 +14,18 @@ class UserModel extends CI_Model
 	public function putUser($data)
 	{
 		$id = $data['id'];
+		if($id == null) return "invaild_data_[id]";
 		$nick_name = $data['nick_name'];
+		if($nick_name == null) return "invaild_data_[nick_name]";
 		$phone = $data['phone'];
+		if($phone == null) return "invaild_data_[phone]";
 
 		// 클라이언트에서 hash 암호화 된 상태로 서버에게 전달해줌
 		$pw = $data['pw'];
 
 		$query = $this->db->query("select count(idx) as idx from User where 
 				id ='$id' or nick_name ='$nick_name' or phone='$phone'")->row();
+
 		if ($query->idx >= 1) {
 			$response_data['result'] = "이미 가입된 계정입니다";
 			return json_encode($response_data);
@@ -204,16 +208,14 @@ class UserModel extends CI_Model
         $sex=$userinfo['sex'];
         $phone=$userinfo['phone'];
         $residence=$userinfo['residence'];
-        $category=null;
-        $device_id=null;
-        $device_model=null;
-        $device_os=null;
-        $app_version=null;
+        $category=$userinfo['category'];
+        $user_agent=$userinfo['user_agent'];
 
         $uid=$userinfo['kakao_uid'];
 
+
         $result_code=$this->db->query("update User set name='$name' , age=$age , nick_name='$nick_name' , sex='$sex' , phone='$phone' , residence='$residence' ,category =null , create_at=NOW(),update_at=NOW(),delete_at=NOW(),recently_login_at=NOW(),
-        device_id=null,device_model=null,device_os=null,app_version=null where id='$uid'");
+        user_agent='$user_agent' where id='$uid'");
         return $result_code;
     }
 

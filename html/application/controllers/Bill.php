@@ -127,6 +127,10 @@ class Bill extends CI_Controller
         return $result;
 
     }
+    public function test(){
+		
+    }
+
     //법안에 대해 좋아요 싫어요 클릭
     public function billEvaluationWrite($input){
         echo "ㅂqqqqqqqqqqqq";

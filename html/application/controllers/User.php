@@ -158,10 +158,18 @@ class User extends CI_Controller
     }
     //카카오 로그인 동의 후 pmm 가입
     public function kakaoSign(){
+
+
+
+
+
+
+
+
+		
         $info=$this->input->input_stream('kakao_user_info');
         $this->load->model('UserModel');
         echo $this->UserModel->putKakaoUser($info);
-
     }
 }
 

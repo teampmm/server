@@ -27,7 +27,7 @@ class User extends CI_Controller
 			$this->load->model("UserModel");
 			// db에 사용자를 추가한다.
 			$result = $this->UserModel->putUser($json_data);
-
+ 
 			echo $result;
 		}
 	}

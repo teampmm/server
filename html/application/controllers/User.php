@@ -96,8 +96,7 @@ class User extends CI_Controller
 			    $this->kakaoLogin();
             }
 		}
-		else if ($this->http_method == "patch"){
-
+		else if ($this->http_method == "PATCH" or $this->http_method=='patch'){
             if ($client_data=='kakao_sign'){
                 $this->kakaoSign();
 

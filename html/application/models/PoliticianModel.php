@@ -81,7 +81,7 @@ class PoliticianModel extends CI_Model
 		    // 당선 지역
 		    // 카테고리
 		    $politician_pledge_result = $this->db->query("SELECT
-                idx, kr_name, party_idx, profile_image_url, elect_area, category
+                idx, kr_name, party_idx, profile_image_url, elect_area, category, affiliation_committee
                 FROM Politician where idx = '$card_number[$i]'")->result();
 
 		    foreach ($politician_pledge_result as $row) {
@@ -105,6 +105,7 @@ class PoliticianModel extends CI_Model
 			    $card_data['politician_idx'] = $row->idx;
 			    $card_data['kr_name'] = $row->kr_name;
 			    $card_data['party_name'] = $party_select_result->party_name;
+			    $card_data['affiliation_committee'] = $row->affiliation_committee;
 			    $card_data['elect_area'] = $row->elect_area;
 			    $card_data['profile_image_url'] = $row->profile_image_url;
 			    $card_data['category'] = $row->category;

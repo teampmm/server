@@ -41,7 +41,7 @@ class Politician extends CI_Controller
     // 정치인 기본 정보 가져오기
     public function getInfo(){
         // 정치인 기본정보 요청 - 정치인의 이름을 가지고 들어옴. ( kr_name )
-        $json_data = $this->input->get('base_info_request', True);
+        $json_data = $this->input->get('info_request', True);
         $json_data = json_decode($json_data, True);
 
         // db에 사용자가 보낸 이메일이 있는지 확인한다. ( 중복체크 과정 ).
@@ -74,17 +74,7 @@ class Politician extends CI_Controller
         print_r($result);
     }
 
-    // 정치인 상세정보 가져오기
-    public function getDetailInfo(){
-        // 정치인 상세 정보 요청
-        $json_data = $this->input->get('detail_info_request', True);
-        $json_data = json_decode($json_data, True);
 
-        // db에 사용자가 보낸 이메일이 있는지 확인한다. ( 중복체크 과정 ).
-        $this->load->model('PoliticianModel');
-        $result = $this->PoliticianModel->getDetailInfo($json_data);
-        print_r($result);
-    }
     // 정치인 응원하기 댓글 가져오기
     public function getComments(){
         // 정치인 상세 정보 요청
@@ -144,3 +134,16 @@ class Politician extends CI_Controller
         }
     }
 }
+
+// 사용안함
+// 정치인 상세정보 가져오기
+//public function getDetailInfo(){
+//	// 정치인 상세 정보 요청
+//	$json_data = $this->input->get('detail_info_request', True);
+//	$json_data = json_decode($json_data, True);
+//
+//	// db에 사용자가 보낸 이메일이 있는지 확인한다. ( 중복체크 과정 ).
+//	$this->load->model('PoliticianModel');
+//	$result = $this->PoliticianModel->getDetailInfo($json_data);
+//	print_r($result);
+//}

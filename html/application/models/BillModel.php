@@ -309,4 +309,30 @@ class BillModel extends CI_Model
         $result_json['response_code']=(boolean)$result;
         return json_encode($result_json);
     }
+    //사용자가 법안에 대해 좋아요 혹은 싫어요를 클릭함
+    //사용자가 해당 법안에 대해 처음 좋아요 , 싫어요 클릭했을시에 row 생성
+    //사용자가 좋아요 - > 싫어요 또는 싫어요 - > 좋아요 를 클릭했을시에 row 업데이트
+    //사용자가 좋아요 해제 , 싫어요 해제  클릭시 row 삭제
+    public function billEvaluationWrite($bill_idx,$status){
+        $result=$this->db->query("select count(*) as 'count' from UserEvaluationBill where bill_idx=$bill_idx")->row();
+        if ($result->count >=1){
+            if ($status=='agreement'){
+                $result=$this->db->query("update UserEvaluationBill set status=0 where user_idx=1 and bill_idx=$bill_idx");
+            }else if ($status=='opposition'){
+                $result=$this->db->query("update UserEvaluationBill set status=1 where user_idx=1 and bill_idx=$bill_idx");
+            }else{
+                $result=$this->db->query("delete from UserEvaluationBill where user_idx=1 and bill_idx=$bill_idx");
+
+            }
+        }else{
+            if ($status=='agreement'){
+                $result=$this->db->query("insert into UserEvaluationBill(bill_idx,user_idx,status) values ($bill_idx,1,0)");
+            }else if ($status=='opposition'){
+                $result=$this->db->query("insert into UserEvaluationBill(bill_idx,user_idx,status) values ($bill_idx,1,1)");
+            }
+        }
+        $result_array=array();
+        $result_array['response_code']=(boolean)$result;
+        return json_encode($result_array);
+    }
 }

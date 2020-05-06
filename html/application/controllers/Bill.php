@@ -77,6 +77,9 @@ class Bill extends CI_Controller
 	           echo $result;
             }else if ($data=='bill_evaluation_write'){
 	            $input=$this->input->post("evaluation_write",true);
+	            $input_json=json_decode($input,true);
+	            $result=$this->billEvaluationClick($input_json['bill_idx'],$input_json['status']);
+	            echo $result;
             }
         }
     }
@@ -125,14 +128,11 @@ class Bill extends CI_Controller
         $this->load->model("BillModel");
         $result=$this->BillModel->billCommentWrite($bill_idx,$content,$status);
         return $result;
-
     }
-    public function test(){
-		
-    }
-
     //법안에 대해 좋아요 싫어요 클릭
-    public function billEvaluationWrite($input){
-        echo "asdffff";
+    public function billEvaluationClick($bill_idx,$status){
+        $this->load->model('BillModel');
+        $result=$this->BillModel->billEvaluationWrite($bill_idx,$status);
+        return$result;
     }
 }

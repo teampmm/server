@@ -125,6 +125,7 @@ class Bill extends CI_Controller
         $this->load->model("BillModel");
         $result=$this->BillModel->billCommentWrite($bill_idx,$content,$status);
         return $result;
+
     }
     //법안에 대해 좋아요 싫어요 클릭
     public function billEvaluationWrite($input){

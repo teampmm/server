@@ -74,7 +74,8 @@ class User extends CI_Controller
 	// request url : {서버 ip}/user/{data}
 	public function requestData($client_data)
 	{
-		// 사용자 정보를 조회 할 때
+
+        // 사용자 정보를 조회 할 때
 		if ($this->http_method == "GET") {
 			if ($client_data == 'nick_name') {
 				// 사용자 닉네임 중복체크
@@ -93,13 +94,13 @@ class User extends CI_Controller
 			}
 			else if ($client_data == 'kakao_login'){
 			    $this->kakaoLogin();
-            }else if ($client_data=='kakao_sign'){
+            }
+		}
+		else if ($this->http_method == "PATCH" or $this->http_method=='patch'){
+            if ($client_data=='kakao_sign'){
                 $this->kakaoSign();
 
             }
-		}
-		else if ($this->http_method == "PATCH"){
-			print_r("PATCH");
 		}
 		else if($this->http_method == "DELETE"){
 			print_r("DELETE");
@@ -157,7 +158,7 @@ class User extends CI_Controller
     }
     //카카오 로그인 동의 후 pmm 가입
     public function kakaoSign(){
-        $info=$this->input->post('kakao_user_info');
+        $info=$this->input->input_stream('kakao_user_info');
         $this->load->model('UserModel');
         echo $this->UserModel->putKakaoUser($info);
 

@@ -166,7 +166,11 @@ class User extends CI_Controller
 
 
 
-		
+
+
+
+
+
         $info=$this->input->input_stream('kakao_user_info');
         $this->load->model('UserModel');
         echo $this->UserModel->putKakaoUser($info);

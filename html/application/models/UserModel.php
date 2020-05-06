@@ -14,14 +14,18 @@ class UserModel extends CI_Model
 	public function putUser($data)
 	{
 		$id = $data['id'];
+		if($id == null) return "invaild_data_[id]";
 		$nick_name = $data['nick_name'];
+		if($nick_name == null) return "invaild_data_[nick_name]";
 		$phone = $data['phone'];
+		if($phone == null) return "invaild_data_[phone]";
 
 		// 클라이언트에서 hash 암호화 된 상태로 서버에게 전달해줌
 		$pw = $data['pw'];
 
 		$query = $this->db->query("select count(idx) as idx from User where 
 				id ='$id' or nick_name ='$nick_name' or phone='$phone'")->row();
+
 		if ($query->idx >= 1) {
 			$response_data['result'] = "이미 가입된 계정입니다";
 			return json_encode($response_data);
@@ -68,9 +72,11 @@ class UserModel extends CI_Model
 	{
 		// client가 보낸 사용자 id
 		$id = $data['id'];
+		if($id == null) return "invaild_data_[id]";
 
 		// 사용자 패스워드는 암호화 된 채로 들어온다.
 		$pw = $data['pw'];
+		if($pw == null) return "invaild_data_[pw]";
 
 		// client로 부터 입력받은 id, pw에 대한 사용자 정보가 일치 하는지 조회
 		$query = $this->db->query("select count(idx) as 'count' from User where 
@@ -106,6 +112,7 @@ class UserModel extends CI_Model
 	{
 		// client가 보낸 사용자 닉네임
 		$nick_name = $data['nick_name'];
+		if($nick_name == null) return "invaild_data_[nick_name]";
 
 		// client로 부터 입력 받은 닉네임이 있는지 조회 - 중복체크를 위함.
 		$query = $this->db->query("select count(idx) as 'count' from User where 
@@ -125,11 +132,12 @@ class UserModel extends CI_Model
 			return json_encode($response_data);
 		}
 	}
-
+	// 아이디 중복체크
 	public function getIdCheck($data)
 	{
 		// client가 보낸 사용자 아이디
 		$id = $data['id'];
+		if($id == null) return "invaild_data_[id]";
 
 		// client로 부터 입력 받은 아이디가 있는지 조회 - 중복체크를 위함.
 		$query = $this->db->query("select count(idx) as 'count' from User where 
@@ -153,6 +161,8 @@ class UserModel extends CI_Model
 	//핸드폰 인증을 하기전에 우선 가입이 되어있는지 확인
 	public function phoneCheck($phone)
 	{
+		if($phone == null) return "invaild_data_[phone]";
+
 		$count
 			= $this->db->query("select count(idx) as 'count' from User where phone="
 			. $phone)->row();
@@ -170,6 +180,8 @@ class UserModel extends CI_Model
     //경우 2 . 카카오 동의만 받고 회원가입을 진행 하지 않음
     //경우 3 . 카카오 로그인으로 회원가입 진행
     public function kakaoCheck($uid){
+	    if($uid == null) return "invaild_data_[uid]";
+
 	    $result=$this->db->query("select *,count(idx)as count from User where id=$uid and social_login='K'")->row();
 	    //이미 테이블에 카카오 uid가 저장되어있는경우
 	    if ($result->count ==1){
@@ -199,21 +211,34 @@ class UserModel extends CI_Model
     public function putKakaoUser($info){
         $userinfo = json_decode($info, true);
         $name=$userinfo['name'];
-        $age=(int)$userinfo['age'];
-        $nick_name=$userinfo['nick_name'];
-        $sex=$userinfo['sex'];
-        $phone=$userinfo['phone'];
-        $residence=$userinfo['residence'];
-        $category=null;
-        $device_id=null;
-        $device_model=null;
-        $device_os=null;
-        $app_version=null;
+//	    if($name == null) return "invaild_data_[name]";
+
+	    $age=(int)$userinfo['age'];
+	    if($age == null) return "invaild_data_[age]";
+
+	    $nick_name=$userinfo['nick_name'];
+	    if($nick_name == null) return "invaild_data_[nick_name]";
+
+	    $sex=$userinfo['sex'];
+	    if($sex == null) return "invaild_data_[sex]";
+
+	    $phone=$userinfo['phone'];
+	    if($phone == null) return "invaild_data_[phone]";
+
+	    $residence=$userinfo['residence'];
+//	    if($residence == null) return "invaild_data_[residence]";
+
+	    $category=$userinfo['category'];
+//	    if($category == null) return "invaild_data_[category]";
+
+	    $user_agent=$userinfo['user_agent'];
+	    if($user_agent == null) return "invaild_data_[user_agent]";
 
         $uid=$userinfo['kakao_uid'];
+	    if($uid == null) return "invaild_data_[kakao_uid]";
 
-        $result_code=$this->db->query("update User set name='$name' , age=$age , nick_name='$nick_name' , sex='$sex' , phone='$phone' , residence='$residence' ,category =null , create_at=NOW(),update_at=NOW(),delete_at=NOW(),recently_login_at=NOW(),
-        device_id=null,device_model=null,device_os=null,app_version=null where id='$uid'");
+        $result_code=$this->db->query("update User set name='$name' , age=$age , nick_name='$nick_name' , sex='$sex' , phone='$phone' , residence='$residence' ,category ='$category' , create_at=NOW(),update_at=NOW(),delete_at=NOW(),recently_login_at=NOW(),
+        user_agent='$user_agent' where id='$uid'");
         return $result_code;
     }
 

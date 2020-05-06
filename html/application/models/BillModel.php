@@ -305,6 +305,8 @@ class BillModel extends CI_Model
             $result=$this->db->query("insert into Comment(user_idx,bill_idx,content,create_at,status) values (1,$bill_idx,'$content',NOW(),1)");
 
         }
-        return (boolean)$result;
+        $result_json=array();
+        $result_json['response_code']=(boolean)$result;
+        return json_encode($result_json);
     }
 }

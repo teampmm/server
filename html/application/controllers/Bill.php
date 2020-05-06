@@ -44,7 +44,7 @@ class Bill extends CI_Controller
             //법안의 찬성 댓글 and 대댓글 갯수
             //페이징
             else if ($data == 'bill_agreement_comment') {
-                $bill_idx = $this->input->get('bill_idx_request', true);
+                $bill_idx = $this->input->get('bill_agreement_request', true);
                 $bill_idx=json_decode($bill_idx,true);
                 $result = $this->billComment($bill_idx['bill_idx'],$bill_idx['comment_page'], 'agreement');
                 echo $result;
@@ -53,7 +53,7 @@ class Bill extends CI_Controller
             //법안의 반대 댓글 and 대댓글 갯수
             //페이징
             else if ($data == 'bill_opposition_comment') {
-                $bill_idx = $this->input->get('bill_idx_request', true);
+                $bill_idx = $this->input->get('bill_opposition_request', true);
                 $bill_idx=json_decode($bill_idx,true);
                 $result = $this->billComment($bill_idx['bill_idx'], $bill_idx['comment_page'], 'opposition');
                 echo $result;
@@ -62,17 +62,21 @@ class Bill extends CI_Controller
             //댓글 idx , 대댓글 페이지
             //대댓글의 정보 and 페이징
             else if ($data == 'bill_sub_comment') {
-                $comment_idx = $this->input->get('comment_idx_request', true);
+                $comment_idx = $this->input->get('bill_sub_comment', true);
                 $comment_idx=json_decode($comment_idx,true);
 
                 $result = $this->billSubComment($comment_idx['comment_idx'], $comment_idx['sub_comment_page']);
                 echo $result;
             }
         }else if ($this->http_method=="POST"){
+	        //사용자가 법안에 대해 댓글 쓰기
 	        if($data=='bill_comment_write'){
 	           $input=$this->input->post('comment_write',true);
-	           $result=$this->billCommentWrite($input);
+                $input_json=json_decode($input,true);
+                $result=$this->billCommentWrite($input_json['bill_idx'],$input_json['content'],$input_json['status']);
 	           echo $result;
+            }else if ($data=='bill_evaluation_write'){
+	            $input=$this->input->post("evaluation_write",true);
             }
         }
     }
@@ -117,12 +121,13 @@ class Bill extends CI_Controller
     }
     //법안 댓글 달기
     //좋아요 댓글인지 싫어요 댓글인지 표기
-    public function billCommentWrite($input){
-        $input_json=json_decode($input,true);
+    public function billCommentWrite($bill_idx,$content,$status){
         $this->load->model("BillModel");
-        $result=$this->BillModel->billCommentWrite($input_json['bill_idx'],$input_json['content'],$input_json['status']);
-        $result_json=array();
-        $result_json['response_code']=$result;
-        return json_encode($result_json);
+        $result=$this->BillModel->billCommentWrite($bill_idx,$content,$status);
+        return $result;
+    }
+    //법안에 대해 좋아요 싫어요 클릭
+    public function billEvaluationWrite($input){
+
     }
 }

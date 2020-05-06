@@ -17,15 +17,38 @@ class PoliticianModel extends CI_Model
 	    // 한 페이지에 보여줄 카드의 갯수
 	    $per_page_data = 8;
 
-	    // 총 카드의 수
-	    $total_card = $this->db->query("select count(idx) as `count` from Politician")->row();
+	    // 총 카드 덱의 수
+	    $total_card = $this->db->query("select count(idx) as `count` from RandomCard")->row();
 		$total_card = $total_card->count;
 
-	    // 사용자가 가지고 있는 랜덤 카드 인덱스 - RandomCard 인덱스
-    	$current_rand_idx = $data['idx'];
+		if ($data == null) return 'syntax error or input data error';
 
 	    // 사용자가 요청한 페이지 - RandomCard 인덱스
 	    $request_page_idx = $data['page'];
+	    if($request_page_idx==null) return 'invalid_data_[page]';
+
+	    // 사용자가 가지고 있는 랜덤 카드 인덱스 - RandomCard 인덱스
+    	$current_rand_idx = $data['rand_idx'];
+	    if($current_rand_idx==null) return 'invalid_data_[rand_idx]';
+
+	    // 사용자의 닉네임
+	    $user_nick_name = $data['nick_name'];
+	    if($user_nick_name==null) return 'invalid_data_[nick_name]';
+
+	    // 사용자의 인덱스
+	    $user_select_result = $this->db->query("select idx from User where nick_name = '$user_nick_name'")->row();
+	    if($user_select_result == null) return 'invalid_data_[nick_name]';
+
+	    // 사용자의 인덱스로 찾은 정치인 북마크 인덱스
+	    $book_mark_select_result = $this->db->query("select politician_idx from BookMark where user_idx = '$user_select_result->idx'")->result();
+
+	    // 북마크한 정치인의 인덱스를 담을 배열
+	    $book_mark_array = array();
+
+	    // 배열에 정치인 북마크 인덱스 담기
+	    for ($i = 0 ;$i < count($book_mark_select_result); $i++ ){
+		    $book_mark_array[$i] = $book_mark_select_result[$i]->politician_idx;
+	    }
 
 	    if ($current_rand_idx == null){
 		    // rand_idx 할당
@@ -70,7 +93,15 @@ class PoliticianModel extends CI_Model
                     party_name
                     FROM Party where idx = '$row->party_idx'")->row();
 
+				    // 사용자가 북마크한 정치인 표시
+				    if(in_array($row->idx, $book_mark_array)){
+					    $card_data['book_mark'] = true;
+				    }else{
+					    $card_data['book_mark'] = false;
+				    }
+
 				    // 정치인 카드에 들어갈 정보
+				    $card_data['politician_idx'] = $row->idx;
 				    $card_data['kr_name'] = $row->kr_name;
 				    $card_data['party_name'] = $party_select_result->party_name;
 				    $card_data['elect_area'] = $row->elect_area;
@@ -135,7 +166,7 @@ class PoliticianModel extends CI_Model
 	    // 현재 보고있는 페이지
 	    $response_data['current_page'] = $request_page_idx;
 	    // 총 페이지
-	    $response_data['total_page'] = ceil($total_card/$per_page_data);
+	    $response_data['total_page'] = ceil(count($card_array)/$per_page_data);
 	    // 카드 정보
 	    $response_data['card_list'] = $card_list;
 	    return json_encode($response_data);
@@ -162,11 +193,13 @@ class PoliticianModel extends CI_Model
     // output : 정치인 사진경로, 공약 이행률, 카테고리, 이름, 정당이름, 약력
     public function getInfo($data)
     {
-        // 클라이언트에게 응답 해줄 데이터
+	    if ($data == null) return 'syntax error or input data error';
+
+	    // 클라이언트에게 응답 해줄 데이터
         $response_data = array();
 
         // 정치인 인덱스
-        $politician_idx = $data['idx'];
+        $politician_idx = $data['politician_idx'];
 		if($politician_idx==null) return 'invalid_data_[idx]';
 
         // 정치인 기본 정보 조회 - 인덱스, 정당인덱스, 약력, 카테고리, 정치인 사진 경로
@@ -253,11 +286,13 @@ class PoliticianModel extends CI_Model
     // output : 뉴스제목, 뉴스날짜, 뉴스 링크 경로
     public function getNews($data)
     {
+	    if ($data == null) return 'syntax error or input data error';
+
 	    // 클라에게 보내줄 응답 데이터
 	    $response_data = array();
 
         // 정치인 이름
-        $politician_idx = $data['idx'];
+        $politician_idx = $data['politician_idx'];
 
 	    // 정치인 조회 결과가 없음
 	    if($politician_idx == null) return 'invalid_data_[idx]';
@@ -275,17 +310,18 @@ class PoliticianModel extends CI_Model
 
     }
 
-
     // 정치인 공약 정보 요청
     // input : 정치인 인덱스
     // output : 공약내용, 공약대수, 공약 이행 상태
     public function getPledgeInfo($data){
 
+	    if ($data == null) return 'syntax error or input data error';
+
 	    // 클라에게 보내줄 응답 데이터
 	    $response_data = array();
 
         // 정치인 인덱스
-        $politician_idx = $data['idx'];
+        $politician_idx = $data['politician_idx'];
 
 	    // 정치인 조회 결과가 없음
 	    if($politician_idx == null) return 'invalid_data_[idx]';
@@ -322,7 +358,6 @@ class PoliticianModel extends CI_Model
 
         return json_encode($response_data);
     }
-
 
     // 정치인 응원하기 댓글
 	// input : 정치인 이름

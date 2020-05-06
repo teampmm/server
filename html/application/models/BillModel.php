@@ -205,7 +205,7 @@ class BillModel extends CI_Model
     private  function votePerson($index){
         $politician_row=$this->db->query("select party_idx,kr_name from Politician where idx=$index")->row();
         $data['idx']=$index;
-        $data['party_idx']=$politician_row->party_idx;
+        $data['party_idx']=(int)$politician_row->party_idx;
         $data['kr_name']=$politician_row->kr_name;
         $party_name=$this->db->query("select party_name from Party where idx=".$data['party_idx'])->row();
         $data['party_name']=$party_name->party_name;
@@ -294,5 +294,19 @@ class BillModel extends CI_Model
             $result_array['next_page']=false;
         }
         return json_encode($result_array);
+    }
+    //사용자가 법안에 대해 댓글을 작성할 경우
+    public function billCommentWrite($bill_idx,$content,$status){
+        $result=0;
+        if($status=='agreement'){
+            $result=$this->db->query("insert into Comment(user_idx,bill_idx,content,create_at,status) values (1,$bill_idx,'$content',NOW(),0)");
+
+        }else if ($status=='opposition'){
+            $result=$this->db->query("insert into Comment(user_idx,bill_idx,content,create_at,status) values (1,$bill_idx,'$content',NOW(),1)");
+
+        }
+        $result_json=array();
+        $result_json['response_code']=(boolean)$result;
+        return json_encode($result_json);
     }
 }

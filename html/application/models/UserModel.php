@@ -13,6 +13,8 @@ class UserModel extends CI_Model
 	// 사용자 회원가입
 	public function putUser($data)
 	{
+		if ($data == null) return 'syntax error or input data error';
+
 		$id = $data['id'];
 		if($id == null) return "invaild_data_[id]";
 		$nick_name = $data['nick_name'];
@@ -70,6 +72,8 @@ class UserModel extends CI_Model
 	// 사용자가 로그인 요청 - email정보와, 패스워드 정보를 입력으로 받는다.
 	public function getLoginStatus($data)
 	{
+		if ($data == null) return 'syntax error or input data error';
+
 		// client가 보낸 사용자 id
 		$id = $data['id'];
 		if($id == null) return "invaild_data_[id]";
@@ -110,6 +114,8 @@ class UserModel extends CI_Model
 	// 이메일 중복 시 return failed
 	public function getNickCheck($data)
 	{
+		if ($data == null) return 'syntax error or input data error';
+
 		// client가 보낸 사용자 닉네임
 		$nick_name = $data['nick_name'];
 		if($nick_name == null) return "invaild_data_[nick_name]";
@@ -135,6 +141,8 @@ class UserModel extends CI_Model
 	// 아이디 중복체크
 	public function getIdCheck($data)
 	{
+		if ($data == null) return 'syntax error or input data error';
+
 		// client가 보낸 사용자 아이디
 		$id = $data['id'];
 		if($id == null) return "invaild_data_[id]";
@@ -188,7 +196,7 @@ class UserModel extends CI_Model
 	        //카카오 동의만 받고 가입을 진행하지 않은 상태
 	        //pmm자체 회원가입 페이지로 넘어가야함
             //pmm자체 회원가입으로 넘어가야함 = 1
-            if($result->name ==null){
+            if($result->nick_name ==null){
 	            return '1';
             }
 	        //카카오 동의후 pmm회원가입까지 완료한 상태

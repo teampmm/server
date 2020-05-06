@@ -39,14 +39,14 @@ class Politician extends CI_Controller
     }
 
     // 정치인 기본 정보 가져오기
-    public function getBaseInfo(){
+    public function getInfo(){
         // 정치인 기본정보 요청 - 정치인의 이름을 가지고 들어옴. ( kr_name )
         $json_data = $this->input->get('base_info_request', True);
         $json_data = json_decode($json_data, True);
 
         // db에 사용자가 보낸 이메일이 있는지 확인한다. ( 중복체크 과정 ).
         $this->load->model('PoliticianModel');
-        $result = $this->PoliticianModel->getBaseInfo($json_data);
+        $result = $this->PoliticianModel->getInfo($json_data);
         print_r($result);
     }
 
@@ -111,7 +111,7 @@ class Politician extends CI_Controller
 
             // 클라이언트가 정치인 기본정보를 요청함.
             else if($client_data == "info"){
-                $this->getBaseInfo();
+                $this->getInfo();
             }
 
             // 클라이언트가 정치인 관련 뉴스 정보를 요청함.

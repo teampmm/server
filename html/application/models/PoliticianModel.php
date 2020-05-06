@@ -160,7 +160,7 @@ class PoliticianModel extends CI_Model
     // 정치인 기본정보 요청
     // input : 정치인 인덱스
     // output : 정치인 사진경로, 공약 이행률, 카테고리, 이름, 정당이름, 약력
-    public function getBaseInfo($data)
+    public function getInfo($data)
     {
         // 클라이언트에게 응답 해줄 데이터
         $response_data = array();
@@ -171,8 +171,7 @@ class PoliticianModel extends CI_Model
 
         // 정치인 기본 정보 조회 - 인덱스, 정당인덱스, 약력, 카테고리, 정치인 사진 경로
         $politician_select_result = $this->db->query("SELECT
-                idx, kr_name, party_idx,history, category, profile_image_url
-                FROM Politician where idx = '$politician_idx'")->row();
+                * FROM Politician where idx = '$politician_idx'")->row();
 
         // 정치인 조회 결과가 없음
         if($politician_select_result == null){
@@ -186,10 +185,20 @@ class PoliticianModel extends CI_Model
 			$party_select_result = $this->db->query("SELECT party_name FROM Party where idx = '$politician_idx'")->row();
 
 			$response_data['kr_name'] = $politician_select_result->kr_name;
+			$response_data['ch_name'] = $politician_select_result->ch_name;
+			$response_data['en_name'] = $politician_select_result->en_name;
 			$response_data['party_name'] = $party_select_result->party_name;
+			$response_data['office_number'] = $politician_select_result->office_number;
 			$response_data['history'] = $politician_select_result->history;
-			$response_data['category'] = $politician_select_result->category;
 			$response_data['profile_image_url'] = $politician_select_result->profile_image_url;
+			$response_data['affiliation_committee'] = $politician_select_result->affiliation_committee;
+			$response_data['email_id'] = $politician_select_result->email_id;
+			$response_data['email_address'] = $politician_select_result->email_address;
+			$response_data['aide'] = $politician_select_result->aide;
+			$response_data['secretary'] = $politician_select_result->secretary;
+			$response_data['category'] = $politician_select_result->category;
+			$response_data['elect_generation'] = $politician_select_result->elect_generation;
+			$response_data['elect_area'] = $politician_select_result->elect_area;
 
 			// 정치인 테이블에서 정치인 인덱스로 정치인 공약 모음 테이블에 있는 공약을 조회
 			// 공약 이행률 계산
@@ -298,7 +307,7 @@ class PoliticianModel extends CI_Model
 
 	        // 정치인 공약 모음에서 대수, 공약이행상태, 내용을 가져온다.
 	        $politician_pledge_select_result = $this->db->query("SELECT
-                pledge_implement_status, content
+                pledge_implement_status, content, create_at, update_at
                 FROM PoliticianPledge where 
                 politician_idx = '$politician_idx' and 
                 generation = '$elect_generation[$i]'")->result();
@@ -314,32 +323,6 @@ class PoliticianModel extends CI_Model
         return json_encode($response_data);
     }
 
-
-    // 정치인 상세 정보 요청
-    // input : 정치인 이름
-    // output : 당선대수, 당선횟수, 당선지역, 소속위원회, 약력, 연락처
-    public function getDetailInfo($data){
-
-        // 정치인 이름
-	    $politician_idx = $data['idx'];
-
-	    // 정치인 조회 결과가 없음
-	    if($politician_idx == null) return 'invalid_data_[idx]';
-
-        // 정치인 이름으로 상세정보 찾기
-        $politician_select_result = $this->db->query("SELECT
-                kr_name, ch_name, en_name, office_number, history, profile_image_url, affiliation_committee,
-                email_id, email_address, aide, secretary, elect_generation, elect_area
-                FROM Politician where idx = '$politician_idx'")->row();
-
-	    // 클라에게 보내줄 응답 데이터
-	    $response_data = array();
-
-	    $response_data['result'] = $politician_select_result;
-
-	    return json_encode($response_data);
-
-    }
 
     // 정치인 응원하기 댓글
 	// input : 정치인 이름
@@ -362,3 +345,31 @@ class PoliticianModel extends CI_Model
 
 }
 
+
+// 사용하지 않는 메서드
+
+// 정치인 상세 정보 요청
+// input : 정치인 이름
+// output : 당선대수, 당선횟수, 당선지역, 소속위원회, 약력, 연락처
+//public function getDetailInfo($data){
+//
+//	// 정치인 이름
+//	$politician_idx = $data['idx'];
+//
+//	// 정치인 조회 결과가 없음
+//	if($politician_idx == null) return 'invalid_data_[idx]';
+//
+//	// 정치인 이름으로 상세정보 찾기
+//	$politician_select_result = $this->db->query("SELECT
+//                kr_name, ch_name, en_name, office_number, history, profile_image_url, affiliation_committee,
+//                email_id, email_address, aide, secretary, elect_generation, elect_area
+//                FROM Politician where idx = '$politician_idx'")->row();
+//
+//	// 클라에게 보내줄 응답 데이터
+//	$response_data = array();
+//
+//	$response_data['result'] = $politician_select_result;
+//
+//	return json_encode($response_data);
+//
+//}

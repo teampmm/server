@@ -170,15 +170,25 @@ class User extends CI_Controller
 	}
 	//카카오 로그인 체크
 	public function kakaoLogin(){
-		$uid=$this->input->post('kakao_uid');
+		$uid=$this->input->post(null,true);
+
+		$error=jsonNullCheck($uid,array('kakao_uid'));
+		if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+
 		$this->load->model('UserModel');
-		echo $this->UserModel->kakaoCheck($uid);
+		echo $this->UserModel->kakaoCheck($uid['kakao_uid']);
 
 	}
 	//카카오 로그인 동의 후 pmm 가입
 	public function kakaoSign(){
-
 		$info=$this->input->input_stream('kakao_user_info');
+
+		$info=json_decode($info,true);
+		
+		$error=jsonNullCheck($info,array('kakao_uid','nick_name','sex','phone'));
+		if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+
+
 		$this->load->model('UserModel');
 		echo $this->UserModel->putKakaoUser($info);
 

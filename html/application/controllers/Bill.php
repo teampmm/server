@@ -30,7 +30,7 @@ class Bill extends CI_Controller
                 $input=$this->input->get(null,true);
 
                 $error=jsonNullCheck($input,array('page'));
-                if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+                if($error!=null){header("HTTP/1.1 400"); echo $error;return;}
 
 
                 $page_idx = $input['page'];

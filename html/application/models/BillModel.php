@@ -271,15 +271,15 @@ class BillModel extends CI_Model
         $result_array=array();
         $json_tmp=array();
         foreach ($rows as $row){
-            $data['user_idx']=$row->user_idx;
-            $data['sub_comment_idx']=$row->idx;
+            $data['user_idx']=(int)$row->user_idx;
+            $data['sub_comment_idx']=(int)$row->idx;
             $data['user_nick_name']=$this->db->query("select nick_name from User where idx=$row->user_idx")->row()->nick_name;
             $data['content']=$row->content;
             $data['agreement']=(int)$this->db->query("select count(idx) as count from CommentRating where sub_comment_idx=$row->idx and status=0")->row()->count;
             $data['opposition']=(int)$this->db->query("select count(idx) as count from CommentRating where sub_comment_idx=$row->idx and status=1 ")->row()->count;
             //답글에 대한 답글일경우 부모 유저를 링크해준다
             if ($row->parent_user_idx != null){
-                $data['parent_user_idx']=$row->parent_user_idx;
+                $data['parent_user_idx']=(int)$row->parent_user_idx;
                 $data['parent_user_nick_name']=$this->db->query("select nick_name from User where idx=$row->parent_user_idx")->row()->nick_name;
 
             }
@@ -309,7 +309,7 @@ class BillModel extends CI_Model
         $result_json['response_code']=(boolean)$result;
         if ((boolean)$result){
             $comment_idx=$this->db->insert_id();
-            $result_json['comment_idx']=$comment_idx;
+            $result_json['comment_idx']=(int)$comment_idx;
 
         }
         return json_encode($result_json);

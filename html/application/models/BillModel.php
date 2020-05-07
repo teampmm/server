@@ -56,13 +56,13 @@ class BillModel extends CI_Model
         foreach ($bill_info as $row) {
 
             $bill_data = array();
-            $bill_data['bill_idx'] = $row->idx;
-            $bill_data['name'] = '법안명' . $row->name;
-            $bill_data['progress_status'] = '법안진행상태' . $row->progress_status;
-            $bill_data['proposal_date'] = '날짜' . $row->proposal_date;
-            $bill_data['proclamation_number'] = '공포번호' . $row->proclamation_number;
+            $bill_data['bill_idx'] = (int)$row->idx;
+            $bill_data['name'] = $row->name;
+            $bill_data['progress_status'] = $row->progress_status;
+            $bill_data['proposal_date'] =  $row->proposal_date;
+            $bill_data['proclamation_number'] = (int)$row->proclamation_number;
             //법안을 발의한 위원회
-            $bill_data['committee_idx'] = '위원회idx' . $row->committee_idx;
+            $bill_data['committee_idx'] = (int)$row->committee_idx;
             //위원회 idx로 위원회 이름 얻기
             $committee = $this->db->query("select name from Committee where idx =$row->committee_idx")->row();
             $bill_data['committee_name'] = '위원회이름' . $committee->name;
@@ -143,12 +143,12 @@ class BillModel extends CI_Model
         foreach ($proposer as $proposer_row) {
             $proposer_data = array();
             $politicians = $this->db->query("select idx,party_idx,kr_name from Politician where idx=$proposer_row->politician_idx")->row();
-            $proposer_data['idx'] = $politicians->idx;
+            $proposer_data['idx'] = (int)$politicians->idx;
             $proposer_data['kr_name'] = $politicians->kr_name;
             $proposer_data['representative'] = $proposer_row->representative;
             //정당인덱스로 정당 이름 찾기
             $party = $this->db->query("select idx,party_name from Party where idx=$politicians->party_idx")->row();
-            $proposer_data['party_idx'] = $party->idx;
+            $proposer_data['party_idx'] =(int)$party->idx;
             $proposer_data['party_name'] = $party->party_name;
 
             array_push($proposer_array, $proposer_data);
@@ -162,7 +162,7 @@ class BillModel extends CI_Model
         $result=array();
 //        $total_array=array();
         $vote_rows=$this->db->query("select politician_idx,vote_status from BillVote where bill_idx=$index")->result();
-        $result['total']=count($vote_rows).'투표참여한 총 인원';
+        $result['total']=count($vote_rows);
 
         //찬성한 사람들을 담는 배열
         $agreement_array=array();
@@ -218,8 +218,8 @@ class BillModel extends CI_Model
         $agreement_count=$this->db->query("select count(bill_idx) as agreement from UserEvaluationBill where bill_idx =$index and status =0")->row();
         $opposition_count=$this->db->query("select count(bill_idx) as opposition from UserEvaluationBill where bill_idx =$index and status =1")->row();
         $result=array();
-        $result['agreement_total']=$agreement_count->agreement;
-        $result['opposition_total']=$opposition_count->opposition;
+        $result['agreement_total']=(int)$agreement_count->agreement;
+        $result['opposition_total']=(int)$opposition_count->opposition;
         $result['user_check']='나중에 사용자 정보 확인해서 사용자가 찬성했는지 반대했는지 아무것도 누르지 않았는지 알려줘야함';
         return json_encode($result);
 
@@ -239,9 +239,9 @@ class BillModel extends CI_Model
         $sub_comment_array=array();
         foreach ($rows as $row){
             //댓글 목록
-            $data['user_idx']=$row->user_idx;
+            $data['user_idx']=(int)$row->user_idx;
             $data['nick_name']=$this->db->query("select * from User where idx=$row->user_idx")->row()->nick_name;
-            $data['comment_idx']=$row->idx;
+            $data['comment_idx']=(int)$row->idx;
             $data['content']=$row->content;
             $data['create_at']=$row->create_at;
             //댓글에 대한 좋아요와 싫어요 갯수 and (사용자가 좋아요 or 싫어요를 클릭 했는지 여부)
@@ -307,6 +307,11 @@ class BillModel extends CI_Model
         }
         $result_json=array();
         $result_json['response_code']=(boolean)$result;
+        if ((boolean)$result){
+            $comment_idx=$this->db->insert_id();
+            $result_json['comment_idx']=$comment_idx;
+
+        }
         return json_encode($result_json);
     }
     //사용자가 법안에 대해 좋아요 혹은 싫어요를 클릭함

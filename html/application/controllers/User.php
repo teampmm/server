@@ -27,7 +27,7 @@ class User extends CI_Controller
 			$this->load->model("UserModel");
 			// db에 사용자를 추가한다.
 			$result = $this->UserModel->putUser($json_data);
- 
+
 			echo $result;
 		}
 	}
@@ -40,20 +40,18 @@ class User extends CI_Controller
 	public function getNickNameCheck()
 	{
 		// 사용자가 닉네임 중복 체크 요청 - nick_name 가지고있다.
-		$json_data = $this->input->get('nick_name_request', true);
-		$json_data = json_decode($json_data, true);
+		$nick_name = $this->input->get('nick_name', true);
 		$this->load->model('UserModel');
-		$result = $this->UserModel->getNickCheck($json_data);
+		$result = $this->UserModel->getNickCheck($nick_name);
 		echo $result;
 	}
 	// 아이디 중복 체크 메서드
 	public function getIdCheck()
 	{
 		// 사용자가 아이디 중복 체크 요청 - nick_name 가지고있다.
-		$json_data = $this->input->get('id_request', true);
-		$json_data = json_decode($json_data, true);
+		$id = $this->input->get('id', true);
 		$this->load->model('UserModel');
-		$result = $this->UserModel->getIdCheck($json_data);
+		$result = $this->UserModel->getIdCheck($id);
 		echo $result;
 	}
 
@@ -77,11 +75,11 @@ class User extends CI_Controller
 
         // 사용자 정보를 조회 할 때
 		if ($this->http_method == "GET") {
-			if ($client_data == 'nick_name') {
+			if ($client_data == 'nick_name_check') {
 				// 사용자 닉네임 중복체크
 				$this->getNickNameCheck();
 			}
-			else if ($client_data == 'id') {
+			else if ($client_data == 'id_check') {
 				// 사용자 닉네임 중복체크
 				$this->getIdCheck();
 			}
@@ -159,26 +157,10 @@ class User extends CI_Controller
     //카카오 로그인 동의 후 pmm 가입
     public function kakaoSign(){
 
-
-
-
-
-		
-		
-		
-
-
-
-
-
-
-
-
-
-
         $info=$this->input->input_stream('kakao_user_info');
         $this->load->model('UserModel');
         echo $this->UserModel->putKakaoUser($info);
+
     }
 }
 

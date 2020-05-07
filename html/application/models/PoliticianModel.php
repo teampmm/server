@@ -3,173 +3,161 @@
 class PoliticianModel extends CI_Model
 {
 
-    function __construct()//생성자, 제일 먼저 실행되는 일종의 초기화
-    {
-        parent::__construct();
-    }
+	function __construct()//생성자, 제일 먼저 실행되는 일종의 초기화
+	{
+		parent::__construct();
+	}
 
-    // 정치인 카드 모아보기 정보
-    public function getPoliticianCard($data){
+	// 정치인 카드 모아보기 정보
+	public function getPoliticianCard($request_page, $random_card_idx){
 
-    	// 응답 데이터
-	    $response_data = array();
+		// 응답 데이터
+		$response_data = array();
 
-	    // 한 페이지에 보여줄 카드의 갯수
-	    $per_page_data = 8;
+		// 한 페이지에 보여줄 카드의 갯수
+		$per_page_data = 8;
 
-		if ($data == null) return 'syntax error or input data error';
+		// 사용자가 가지고 있는 랜덤 카드 인덱스 - RandomCard 인덱스
+		$current_rand_idx = $random_card_idx;
 
-	    // 사용자가 요청한 페이지 - RandomCard 인덱스
-	    $request_page_idx = $data['page'];
-	    if($request_page_idx==null) return 'invalid_data_[page]';
+		if($current_rand_idx == null){
+			// 카드 인덱스, 카드 정보 가져오기 ( 정치인 인덱스가 들어있음 )
+			$random_card_select_result = $this->db->query("select idx, card_number from RandomCard ORDER BY rand() limit 1")->row();
+			$current_rand_idx = $random_card_select_result->idx;
+		}
+		else{
+			$random_card_select_result = $this->db->query("select idx, card_number from RandomCard where idx = '$current_rand_idx'")->row();
+		}
 
-	    // 사용자가 가지고 있는 랜덤 카드 인덱스 - RandomCard 인덱스
-    	$current_rand_idx = $data['rand_idx'];
+		// 카드 정보 ( 정치인 인덱스가 들어있음 )
+		$card_number = $random_card_select_result->card_number;
 
-	    if($current_rand_idx == null){
-		    // 카드 인덱스, 카드 정보 가져오기 ( 정치인 인덱스가 들어있음 )
-		    $random_card_select_result = $this->db->query("select idx, card_number from RandomCard ORDER BY rand() limit 1")->row();
-		    $current_rand_idx = $random_card_select_result->idx;
-	    }
-	    else{
-		    $random_card_select_result = $this->db->query("select idx, card_number from RandomCard where idx = '$current_rand_idx'")->row();
-	    }
+		// 문자열 제일 앞, 뒤에 있는 큰따옴표 제거
+		$card_number = str_replace( "\"","", $card_number); // 쌍따옴표 제거
 
-	    // 카드 정보 ( 정치인 인덱스가 들어있음 )
-	    $card_number = $random_card_select_result->card_number;
+		// 카드 데이터 -> 카드 배열로 변환
+		$card_number = explode(",", $card_number);
 
-	    // 문자열 제일 앞, 뒤에 있는 큰따옴표 제거
-	    $card_number = str_replace( "\"","", $card_number); // 쌍따옴표 제거
+		// 카드 모음 리스트
+		$card_list = array();
 
-	    // 카드 데이터 -> 카드 배열로 변환
-	    $card_number = explode(",", $card_number);
+		// jwt 토큰에서 받은 아이디
+		$user_id = 'id 004';
 
-	    // 카드 모음 리스트
-	    $card_list = array();
+		// 북마크한 정치인의 인덱스를 담을 배열
+		$book_mark_array = array();
 
-	    // jwt 토큰에서 받은 아이디
-	    $user_id = 'id 004';
+		$user_select_result = $this->db->query("select idx from User where id = '$user_id'")->row();
+		if ($user_select_result){
+			$user_idx = $user_select_result->idx;
 
-	    // 북마크한 정치인의 인덱스를 담을 배열
-	    $book_mark_array = array();
+			//사용자의 인덱스로 찾은 정치인 북마크 인덱스
+			$book_mark_select_result = $this->db->query("select politician_idx from BookMark where user_idx = '$user_idx'")->result();
 
-	    $user_select_result = $this->db->query("select idx from User where id = '$user_id'")->row();
-	    if ($user_select_result){
-		    $user_idx = $user_select_result->idx;
+			// 배열에 정치인 북마크 인덱스 담기
+			for ($i = 0 ;$i < count($book_mark_select_result); $i++ ){
+				$book_mark_array[$i] = $book_mark_select_result[$i]->politician_idx;
+			}
+		}
 
-		    //사용자의 인덱스로 찾은 정치인 북마크 인덱스
-		    $book_mark_select_result = $this->db->query("select politician_idx from BookMark where user_idx = '$user_idx'")->result();
+		for ($i = $per_page_data * ($request_page-1); $i < $per_page_data * ($request_page-1) + $per_page_data; $i++){
 
-		    // 배열에 정치인 북마크 인덱스 담기
-		    for ($i = 0 ;$i < count($book_mark_select_result); $i++ ){
-			    $book_mark_array[$i] = $book_mark_select_result[$i]->politician_idx;
-		    }
-	    }
+			// 정치인 카드 갯수가 모자란다면 반복을 종료
+			if($i >= count($card_number)){
+				break;
+			}
 
-	    for ($i = $per_page_data * ($request_page_idx-1); $i < $per_page_data * ($request_page_idx-1) + $per_page_data; $i++){
-
-		    // 정치인 카드 갯수가 모자란다면 반복을 종료
-		    if($i >= count($card_number)){
-			    break;
-		    }
-
-		    // 클라이언트에게 보낼 카드리스트 인덱스로 카드 모아보기 정보를 검색한다.
-		    // 카드 모아보기에 필요한 데이터
-		    // 정치인 사진 경로
-		    // 정치인 이름
-		    // 정치인 정당 인덱스
-		    // 당선 지역
-		    // 카테고리
-		    $politician_pledge_result = $this->db->query("SELECT
+			// 클라이언트에게 보낼 카드리스트 인덱스로 카드 모아보기 정보를 검색한다.
+			// 카드 모아보기에 필요한 데이터
+			// 정치인 사진 경로
+			// 정치인 이름
+			// 정치인 정당 인덱스
+			// 당선 지역
+			// 카테고리
+			$politician_pledge_result = $this->db->query("SELECT
                 idx, kr_name, party_idx, profile_image_url, elect_area, category, affiliation_committee
                 FROM Politician where idx = '$card_number[$i]'")->result();
 
-		    foreach ($politician_pledge_result as $row) {
+			foreach ($politician_pledge_result as $row) {
 
-			    // 카드 하나에 들어있는 데이터
-			    $card_data = array();
+				// 카드 하나에 들어있는 데이터
+				$card_data = array();
 
-			    // 정당 인덱스로 정당의 이름을 조회
-			    $party_select_result = $this->db->query("SELECT
+				// 정당 인덱스로 정당의 이름을 조회
+				$party_select_result = $this->db->query("SELECT
                     party_name
                     FROM Party where idx = '$row->party_idx'")->row();
 
 				if (in_array($row->idx, $book_mark_array)){
-					$card_data['book_mark'] = true;
+					$card_data['bookmark'] = true;
 				}
 				else{
 					$card_data['book_mark'] = false;
 				}
 
-	            // 정치인 카드에 들어갈 정보
-			    $card_data['politician_idx'] = $row->idx;
-			    $card_data['kr_name'] = $row->kr_name;
-			    $card_data['party_name'] = $party_select_result->party_name;
-			    $card_data['affiliation_committee'] = $row->affiliation_committee;
-			    $card_data['elect_area'] = $row->elect_area;
-			    $card_data['profile_image_url'] = $row->profile_image_url;
-			    $card_data['category'] = $row->category;
+				// 정치인 카드에 들어갈 정보
+				$card_data['politician_idx'] = $row->idx;
+				$card_data['kr_name'] = $row->kr_name;
+				$card_data['party_name'] = $party_select_result->party_name;
+				$card_data['affiliation_committee'] = $row->affiliation_committee;
+				$card_data['elect_area'] = $row->elect_area;
+				$card_data['profile_image_url'] = $row->profile_image_url;
+				$card_data['category'] = $row->category;
 
-			    // 정치인 카드 리스트에 추가
-			    array_push($card_list,$card_data);
-		    }
-	    }
+				// 정치인 카드 리스트에 추가
+				array_push($card_list,$card_data);
+			}
+		}
 
-	    // 사용할 카드 덱의 번호
-	    $response_data['rand_card_idx'] = $current_rand_idx;
-	    // 카드의 갯수
-	    $response_data['card_num'] = count($card_list);
-	    // 현재 보고있는 페이지
-	    $response_data['current_page'] = $request_page_idx;
-	    // 총 페이지
-	    $response_data['total_page'] = ceil(count($card_number)/$per_page_data);
-	    // 카드 정보
-	    $response_data['card_list'] = $card_list;
+		// 사용할 카드 덱의 번호
+		$response_data['rand_card_idx'] = $current_rand_idx;
+		// 카드의 갯수
+		$response_data['card_num'] = count($card_list);
+		// 현재 보고있는 페이지
+		$response_data['current_page'] = $request_page;
+		// 총 페이지
+		$response_data['total_page'] = ceil(count($card_number)/$per_page_data);
+		// 카드 정보
+		$response_data['card_list'] = $card_list;
 
-	    return json_encode($response_data);
-    }
+		return json_encode($response_data);
+	}
 
-    // 배열 재 정렬
-    public function arraySort($array)
-    {
-        //배열 인덱스 재정렬
-        $i = 0;
-        foreach ($array as $key => $val) {
-            unset($array[$key]);
+	// 배열 재 정렬
+	public function arraySort($array)
+	{
+		//배열 인덱스 재정렬
+		$i = 0;
+		foreach ($array as $key => $val) {
+			unset($array[$key]);
 
-            $new_key = $i;
-            $array[$new_key] = $val;
-            $i++;
-        }
+			$new_key = $i;
+			$array[$new_key] = $val;
+			$i++;
+		}
 
-        return $array;
-    }
+		return $array;
+	}
 
-    // 정치인 기본정보 요청
-    // input : 정치인 인덱스
-    // output : 정치인 사진경로, 공약 이행률, 카테고리, 이름, 정당이름, 약력
-    public function getInfo($data)
-    {
-	    if ($data == null) return 'syntax error or input data error';
+	// 정치인 기본정보 요청
+	// input : 정치인 인덱스
+	// output : 정치인 사진경로, 공약 이행률, 카테고리, 이름, 정당이름, 약력
+	public function getInfo($politician_idx)
+	{
+		// 클라이언트에게 응답 해줄 데이터
+		$response_data = array();
 
-	    // 클라이언트에게 응답 해줄 데이터
-        $response_data = array();
-
-        // 정치인 인덱스
-        $politician_idx = $data['politician_idx'];
-		if($politician_idx==null) return 'invalid_data_[idx]';
-
-        // 정치인 기본 정보 조회 - 인덱스, 정당인덱스, 약력, 카테고리, 정치인 사진 경로
-        $politician_select_result = $this->db->query("SELECT
+		// 정치인 기본 정보 조회 - 인덱스, 정당인덱스, 약력, 카테고리, 정치인 사진 경로
+		$politician_select_result = $this->db->query("SELECT
                 * FROM Politician where idx = '$politician_idx'")->row();
 
-        // 정치인 조회 결과가 없음
-        if($politician_select_result == null){
-	        $response_data['result'] = "정치인 정보가 없습니다.";
-        	return json_encode($response_data);
-        }
+		// 정치인 조회 결과가 없음
+		if($politician_select_result == null){
+			$response_data['result'] = "정치인 정보가 없습니다.";
+			return json_encode($response_data);
+		}
 
-        // 정치인 조회 결과가 있음
+		// 정치인 조회 결과가 있음
 		else{
 			// 정치인 인덱스로 정당 테이블에 있는 정당 이름 조회
 			$party_select_result = $this->db->query("SELECT party_name FROM Party where idx = '$politician_idx'")->row();
@@ -236,104 +224,95 @@ class PoliticianModel extends CI_Model
 
 			return json_encode($response_data);
 		}
-    }
+	}
 
-    // 정치인 관련 뉴스정보 요청
-    // input : 정치인 인덱스
-    // output : 뉴스제목, 뉴스날짜, 뉴스 링크 경로
-    public function getNews($data)
-    {
-	    if ($data == null) return 'syntax error or input data error';
+	// 정치인 관련 뉴스정보 요청
+	// input : 정치인 인덱스
+	// output : 뉴스제목, 뉴스날짜, 뉴스 링크 경로
+	public function getNews($politician_idx)
+	{
+		// 클라에게 보내줄 응답 데이터
+		$response_data = array();
 
-	    // 클라에게 보내줄 응답 데이터
-	    $response_data = array();
-
-        // 정치인 이름
-        $politician_idx = $data['politician_idx'];
-
-	    // 정치인 조회 결과가 없음
-	    if($politician_idx == null) return 'invalid_data_[idx]';
-
-        // 정치인 관련 뉴스 조회
-        $politician_select_result = $this->db->query("SELECT
+		// 정치인 관련 뉴스 조회
+		$politician_select_result = $this->db->query("SELECT
                 title, `date`, url
                 FROM News where politician_idx = '$politician_idx'")->result();
 
-        $result_num = count($politician_select_result);
-        $response_data['result_num'] = $result_num;
-        $response_data['data'] = $politician_select_result;
+		$result_num = count($politician_select_result);
+		$response_data['result_num'] = $result_num;
+		$response_data['data'] = $politician_select_result;
 
-        return json_encode($response_data);
+		return json_encode($response_data);
 
-    }
+	}
 
-    // 정치인 공약 정보 요청
-    // input : 정치인 인덱스
-    // output : 공약내용, 공약대수, 공약 이행 상태
-    public function getPledgeInfo($data){
+	// 정치인 공약 정보 요청
+	// input : 정치인 인덱스
+	// output : 공약내용, 공약대수, 공약 이행 상태
+	public function getPledgeInfo($politician_idx){
 
-	    if ($data == null) return 'syntax error or input data error';
+		// 클라에게 보내줄 응답 데이터
+		$response_data = array();
 
-	    // 클라에게 보내줄 응답 데이터
-	    $response_data = array();
-
-        // 정치인 인덱스
-        $politician_idx = $data['politician_idx'];
-
-	    // 정치인 조회 결과가 없음
-	    if($politician_idx == null) return 'invalid_data_[idx]';
-
-        // 정치인 인덱스로 정치인 공약 모음 - 당선대수, 당선지역
-        $politician_select_result = $this->db->query("SELECT
+		// 정치인 인덱스로 정치인 공약 모음 - 당선대수, 당선지역
+		$politician_select_result = $this->db->query("SELECT
                 elect_generation, elect_area, kr_name
                 FROM Politician where idx = '$politician_idx'")->row();
 
-        // 당선 대수
-	    $elect_generation = explode(',',$politician_select_result->elect_generation);
+		// 정치인 조회 결과가 없음
+		if($politician_idx == null) return 'invalid_data_[idx]';
+		if($politician_select_result == null) return '정치인 인덱스로 조회된 정치인 정보가 없습니다';
 
-	    // 당선 지역
-	    $elect_area = explode(',',$politician_select_result->elect_area);
+		// 당선 대수
+		$elect_generation = explode(',',$politician_select_result->elect_generation);
 
-        for ($i = 0 ; $i < count($elect_generation); $i++){
+		// 당선 지역
+		$elect_area = explode(',',$politician_select_result->elect_area);
 
-        	$pledge_data = array();
+		// 공약 정보를 담을 배열
+		$pledge_data_array = array();
 
-	        // 정치인 공약 모음에서 대수, 공약이행상태, 내용을 가져온다.
-	        $politician_pledge_select_result = $this->db->query("SELECT
-                pledge_implement_status, content, create_at, update_at
+		for ($i = 0 ; $i < count($elect_generation); $i++){
+
+			$pledge_data = array();
+
+			// 정치인 공약 모음에서 대수, 공약이행상태, 내용을 가져온다.
+			$politician_pledge_select_result = $this->db->query("SELECT
+                pledge_implement_status, content
                 FROM PoliticianPledge where 
                 politician_idx = '$politician_idx' and 
                 generation = '$elect_generation[$i]'")->result();
 
+			$pledge_data['elect_generation'] = $elect_generation[$i];
+			$pledge_data['elect_area'] = $elect_area[$i];
+			$pledge_data['pledge_data'] = $politician_pledge_select_result;
+			$response_data['kr_name'] = $politician_select_result->kr_name;
+			array_push($pledge_data_array,$pledge_data);
+		}
+		$response_data['pledge_data'] = $pledge_data_array;
 
-	        $pledge_data['elect_generation'] = $elect_generation[$i];
-	        $pledge_data['elect_area'] = $elect_area[$i];
-	        $pledge_data['pledge_data'] = $politician_pledge_select_result;
-	        $response_data['kr_name'] = $politician_select_result->kr_name;
-	        $response_data[''.$i] = $pledge_data;
-        }
+		return json_encode($response_data);
+	}
 
-        return json_encode($response_data);
-    }
-
-    // 정치인 응원하기 댓글
+	// 정치인 응원하기 댓글
 	// input : 정치인 이름
 	// output : 정치인 사진 경로, 댓글
-    public function getComments($data){
+	public function getComments($data){
 
-	    // 정치인 이름
-	    $politician_name = $data['kr_name'];
+		// 정치인 이름
+		$politician_name = $data['kr_name'];
 
-	    // 정치인 이름으로 정치인 인덱스 찾기
-	    $politician_select_result = $this->db->query("SELECT
+		// 정치인 이름으로 정치인 인덱스 찾기
+		$politician_select_result = $this->db->query("SELECT
                 idx, profile_image_url
                 FROM Politician where kr_name = '$politician_name'")->row();
 
-	    // 정치인 인덱스
-	    $politician_idx = $politician_select_result->idx;
+		// 정치인 인덱스
+		$politician_idx = $politician_select_result->idx;
 
 
-    }
+	}
 
 }
 

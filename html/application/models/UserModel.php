@@ -112,14 +112,8 @@ class UserModel extends CI_Model
 	// 닉네임 중복 체크
 	// 이메일 중복이 안될 시 return success
 	// 이메일 중복 시 return failed
-	public function getNickCheck($data)
+	public function getNickCheck($nick_name)
 	{
-		if ($data == null) return 'syntax error or input data error';
-
-		// client가 보낸 사용자 닉네임
-		$nick_name = $data['nick_name'];
-		if($nick_name == null) return "invaild_data_[nick_name]";
-
 		// client로 부터 입력 받은 닉네임이 있는지 조회 - 중복체크를 위함.
 		$query = $this->db->query("select count(idx) as 'count' from User where 
                 nick_name='$nick_name'"
@@ -139,14 +133,8 @@ class UserModel extends CI_Model
 		}
 	}
 	// 아이디 중복체크
-	public function getIdCheck($data)
+	public function getIdCheck($id)
 	{
-		if ($data == null) return 'syntax error or input data error';
-
-		// client가 보낸 사용자 아이디
-		$id = $data['id'];
-		if($id == null) return "invaild_data_[id]";
-
 		// client로 부터 입력 받은 아이디가 있는지 조회 - 중복체크를 위함.
 		$query = $this->db->query("select count(idx) as 'count' from User where 
                 id='$id'"
@@ -192,17 +180,20 @@ class UserModel extends CI_Model
 
 	    $result=$this->db->query("select *,count(idx)as count from User where id=$uid and social_login='K'")->row();
 	    //이미 테이블에 카카오 uid가 저장되어있는경우
+        $result_json=array();
 	    if ($result->count ==1){
 	        //카카오 동의만 받고 가입을 진행하지 않은 상태
 	        //pmm자체 회원가입 페이지로 넘어가야함
             //pmm자체 회원가입으로 넘어가야함 = 1
             if($result->nick_name ==null){
-	            return '1';
+	            $result_json['response_code']=1;
+                return json_encode($result_json,true);
             }
 	        //카카오 동의후 pmm회원가입까지 완료한 상태
             //카카오 로그인 완료 = 0
             else{
-                return '0';
+                $result_json['response_code']=0;
+                return json_encode($result_json,true);
 
             }
         }
@@ -210,7 +201,8 @@ class UserModel extends CI_Model
         //카카오 정보 저장 완료 회원가입으로 넘어가야함 = 2
 	    else{
 	        $this->db->query("INSERT INTO User (social_login,id) VALUES ('K','$uid')");
-            return'2';
+            $result_json['response_code']=2;
+            return json_encode($result_json,true);
 
         }
 
@@ -247,7 +239,8 @@ class UserModel extends CI_Model
 
         $result_code=$this->db->query("update User set name='$name' , age=$age , nick_name='$nick_name' , sex='$sex' , phone='$phone' , residence='$residence' ,category ='$category' , create_at=NOW(),update_at=NOW(),delete_at=NOW(),recently_login_at=NOW(),
         user_agent='$user_agent' where id='$uid'");
-        return $result_code;
+        $result_json['response_code']=(boolean)$result_code;
+        return json_encode($result_json,true);
     }
 
 

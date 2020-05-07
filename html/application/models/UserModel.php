@@ -204,8 +204,8 @@ class UserModel extends CI_Model
 
     }
     //카카오 동의후 회원가입을 위한 메서드
-    public function putKakaoUser($info){
-        $userinfo = json_decode($info, true);
+    public function putKakaoUser($userinfo){
+//        $info = json_decode($info, true);
         $name=$userinfo['name'];
 //	    if($name == null) return "invaild_data_[name]";
 

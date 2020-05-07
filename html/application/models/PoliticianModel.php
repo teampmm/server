@@ -50,6 +50,7 @@ class PoliticianModel extends CI_Model
 		if ($user_select_result){
 			$user_idx = $user_select_result->idx;
 
+
 			//사용자의 인덱스로 찾은 정치인 북마크 인덱스
 			$book_mark_select_result = $this->db->query("select politician_idx from BookMark where user_idx = '$user_idx'")->result();
 
@@ -95,7 +96,7 @@ class PoliticianModel extends CI_Model
 				}
 
 				// 정치인 카드에 들어갈 정보
-				$card_data['politician_idx'] = $row->idx;
+				$card_data['politician_idx'] = (int)$row->idx;
 				$card_data['kr_name'] = $row->kr_name;
 				$card_data['party_name'] = $party_select_result->party_name;
 				$card_data['affiliation_committee'] = $row->affiliation_committee;
@@ -109,7 +110,7 @@ class PoliticianModel extends CI_Model
 		}
 
 		// 사용할 카드 덱의 번호
-		$response_data['rand_card_idx'] = $current_rand_idx;
+		$response_data['rand_card_idx'] = (int)$current_rand_idx;
 		// 카드의 갯수
 		$response_data['card_num'] = count($card_list);
 		// 현재 보고있는 페이지
@@ -239,7 +240,7 @@ class PoliticianModel extends CI_Model
                 FROM News where politician_idx = '$politician_idx'")->result();
 
 		$result_num = count($politician_select_result);
-		$response_data['result_num'] = $result_num;
+		$response_data['result_num'] = (int)$result_num;
 		$response_data['data'] = $politician_select_result;
 
 		return json_encode($response_data);
@@ -258,10 +259,6 @@ class PoliticianModel extends CI_Model
 		$politician_select_result = $this->db->query("SELECT
                 elect_generation, elect_area, kr_name
                 FROM Politician where idx = '$politician_idx'")->row();
-
-		// 정치인 조회 결과가 없음
-		if($politician_idx == null) return 'invalid_data_[idx]';
-		if($politician_select_result == null) return '정치인 인덱스로 조회된 정치인 정보가 없습니다';
 
 		// 당선 대수
 		$elect_generation = explode(',',$politician_select_result->elect_generation);
@@ -293,26 +290,6 @@ class PoliticianModel extends CI_Model
 
 		return json_encode($response_data);
 	}
-
-	// 정치인 응원하기 댓글
-	// input : 정치인 이름
-	// output : 정치인 사진 경로, 댓글
-	public function getComments($data){
-
-		// 정치인 이름
-		$politician_name = $data['kr_name'];
-
-		// 정치인 이름으로 정치인 인덱스 찾기
-		$politician_select_result = $this->db->query("SELECT
-                idx, profile_image_url
-                FROM Politician where kr_name = '$politician_name'")->row();
-
-		// 정치인 인덱스
-		$politician_idx = $politician_select_result->idx;
-
-
-	}
-
 }
 
 

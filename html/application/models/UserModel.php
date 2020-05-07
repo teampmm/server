@@ -157,11 +157,7 @@ class UserModel extends CI_Model
 	//핸드폰 인증을 하기전에 우선 가입이 되어있는지 확인
 	public function phoneCheck($phone)
 	{
-		if($phone == null) return "invaild_data_[phone]";
-
-		$count
-			= $this->db->query("select count(idx) as 'count' from User where phone="
-			. $phone)->row();
+		$count = $this->db->query("select count(idx) as 'count' from User where phone='$phone'")->row();
 
 		// 가입 가능
 		if ($count->count == 0) {

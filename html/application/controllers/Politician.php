@@ -1,5 +1,6 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
+include 'DTO/Option.php';
 
 class Politician extends CI_Controller
 {
@@ -29,10 +30,15 @@ class Politician extends CI_Controller
     // 정치인 카드 모아 보기 정보 가져오기
     public function getPoliticianCard(){
         // 정치인 카드 정보 요청 - 받았던 카드의 인덱스 정보를 가지고 온다.
-        $request_page = $this->input->get('page', True);
-        $random_card_idx = $this->input->get('random_card_idx', True);
+        $request_data = $this->input->get(null, True);
 
-        // db에 사용자가 보낸 이메일이 있는지 확인한다. ( 중복체크 과정 ).
+	    $error=jsonNullCheck($request_data,array('page','random_card_idx'));
+	    if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+
+	    $request_page = $request_data['page'];
+        $random_card_idx = $request_data['random_card_idx'];
+
+	    // db에 사용자가 보낸 이메일이 있는지 확인한다. ( 중복체크 과정 ).
         $this->load->model('PoliticianModel');
         $result = $this->PoliticianModel->getPoliticianCard($request_page, $random_card_idx);
         echo $result;
@@ -41,45 +47,42 @@ class Politician extends CI_Controller
     // 정치인 기본 정보 가져오기
     public function getInfo(){
         // 정치인 기본정보 요청 - 정치인의 이름을 가지고 들어옴. ( kr_name )
-        $politician_idx = $this->input->get('politician_idx', True);
+        $politician_idx = $this->input->get(null, True);
 
-        // db에 사용자가 보낸 이메일이 있는지 확인한다. ( 중복체크 과정 ).
+	    $error=jsonNullCheck($politician_idx,array('politician_idx'));
+	    if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+
+	    // db에 사용자가 보낸 이메일이 있는지 확인한다. ( 중복체크 과정 ).
         $this->load->model('PoliticianModel');
-        $result = $this->PoliticianModel->getInfo($politician_idx);
+        $result = $this->PoliticianModel->getInfo($politician_idx['politician_idx']);
 	    echo $result;
     }
 
     // 정치인 관련 뉴스 가져오기
     public function getNews(){
         // 정치인 관련 뉴스 정보 요청
-        $politician_idx = $this->input->get('politician_idx', True);
+        $politician_idx = $this->input->get(null, True);
 
-        // db에 사용자가 보낸 이메일이 있는지 확인한다. ( 중복체크 과정 ).
+	    $error=jsonNullCheck($politician_idx,array('politician_idx'));
+	    if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+
+	    // db에 사용자가 보낸 이메일이 있는지 확인한다. ( 중복체크 과정 ).
         $this->load->model('PoliticianModel');
-        $result = $this->PoliticianModel->getNews($politician_idx);
+        $result = $this->PoliticianModel->getNews($politician_idx['politician_idx']);
 	    echo $result;
     }
 
     // 정치인 공약정보 가져오기
     public function getPledgeInfo(){
         // 정치인 공약 정보 요청
-	    $politician_idx = $this->input->get('politician_idx', True);
-        // db에 사용자가 보낸 이메일이 있는지 확인한다. ( 중복체크 과정 ).
-        $this->load->model('PoliticianModel');
-        $result = $this->PoliticianModel->getPledgeInfo($politician_idx);
-	    echo $result;
-    }
+	    $politician_idx = $this->input->get(null, True);
 
-
-    // 정치인 응원하기 댓글 가져오기
-    public function getComments(){
-        // 정치인 상세 정보 요청
-        $json_data = $this->input->get('comments_request', True);
-        $json_data = json_decode($json_data, True);
+	    $error=jsonNullCheck($politician_idx,array('politician_idx'));
+	    if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
         // db에 사용자가 보낸 이메일이 있는지 확인한다. ( 중복체크 과정 ).
         $this->load->model('PoliticianModel');
-        $result = $this->PoliticianModel->getComments($json_data);
+        $result = $this->PoliticianModel->getPledgeInfo($politician_idx['politician_idx']);
 	    echo $result;
     }
 
@@ -113,11 +116,6 @@ class Politician extends CI_Controller
             // 클라이언트가 정치인 상세 정보를 요청
             else if($client_data == "detail_info"){
                 $this->getDetailInfo();
-            }
-
-            // 클라이언트가 정치인 응원하기 댓글 요청
-            else if($client_data == "comments"){
-                $this->getComments();
             }
 
 

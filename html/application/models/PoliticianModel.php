@@ -19,8 +19,7 @@ class PoliticianModel extends CI_Model
 
 		// 사용자가 가지고 있는 랜덤 카드 인덱스 - RandomCard 인덱스
 		$current_rand_idx = $random_card_idx;
-
-		if($current_rand_idx == null){
+		if($current_rand_idx == "\"\""){
 			// 카드 인덱스, 카드 정보 가져오기 ( 정치인 인덱스가 들어있음 )
 			$random_card_select_result = $this->db->query("select idx, card_number from RandomCard ORDER BY rand() limit 1")->row();
 			$current_rand_idx = $random_card_select_result->idx;

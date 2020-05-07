@@ -1,6 +1,7 @@
 <?php
 
 defined('BASEPATH') or exit('No direct script access allowed');
+include 'DTO/Option.php';
 
 class User extends CI_Controller
 {
@@ -24,6 +25,9 @@ class User extends CI_Controller
 			$json_data = $this->input->post('user_info', true);
 			$json_data = json_decode($json_data, true);
 
+			$error=jsonNullCheck($json_data,array('nick_name','id','pw','phone','social_login'));
+			if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+
 			$this->load->model("UserModel");
 			// db에 사용자를 추가한다.
 			$result = $this->UserModel->putUser($json_data);
@@ -40,18 +44,26 @@ class User extends CI_Controller
 	public function getNickNameCheck()
 	{
 		// 사용자가 닉네임 중복 체크 요청 - nick_name 가지고있다.
-		$nick_name = $this->input->get('nick_name', true);
+		$nick_name = $this->input->get(null, true);
+
+		$error=jsonNullCheck($nick_name,array('nick_name'));
+		if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+
 		$this->load->model('UserModel');
-		$result = $this->UserModel->getNickCheck($nick_name);
+		$result = $this->UserModel->getNickCheck($nick_name['nick_name']);
 		echo $result;
 	}
 	// 아이디 중복 체크 메서드
 	public function getIdCheck()
 	{
 		// 사용자가 아이디 중복 체크 요청 - nick_name 가지고있다.
-		$id = $this->input->get('id', true);
+		$id = $this->input->get(null, true);
+
+		$error=jsonNullCheck($id,array('id'));
+		if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+
 		$this->load->model('UserModel');
-		$result = $this->UserModel->getIdCheck($id);
+		$result = $this->UserModel->getIdCheck($id['id']);
 		echo $result;
 	}
 
@@ -61,6 +73,9 @@ class User extends CI_Controller
 		// 사용자가 로그인 요청 - id, pw 정보를 가지고있다.
 		$json_data = $this->input->post('login_request', true);
 		$json_data = json_decode($json_data, true);
+
+		$error=jsonNullCheck($json_data,array('id','pw'));
+		if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
 		// 사용자가 보낸 id, pw 정보를 db에 있는 id, pw와 비교한다.
 		$this->load->model('UserModel');
@@ -73,7 +88,7 @@ class User extends CI_Controller
 	public function requestData($client_data)
 	{
 
-        // 사용자 정보를 조회 할 때
+		// 사용자 정보를 조회 할 때
 		if ($this->http_method == "GET") {
 			if ($client_data == 'nick_name_check') {
 				// 사용자 닉네임 중복체크
@@ -91,14 +106,14 @@ class User extends CI_Controller
 				$this->loginRequest();
 			}
 			else if ($client_data == 'kakao_login'){
-			    $this->kakaoLogin();
-            }
+				$this->kakaoLogin();
+			}
 		}
 		else if ($this->http_method == "PATCH" or $this->http_method=='patch'){
-            if ($client_data=='kakao_sign'){
-                $this->kakaoSign();
+			if ($client_data=='kakao_sign'){
+				$this->kakaoSign();
 
-            }
+			}
 		}
 		else if($this->http_method == "DELETE"){
 			print_r("DELETE");
@@ -115,12 +130,18 @@ class User extends CI_Controller
 				require_once "/home/ubuntu/db/sms/class/Clientapi.class.php";
 				$smsobj = new Clientapi();
 				$smsobj->init();
-				$user_phone = $this->input->post('user_phone', true);
+				$user_phone = $this->input->post(null, true);
+
+				$error=jsonNullCheck($user_phone,array('user_phone'));
+				if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+
+				$user_phone = $user_phone['user_phone'];
 
 
 				//이미 같은 핸드폰 번호로 회원가입이 되어있는지 확인
 				$this->load->model('UserModel');
 				$check_code = $this->UserModel->phoneCheck($user_phone);
+
 
 				// 가입 가능
 				if ($check_code == 0) {
@@ -149,19 +170,19 @@ class User extends CI_Controller
 	}
 	//카카오 로그인 체크
 	public function kakaoLogin(){
-	    $uid=$this->input->post('kakao_uid');
-	    $this->load->model('UserModel');
-	    echo $this->UserModel->kakaoCheck($uid);
+		$uid=$this->input->post('kakao_uid');
+		$this->load->model('UserModel');
+		echo $this->UserModel->kakaoCheck($uid);
 
-    }
-    //카카오 로그인 동의 후 pmm 가입
-    public function kakaoSign(){
+	}
+	//카카오 로그인 동의 후 pmm 가입
+	public function kakaoSign(){
 
-        $info=$this->input->input_stream('kakao_user_info');
-        $this->load->model('UserModel');
-        echo $this->UserModel->putKakaoUser($info);
+		$info=$this->input->input_stream('kakao_user_info');
+		$this->load->model('UserModel');
+		echo $this->UserModel->putKakaoUser($info);
 
-    }
+	}
 }
 
 

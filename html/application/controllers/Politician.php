@@ -29,49 +29,45 @@ class Politician extends CI_Controller
     // 정치인 카드 모아 보기 정보 가져오기
     public function getPoliticianCard(){
         // 정치인 카드 정보 요청 - 받았던 카드의 인덱스 정보를 가지고 온다.
-        $json_data = $this->input->get('card_request', True);
-        $json_data = json_decode($json_data, True);
+        $request_page = $this->input->get('page', True);
+        $random_card_idx = $this->input->get('random_card_idx', True);
 
         // db에 사용자가 보낸 이메일이 있는지 확인한다. ( 중복체크 과정 ).
         $this->load->model('PoliticianModel');
-        $result = $this->PoliticianModel->getPoliticianCard($json_data);
-        print_r($result);
+        $result = $this->PoliticianModel->getPoliticianCard($request_page, $random_card_idx);
+        echo $result;
     }
 
     // 정치인 기본 정보 가져오기
     public function getInfo(){
         // 정치인 기본정보 요청 - 정치인의 이름을 가지고 들어옴. ( kr_name )
-        $json_data = $this->input->get('info_request', True);
-        $json_data = json_decode($json_data, True);
+        $politician_idx = $this->input->get('politician_idx', True);
 
         // db에 사용자가 보낸 이메일이 있는지 확인한다. ( 중복체크 과정 ).
         $this->load->model('PoliticianModel');
-        $result = $this->PoliticianModel->getInfo($json_data);
-        print_r($result);
+        $result = $this->PoliticianModel->getInfo($politician_idx);
+	    echo $result;
     }
 
     // 정치인 관련 뉴스 가져오기
     public function getNews(){
         // 정치인 관련 뉴스 정보 요청
-        $json_data = $this->input->get('news_request', True);
-        $json_data = json_decode($json_data, True);
+        $politician_idx = $this->input->get('politician_idx', True);
 
         // db에 사용자가 보낸 이메일이 있는지 확인한다. ( 중복체크 과정 ).
         $this->load->model('PoliticianModel');
-        $result = $this->PoliticianModel->getNews($json_data);
-        print_r($result);
+        $result = $this->PoliticianModel->getNews($politician_idx);
+	    echo $result;
     }
 
     // 정치인 공약정보 가져오기
     public function getPledgeInfo(){
         // 정치인 공약 정보 요청
-        $json_data = $this->input->get('pledge_request', True);
-        $json_data = json_decode($json_data, True);
-
+	    $politician_idx = $this->input->get('politician_idx', True);
         // db에 사용자가 보낸 이메일이 있는지 확인한다. ( 중복체크 과정 ).
         $this->load->model('PoliticianModel');
-        $result = $this->PoliticianModel->getPledgeInfo($json_data);
-        print_r($result);
+        $result = $this->PoliticianModel->getPledgeInfo($politician_idx);
+	    echo $result;
     }
 
 
@@ -84,7 +80,7 @@ class Politician extends CI_Controller
         // db에 사용자가 보낸 이메일이 있는지 확인한다. ( 중복체크 과정 ).
         $this->load->model('PoliticianModel');
         $result = $this->PoliticianModel->getComments($json_data);
-        print_r($result);
+	    echo $result;
     }
 
     // 클라이언트가 사용자에 대한 데이터를 요청할때

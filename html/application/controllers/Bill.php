@@ -2,6 +2,8 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 
+include 'DTO/Option.php';
+
 class Bill extends CI_Controller
 {
 	public $http_method;
@@ -20,50 +22,74 @@ class Bill extends CI_Controller
 		echo($result);
 	}
 
+
 	public function requestData($data){
 	    if ($this->http_method=="GET") {
             //법안 모아보기
             if ($data == 'card') {
-                $page_idx = $this->input->get('page_request', true);
-                $page_idx=json_decode($page_idx,true);
-                $result = $this->page($page_idx['page']);
+                $input=$this->input->get(null,true);
+
+                $error=jsonNullCheck($input,array('page'));
+                if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+
+
+                $page_idx = $input['page'];
+                $result = $this->page($page_idx);
                 echo $result;
             } //법안 상세정보
             else if ($data == 'bill_info') {
-                $bill_idx = $this->input->get('bill_idx_request', true);
-                $bill_idx=json_decode($bill_idx,true);
-                $result = $this->billInfo($bill_idx['bill_idx']);
+                $input = $this->input->get(null,true);
+
+                $error=jsonNullCheck($input,array('bill_idx'));
+                if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+
+
+                $result = $this->billInfo($input['bill_idx']);
                 echo $result;
             } //법안 자체의 좋아요 싫어요 수
             else if ($data == 'bill_user_evaluation') {
-                $bill_idx = $this->input->get('bill_idx_request', true);
-                $bill_idx=json_decode($bill_idx,true);
-                $result = $this->billUserEvaluation($bill_idx['bill_idx']);
+                $opposition_comment = $this->input->get(null, true);
+
+                $error=jsonNullCheck($opposition_comment,array('bill_idx'));
+                if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+
+
+                $result = $this->billUserEvaluation($opposition_comment['bill_idx']);
                 echo $result;
             }
             //법안의 찬성 댓글 and 대댓글 갯수
             //페이징
             else if ($data == 'bill_agreement_comment') {
-                $bill_idx = $this->input->get('bill_agreement_request', true);
-                $bill_idx=json_decode($bill_idx,true);
-                $result = $this->billComment($bill_idx['bill_idx'],$bill_idx['comment_page'], 'agreement');
+                $agreement_comment = $this->input->get(null, true);
+
+                $error=jsonNullCheck($agreement_comment,array('bill_idx','comment_page'));
+                if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+
+
+                $result = $this->billComment($agreement_comment['bill_idx'],$agreement_comment['comment_page'], 'agreement');
                 echo $result;
 
             }
             //법안의 반대 댓글 and 대댓글 갯수
             //페이징
             else if ($data == 'bill_opposition_comment') {
-                $bill_idx = $this->input->get('bill_opposition_request', true);
-                $bill_idx=json_decode($bill_idx,true);
-                $result = $this->billComment($bill_idx['bill_idx'], $bill_idx['comment_page'], 'opposition');
+                $opposition_comment = $this->input->get(null, true);
+
+                $error=jsonNullCheck($opposition_comment,array('bill_idx','comment_page'));
+                if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+
+                $result = $this->billComment($opposition_comment['bill_idx'], $opposition_comment['comment_page'], 'opposition');
                 echo $result;
             }
+
             //대댓글 보기 클릭
             //댓글 idx , 대댓글 페이지
             //대댓글의 정보 and 페이징
             else if ($data == 'bill_sub_comment') {
-                $comment_idx = $this->input->get('bill_sub_comment', true);
-                $comment_idx=json_decode($comment_idx,true);
+                $comment_idx = $this->input->get(null, true);
+
+                $error=jsonNullCheck($comment_idx,array('comment_idx','sub_comment_page'));
+                if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
                 $result = $this->billSubComment($comment_idx['comment_idx'], $comment_idx['sub_comment_page']);
                 echo $result;
@@ -71,13 +97,21 @@ class Bill extends CI_Controller
         }else if ($this->http_method=="POST"){
 	        //사용자가 법안에 대해 댓글 쓰기
 	        if($data=='bill_comment_write'){
-	           $input=$this->input->post('comment_write',true);
-                $input_json=json_decode($input,true);
+	           $input=$this->input->post("comment_write",true);
+	           $input_json=json_decode($input,true);
+
+                $error=jsonNullCheck($input_json,array('bill_idx','content','status'));
+                if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+
                 $result=$this->billCommentWrite($input_json['bill_idx'],$input_json['content'],$input_json['status']);
 	           echo $result;
             }else if ($data=='bill_evaluation_write'){
 	            $input=$this->input->post("evaluation_write",true);
 	            $input_json=json_decode($input,true);
+
+                $error=jsonNullCheck($input_json,array('bill_idx','status'));
+                if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+
 	            $result=$this->billEvaluationClick($input_json['bill_idx'],$input_json['status']);
 	            echo $result;
             }

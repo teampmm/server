@@ -105,7 +105,28 @@ class Bill extends CI_Controller
 
                 $result=$this->billCommentWrite($input_json['bill_idx'],$input_json['content'],$input_json['status']);
 	           echo $result;
-            }else if ($data=='bill_evaluation_write'){
+            }
+	        //사용자가 댓글에 대한 답글 쓰기
+	        else if ($data=='bill_sub_comment_write'){
+	            $input=$this->input->post('sub_comment_write',true);
+	            $input_json=json_decode($input,true);
+
+                $error=jsonNullCheck($input_json,array('comment_idx','content'));
+                if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+
+                //댓글에 대한 답글일경우
+                if(empty($input_json['parent_user_idx'])){
+                   $result= $this->subCommentWrite($input_json['comment_idx'],$input_json['content'],null);
+                   echo $result;
+                }
+                //답글에 대한 답글 일 경우
+                else{
+                    $result= $this->subCommentWrite($input_json['comment_idx'],$input_json['content'],$input_json['parent_user_idx']);
+                    echo $result;
+
+                }
+            }
+	        else if ($data=='bill_evaluation_write'){
 	            $input=$this->input->post("evaluation_write",true);
 	            $input_json=json_decode($input,true);
 
@@ -168,5 +189,11 @@ class Bill extends CI_Controller
         $this->load->model('BillModel');
         $result=$this->BillModel->billEvaluationWrite($bill_idx,$status);
         return$result;
+    }
+    //댓글에 대해 답글달기
+    public function subCommentWrite($comment_idx,$content,$parent_idx){
+	    $this->load->model('BillModel');
+        $result=$this->BillModel->billSubCommmentWrite($comment_idx,$content,$parent_idx);
+	    return$result;
     }
 }

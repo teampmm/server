@@ -312,6 +312,21 @@ class BillModel extends CI_Model
         
         return json_encode($result_json);
     }
+    //사용자가 댓글에 대한 답글을 작성 할 경우 (부보 인덱스가 없는경우)
+    // or
+    // 사용자가 답글에 대한 답글을 작성 할 경우 (부모 인덱스가 있는경우)
+    public function billSubCommmentWrite($comment_idx,$content,$parent_idx){
+        if ($parent_idx==null){
+            $this->db->query("insert into SubComment(comment_idx,user_idx,content,create_at) values ($comment_idx,1,'$content',NOW())");
+        }else{
+            $this->db->query("insert into SubComment(comment_idx,user_idx,content,parent_user_idx,create_at) values ($comment_idx,1,'$content',$parent_idx,NOW())");
+
+        }
+        $result=array();
+        $result['sub_comment_idx']=$this->db->insert_id();
+        return json_encode($result);
+    }
+    
     //사용자가 법안에 대해 좋아요 혹은 싫어요를 클릭함
     //사용자가 해당 법안에 대해 처음 좋아요 , 싫어요 클릭했을시에 row 생성
     //사용자가 좋아요 - > 싫어요 또는 싫어요 - > 좋아요 를 클릭했을시에 row 업데이트

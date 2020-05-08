@@ -87,16 +87,43 @@ class Politician extends CI_Controller
     }
 
     // 정치인 공약정보 가져오기
-    public function patchBookmarkModify(){
-        // 정치인 공약 정보 요청
+    public function postBookmarkModify(){
+
 	    $politician_idx = $this->input->input_stream('politician_idx');
 
 	    if ( $politician_idx == null or $politician_idx < 1) return "invaild_data_politician_idx";
 
         // db에 사용자가 보낸 이메일이 있는지 확인한다. ( 중복체크 과정 ).
         $this->load->model('PoliticianModel');
-        $result = $this->PoliticianModel->patchBookmarkModify($politician_idx);
+        $result = $this->PoliticianModel->postBookmarkModify($politician_idx);
 	    echo $result;
+    }
+
+    // 정치인 좋아요 싫어요 정보 수정
+    public function postUserEvaluation(){
+        $input=$this->input->post("evaluation_write",true);
+        $input_json=json_decode($input,true);
+
+        $error=jsonNullCheck($input_json,array('politician_idx','status'));
+        if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+
+        // db에 사용자가 보낸 이메일이 있는지 확인한다. ( 중복체크 과정 ).
+        $this->load->model('PoliticianModel');
+        $result = $this->PoliticianModel->postUserEvaluation($input_json['politician_idx'], $input_json['status'] );
+        echo $result;
+    }
+
+    // 정치인 좋아요 싫어요 정보 조회
+    public function getUserEvaluation(){
+        $politician_idx = $this->input->get(null, True);
+
+        $error=jsonNullCheck($politician_idx,array('politician_idx'));
+        if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+
+        // db에 사용자가 보낸 이메일이 있는지 확인한다. ( 중복체크 과정 ).
+        $this->load->model('PoliticianModel');
+        $result = $this->PoliticianModel->getUserEvaluation($politician_idx['politician_idx']);
+        echo $result;
     }
 
     // 클라이언트가 사용자에 대한 데이터를 요청할때
@@ -131,15 +158,21 @@ class Politician extends CI_Controller
                 $this->getDetailInfo();
             }
 
-
-        } else if ($this->http_method == "POST") {
-
-        }else if ($this->http_method == "PATCH" or $this->http_method=='patch'){
-            // 북마크 선택 / 해제
-            if($client_data == "bookmark"){
-                $this->patchBookmarkModify();
+            // 정치인 좋아요 싫어요 정보 조회
+            else if($client_data == "politician_user_evaluation"){
+                $this->getUserEvaluation();
             }
 
+        } else if ($this->http_method == "POST") {
+            // 북마크 선택 / 해제
+            if($client_data == "bookmark"){
+                    $this->postBookmarkModify();
+            }
+            // 정치인 좋아요 / 싫어요
+            else if($client_data == "politician_user_evaluation"){
+                $this->postUserEvaluation();
+            }
+        }else if ($this->http_method == "PATCH" or $this->http_method=='patch'){
 
         } else if ($this->http_method == "DELETE") {
 

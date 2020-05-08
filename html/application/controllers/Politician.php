@@ -86,6 +86,19 @@ class Politician extends CI_Controller
 	    echo $result;
     }
 
+    // 정치인 공약정보 가져오기
+    public function patchBookmarkModify(){
+        // 정치인 공약 정보 요청
+	    $politician_idx = $this->input->input_stream('politician_idx');
+
+	    if ( $politician_idx == null or $politician_idx < 1) return "invaild_data_politician_idx";
+
+        // db에 사용자가 보낸 이메일이 있는지 확인한다. ( 중복체크 과정 ).
+        $this->load->model('PoliticianModel');
+        $result = $this->PoliticianModel->patchBookmarkModify($politician_idx);
+	    echo $result;
+    }
+
     // 클라이언트가 사용자에 대한 데이터를 요청할때
     // request url : {서버 ip}/politician/{data}
     public function requestData($client_data)
@@ -121,7 +134,12 @@ class Politician extends CI_Controller
 
         } else if ($this->http_method == "POST") {
 
-        } else if ($this->http_method == "PATCH") {
+        }else if ($this->http_method == "PATCH" or $this->http_method=='patch'){
+            // 북마크 선택 / 해제
+            if($client_data == "bookmark"){
+                $this->patchBookmarkModify();
+            }
+
 
         } else if ($this->http_method == "DELETE") {
 

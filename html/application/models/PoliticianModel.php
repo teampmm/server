@@ -290,6 +290,43 @@ class PoliticianModel extends CI_Model
 
 		return json_encode($response_data);
 	}
+
+	public function patchBookmarkModify($politician_idx){
+
+        // 클라에게 보내줄 응답 데이터
+        $response_data = array();
+
+	    $user_id = "id 004"; // 토큰에서 받은 유저 아이디
+
+	    // jwt 토큰에서 받은 유저 아이디
+        $politician_select_result = $this->db->query("SELECT
+                idx FROM User where 
+                id = '$user_id'")->row();
+
+        // 유저 인덱스
+        $user_idx = $politician_select_result->idx;
+
+        // 사용자가 해당 정치인을 북마크 했는지 여부 보기
+        $bookmark_select_result = $this->db->query("SELECT
+                count(idx) as `count`  FROM BookMark where 
+                user_idx = '$user_idx' and politician_idx = '$politician_idx'")->row();
+
+        // 해당 정치인을 북마크를 하고있었는데, 북마크 삭제 요청이 들어옴
+        if ($bookmark_select_result->count == 1){
+            $this->db->query("DELETE FROM BookMark WHERE user_idx = '$user_idx' and politician_idx = '$politician_idx'" );
+            $response_data['result'] = '북마크 삭제';
+            return json_encode($response_data);
+        }
+
+        // 해당 정치인을 북마크를 안하고 있었는데, 북마크 추가 요청이 들어옴
+        else{
+            $this->db->query("INSERT INTO BookMark VALUES 
+                (null, $user_idx, null, $politician_idx, NOW(),NOW(),NOW())" );
+            $response_data['result'] = '북마크 추가';
+            return json_encode($response_data);
+        }
+    }
+
 }
 
 

@@ -111,21 +111,27 @@ class Bill extends CI_Controller
 	            $input=$this->input->post('sub_comment_write',true);
 	            $input_json=json_decode($input,true);
 
-                $error=jsonNullCheck($input_json,array('comment_idx','content'));
-                if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+
 
                 //댓글에 대한 답글일경우
                 if(empty($input_json['parent_user_idx'])){
-                   $result= $this->subCommentWrite($input_json['comment_idx'],$input_json['content'],null);
+                    $error=jsonNullCheck($input_json,array('comment_idx','content'));
+                    if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+
+                    $result= $this->subCommentWrite($input_json['comment_idx'],$input_json['content'],null);
                    echo $result;
                 }
                 //답글에 대한 답글 일 경우
                 else{
+                    $error=jsonNullCheck($input_json,array('comment_idx','content','parent_user_idx'));
+                    if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+
                     $result= $this->subCommentWrite($input_json['comment_idx'],$input_json['content'],$input_json['parent_user_idx']);
                     echo $result;
 
                 }
             }
+	        //법안에 대한 좋아요 싫어요
 	        else if ($data=='bill_evaluation_write'){
 	            $input=$this->input->post("evaluation_write",true);
 	            $input_json=json_decode($input,true);
@@ -135,6 +141,26 @@ class Bill extends CI_Controller
 
 	            $result=$this->billEvaluationClick($input_json['bill_idx'],$input_json['status']);
 	            echo $result;
+            }
+	        //사용자가 댓글 , 대댓글에 대한 좋아요 싫어요 클릭
+	        else if ($data=='comment_evaluation_write'){
+	            $input=$this->input->post("evaluation_write",true);
+	            $input_json=json_decode($input,true);
+
+                //댓글에 대해 좋아요 누른경우
+                if (empty($input_json['sub_comment_idx'])){
+                    $error=jsonNullCheck($input_json,array('status','comment_idx'));
+                    if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+                    $result=$this->commentEvaluationClick('comment_idx',$input_json['comment_idx'],$input_json['status']);
+                }
+                //대댓글에 대해 좋아요 누른경우
+                else{
+                    $error=jsonNullCheck($input_json,array('status','sub_comment_idx'));
+                    if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+                    $result=$this->commentEvaluationClick('sub_comment_idx',$input_json['sub_comment_idx'],$input_json['status']);
+                }
+
+                echo $result;
             }
         }
     }
@@ -195,5 +221,11 @@ class Bill extends CI_Controller
 	    $this->load->model('BillModel');
         $result=$this->BillModel->billSubCommmentWrite($comment_idx,$content,$parent_idx);
 	    return$result;
+    }
+    //댓글, 대댓글에 대해 좋아요 싫어요 클릭
+    public function commentEvaluationClick($comment_check,$comment_idx,$status){
+        $this->load->model('BillModel');
+        $result=$this->BillModel->commentEvaluationWrite($comment_check,$comment_idx,$status);
+        return$result;
     }
 }

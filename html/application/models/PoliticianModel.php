@@ -291,7 +291,8 @@ class PoliticianModel extends CI_Model
 		return json_encode($response_data);
 	}
 
-	public function patchBookmarkModify($politician_idx){
+	// 정치인 북마크 클릭/해제
+	public function postBookmarkModify($politician_idx){
 
         // 클라에게 보내줄 응답 데이터
         $response_data = array();
@@ -325,6 +326,92 @@ class PoliticianModel extends CI_Model
             $response_data['result'] = '북마크 추가';
             return json_encode($response_data);
         }
+    }
+
+    // 정치인 좋아요 싫어요 정보수정
+    public function postUserEvaluation($politician_idx, $like_status){
+        // 클라에게 보내줄 응답 데이터
+        $response_data = array();
+
+        if($like_status == "like"){
+            $status = 1;
+        }
+        else{
+            $status = 0;
+        }
+
+        $user_id = "id 004"; // 토큰에서 받은 유저 아이디
+
+        // jwt 토큰에서 받은 유저 아이디
+        $politician_select_result = $this->db->query("SELECT
+                idx FROM User where 
+                id = '$user_id'")->row();
+
+        // 사용자 인덱스
+        $user_idx = $politician_select_result->idx;
+
+        // 사용자의 정치인에 대한 좋아요 데이터가 있는지 확인
+        $bookmark_select_result = $this->db->query("SELECT
+                count(idx) as `count`  FROM UserEvaluationBill where 
+                user_idx = '$user_idx' and politician_idx = '$politician_idx'")->row();
+
+        // 좋아요 싫어요 데이터가 있는 경우
+        if ($bookmark_select_result->count == 1){
+
+            // 사용자의 정치인 좋아요에 대한 데이터가 있는가?
+            $result = $this->db->query("select count(*) as `count` from UserEvaluationBill where 
+                user_idx = '$user_idx' and politician_idx = '$politician_idx' and 
+                status = '$like_status'")->row();
+
+            // 데이터가 같은 경우 - 데이터 삭제
+            if($result->count == 1){
+                if ($status=='like'){
+                    $result=$this->db->query("update UserEvaluationBill set status='dislike' where user_idx='$user_idx' and politician_idx='$politician_idx'");
+                }else if ($status=='dislike'){
+                    $result=$this->db->query("update UserEvaluationBill set status='like' where user_idx='$user_idx' and politician_idx='$politician_idx'");
+                }else{
+                    $result=$this->db->query("delete from UserEvaluationBill where user_idx='$user_idx' and politician_idx='$politician_idx'");
+                }
+            }
+        }
+
+        // 좋아요 싫어요 데이터가 없는 경우
+        else{
+            $result = $this->db->query("INSERT INTO UserEvaluationBill VALUES 
+                (null, null ,$politician_idx,$user_idx,$status)" );
+        }
+
+        $response_data['result'] = (boolean)$result;
+        return json_encode($response_data);
+    }
+
+    // 정치인 좋아요 싫어요 정보 조회
+    public function getUserEvaluation($politician_idx){
+        // 클라에게 보내줄 응답 데이터
+        $response_data = array();
+
+        $user_id = "id 003"; // 토큰에서 받은 유저 아이디
+
+        // jwt 토큰에서 받은 유저 아이디
+        $politician_select_result = $this->db->query("SELECT
+                idx FROM User where 
+                id = '$user_id'")->row();
+
+        // 사용자 인덱스
+        $user_idx = $politician_select_result->idx;
+
+        // 좋아요 싫어요 정보조회
+        $result = $this->db->query("SELECT * , count(*) as `count` FROM UserEvaluationBill where 
+                user_idx = $user_idx and politician_idx = $politician_idx")->row();
+
+        if($result->count == 0){
+            $response_data['status'] = '조회된 데이터가 없습니다';
+        }
+        else{
+            $response_data['status'] = $result->status;
+        }
+        return json_encode($response_data);
+
     }
 
 }

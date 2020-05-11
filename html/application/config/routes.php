@@ -4,6 +4,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
 
 // CORS 요청처리 시작
 header('Access-Control-Allow-Origin: *');
+header("Access-Control-Allow-Headers: *");
 header("Access-Control-Allow-Methods: GET, POST, DELETE, PATCH, OPTIONS");
 // CORS 요청처리 끝
 

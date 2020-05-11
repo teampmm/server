@@ -14,7 +14,7 @@ class Politician extends CI_Controller
         // 클라에서 요청한 (GET, POST, PATCH, DELETE) HTTP 메서드 확인
         $this->http_method = $_SERVER["REQUEST_METHOD"];
 
-        $this->load->model('PoliticianModel');
+//        $this->load->model('PoliticianModel');
     }
 
     // request url : {서버 ip}/politician

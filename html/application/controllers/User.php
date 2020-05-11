@@ -7,7 +7,6 @@ include 'DTO/PolicticsJwt.php';
 class User extends CI_Controller
 {
 	public $http_method;
-    public $header_data;
 
 	public function __construct()
 	{
@@ -43,6 +42,11 @@ class User extends CI_Controller
 
         // 클라이언트가 header에 토큰정보를 담아 보낸걸 확인한다.
         $header_data = apache_request_headers();
+
+        if($header_data['Authorization'] == null){
+            echo "token is null";
+            exit();
+        }
 
         // 클라이언트의 토큰으로 인코딩도니 문자열을 해독한다.
         // == jwt_data에는 클라이언트가보낸 토큰의 정보들이 담겨있다.

@@ -1,6 +1,7 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 include 'DTO/Option.php';
+include 'DTO/PolicticsJwt.php';
 
 class Politician extends CI_Controller
 {
@@ -22,13 +23,31 @@ class Politician extends CI_Controller
 
     }
 
-    public function headerData($jwtToken)
+    public function headerData()
     {
+        $pmm_jwt = new PolicticsJwt();
 
+        // 클라이언트가 header에 토큰정보를 담아 보낸걸 확인한다.
+        $header_data = apache_request_headers();
+
+        if($header_data['Authorization'] == null){
+            echo "token is null";
+            exit();
+        }
+
+        // 클라이언트의 토큰으로 인코딩도니 문자열을 해독한다.
+        // == jwt_data에는 클라이언트가보낸 토큰의 정보들이 담겨있다.
+        $jwt_data = $pmm_jwt->tokenParsing($header_data['Authorization']);
+
+        return $jwt_data;
     }
 
     // 정치인 카드 모아 보기 정보 가져오기
     public function getPoliticianCard(){
+
+        // 클라이언트가 보낸 토큰 정보가 담겨있다.
+        $token_data = $this->headerData();
+
         // 정치인 카드 정보 요청 - 받았던 카드의 인덱스 정보를 가지고 온다.
         $request_data = $this->input->get(null, True);
 
@@ -40,7 +59,7 @@ class Politician extends CI_Controller
 
 	    // db에 사용자가 보낸 이메일이 있는지 확인한다. ( 중복체크 과정 ).
         $this->load->model('PoliticianModel');
-        $result = $this->PoliticianModel->getPoliticianCard($request_page, $random_card_idx);
+        $result = $this->PoliticianModel->getPoliticianCard($request_page, $random_card_idx, $token_data);
         echo $result;
     }
 
@@ -86,8 +105,11 @@ class Politician extends CI_Controller
 	    echo $result;
     }
 
-    // 정치인 공약정보 가져오기
+    // 정치인 북마크 수정하기
     public function postBookmarkModify(){
+
+        // 클라이언트가 보낸 토큰 정보가 담겨있다.
+        $token_data = $this->headerData();
 
 	    $politician_idx = $this->input->input_stream('politician_idx');
 
@@ -95,12 +117,32 @@ class Politician extends CI_Controller
 
         // db에 사용자가 보낸 이메일이 있는지 확인한다. ( 중복체크 과정 ).
         $this->load->model('PoliticianModel');
-        $result = $this->PoliticianModel->postBookmarkModify($politician_idx);
+        $result = $this->PoliticianModel->postBookmarkModify($politician_idx, $token_data);
 	    echo $result;
     }
+    // 정치인 북마크 조회하기
+    public function getBookmark(){
 
-    // 정치인 좋아요 싫어요 정보 수정
+        // 클라이언트가 보낸 토큰 정보가 담겨있다.
+        $token_data = $this->headerData();
+
+        $politician_idx = $this->input->get(null, True);
+
+        $error=jsonNullCheck($politician_idx,array('politician_idx'));
+        if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+
+        // db에 사용자가 보낸 이메일이 있는지 확인한다. ( 중복체크 과정 ).
+        $this->load->model('PoliticianModel');
+        $result = $this->PoliticianModel->getBookmark($politician_idx['politician_idx'], $token_data);
+        echo $result;
+    }
+
+    // 정치인 좋아요 싫어요 수정하기
     public function postUserEvaluation(){
+
+        // 클라이언트가 보낸 토큰 정보가 담겨있다.
+        $token_data = $this->headerData();
+
         $input=$this->input->post("evaluation_write",true);
         $input_json=json_decode($input,true);
 
@@ -109,12 +151,16 @@ class Politician extends CI_Controller
 
         // db에 사용자가 보낸 이메일이 있는지 확인한다. ( 중복체크 과정 ).
         $this->load->model('PoliticianModel');
-        $result = $this->PoliticianModel->postUserEvaluation($input_json['politician_idx'], $input_json['status'] );
+        $result = $this->PoliticianModel->postUserEvaluation($input_json['politician_idx'], $input_json['status'], $token_data);
         echo $result;
     }
 
     // 정치인 좋아요 싫어요 정보 조회
     public function getUserEvaluation(){
+
+        // 클라이언트가 보낸 토큰 정보가 담겨있다.
+        $token_data = $this->headerData();
+
         $politician_idx = $this->input->get(null, True);
 
         $error=jsonNullCheck($politician_idx,array('politician_idx'));
@@ -122,7 +168,7 @@ class Politician extends CI_Controller
 
         // db에 사용자가 보낸 이메일이 있는지 확인한다. ( 중복체크 과정 ).
         $this->load->model('PoliticianModel');
-        $result = $this->PoliticianModel->getUserEvaluation($politician_idx['politician_idx']);
+        $result = $this->PoliticianModel->getUserEvaluation($politician_idx['politician_idx'], $token_data);
         echo $result;
     }
 
@@ -161,6 +207,9 @@ class Politician extends CI_Controller
             // 정치인 좋아요 싫어요 정보 조회
             else if($client_data == "politician_user_evaluation"){
                 $this->getUserEvaluation();
+            }
+            else if($client_data == "bookmark"){
+                $this->getBookmark();
             }
 
         } else if ($this->http_method == "POST") {

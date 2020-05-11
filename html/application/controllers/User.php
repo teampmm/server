@@ -2,10 +2,12 @@
 
 defined('BASEPATH') or exit('No direct script access allowed');
 include 'DTO/Option.php';
+include 'DTO/PolicticsJwt.php';
 
 class User extends CI_Controller
 {
 	public $http_method;
+    public $token_data;
 
 	public function __construct()
 	{
@@ -13,7 +15,6 @@ class User extends CI_Controller
 
 		// 클라에서 요청한 (GET, POST, PATCH, DELETE) HTTP 메서드 확인
 		$this->http_method = $_SERVER["REQUEST_METHOD"];
-//        return $this->http_method;
 	}
 
 	// request url : {서버 ip}/user
@@ -36,21 +37,31 @@ class User extends CI_Controller
 		}
 	}
 
-	public function headerData($jwtToken)
+	public function headerTokenData()
 	{
+        $pmm_jwt = new PolicticsJwt();
+
+        // 클라이언트가 header에 토큰정보를 담아 보낸걸 확인한다.
+        $header_data = apache_request_headers();
+
+        // 클라이언트의 토큰으로 인코딩도니 문자열을 해독한다.
+        // == jwt_data에는 클라이언트가보낸 토큰의 정보들이 담겨있다.
+        $token_data = $pmm_jwt->tokenParsing($header_data['Authorization']);
+
+        return $token_data;
 	}
 
 	// 닉네임 중복 체크 메서드
 	public function getNickNameCheck()
 	{
-		// 사용자가 닉네임 중복 체크 요청 - nick_name 가지고있다.
-		$nick_name = $this->input->get(null, true);
+	    // 헤더의 토큰 정보를 가져온다.
+        $this->token_data = $this->headerTokenData();
 
-		$error=jsonNullCheck($nick_name,array('nick_name'));
-		if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+        // 토큰정보에서 사용자의 닉네임을 가져온다.
+        $nick_name = $this->token_data->nick_name;
 
 		$this->load->model('UserModel');
-		$result = $this->UserModel->getNickCheck($nick_name['nick_name']);
+		$result = $this->UserModel->getNickCheck($nick_name);
 		echo $result;
 	}
 	// 아이디 중복 체크 메서드
@@ -79,7 +90,12 @@ class User extends CI_Controller
 
 		// 사용자가 보낸 id, pw 정보를 db에 있는 id, pw와 비교한다.
 		$this->load->model('UserModel');
-		$result = $this->UserModel->getLoginStatus($json_data);
+
+		// 사용자의 정보를 가져온다.
+        $user_info = $this->UserModel->getUserInfo($json_data['id']);
+
+        // 로그인 결과를 반환
+        $result = $this->UserModel->getLoginStatus($json_data, $user_info);
 		echo $result;
 	}
 

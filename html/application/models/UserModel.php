@@ -161,9 +161,9 @@ class UserModel extends CI_Model
     //경우 1 . 처음 회원가입
     //경우 2 . 카카오 동의만 받고 회원가입을 진행 하지 않음
     //경우 3 . 카카오 로그인으로 회원가입 진행
-    public function kakaoCheck($uid){
+    public function kakaoCheck($uid, $user_info){
 
-	    $result=$this->db->query("select *,count(idx)as count from User where id=$uid and social_login='K'")->row();
+	    $result=$this->db->query("select *,count(idx)as `count` from User where id='$uid' and social_login='K'")->row();
 	    //이미 테이블에 카카오 uid가 저장되어있는경우
         $result_json=array();
 	    if ($result->count ==1){
@@ -172,13 +172,21 @@ class UserModel extends CI_Model
             //pmm자체 회원가입으로 넘어가야함 = 1
             if($result->nick_name ==null){
 	            $result_json['response_code']=1;
-                return json_encode($result_json,true);
+                return json_encode($result_json);
             }
 	        //카카오 동의후 pmm회원가입까지 완료한 상태
             //카카오 로그인 완료 = 0
             else{
+
+                // jwt 토큰 객체 생성
+                $pmm_jwt = new PolicticsJwt();
+
+                // 사용자 id 값으로 토큰을 생성해서 client에게 전달해준다.
+                // 이제부터 클라이언트는 api 요청 시 서버로 부터 받은 토큰을 사용 하여 필요한 데이터를 주고 받는다.
+                $token = $pmm_jwt->createToken($user_info);
                 $result_json['response_code']=0;
-                return json_encode($result_json,true);
+                $result_json['token']=$token;
+                return json_encode($result_json);
 
             }
         }
@@ -187,7 +195,7 @@ class UserModel extends CI_Model
 	    else{
 	        $this->db->query("INSERT INTO User (social_login,id) VALUES ('K','$uid')");
             $result_json['response_code']=2;
-            return json_encode($result_json,true);
+            return json_encode($result_json);
 
         }
 

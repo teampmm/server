@@ -7,7 +7,7 @@ include 'DTO/PolicticsJwt.php';
 class User extends CI_Controller
 {
 	public $http_method;
-    public $token_data;
+    public $header_data;
 
 	public function __construct()
 	{
@@ -37,7 +37,7 @@ class User extends CI_Controller
 		}
 	}
 
-	public function headerTokenData()
+	public function headerData()
 	{
         $pmm_jwt = new PolicticsJwt();
 
@@ -46,22 +46,22 @@ class User extends CI_Controller
 
         // 클라이언트의 토큰으로 인코딩도니 문자열을 해독한다.
         // == jwt_data에는 클라이언트가보낸 토큰의 정보들이 담겨있다.
-        $token_data = $pmm_jwt->tokenParsing($header_data['Authorization']);
+        $jwt_data = $pmm_jwt->tokenParsing($header_data['Authorization']);
 
-        return $token_data;
+        return $jwt_data;
 	}
 
 	// 닉네임 중복 체크 메서드
 	public function getNickNameCheck()
 	{
-	    // 헤더의 토큰 정보를 가져온다.
-        $this->token_data = $this->headerTokenData();
+		// 사용자가 닉네임 중복 체크 요청 - nick_name 가지고있다.
+		$nick_name = $this->input->get(null, true);
 
-        // 토큰정보에서 사용자의 닉네임을 가져온다.
-        $nick_name = $this->token_data->nick_name;
+		$error=jsonNullCheck($nick_name,array('nick_name'));
+		if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
 		$this->load->model('UserModel');
-		$result = $this->UserModel->getNickCheck($nick_name);
+		$result = $this->UserModel->getNickCheck($nick_name['nick_name']);
 		echo $result;
 	}
 	// 아이디 중복 체크 메서드
@@ -192,7 +192,12 @@ class User extends CI_Controller
 		if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
 		$this->load->model('UserModel');
-		echo $this->UserModel->kakaoCheck($uid['kakao_uid']);
+
+        // 사용자의 정보를 가져온다.
+        $user_info = $this->UserModel->getUserInfo($uid['kakao_uid']);
+
+		$result =  $this->UserModel->kakaoCheck($uid['kakao_uid'], $user_info);
+		echo $result;
 
 	}
 	//카카오 로그인 동의 후 pmm 가입

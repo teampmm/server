@@ -97,6 +97,10 @@ def votePolitician(write_result,num,i,k):
         write_result.cell(row=num + i, column=48).value = k['sgId']
     except:
         write_result.cell(row=num + i, column=48).value = ''
+    try:
+        write_result.cell(row=num + i, column=49).value = k['sgTypecode']
+    except:
+        write_result.cell(row=num + i, column=49).value = ''
 
 #당선정보를 가져오기위해 선거코드와 선거종류코드를 가지고 api신청
 code_list=[['20160413',4],['20160413',5],['20160413',6],['20160413',7],

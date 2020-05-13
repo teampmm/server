@@ -9,7 +9,13 @@ class PoliticianModel extends CI_Model
 	}
 
 	// 정치인 카드 모아보기 정보
-	public function getPoliticianCard($request_page, $random_card_idx, $token_data){
+	public function getPoliticianCard($request_page, $random_card_idx, $token_and_login_data){
+
+	    // 클라이언트가 첫 페이지 요청할때, 덱 번호가 정해져 있지 않아서 -1값으로 요청이 들어온다.
+	    $RANDOM_CARD_INIT_DATA = -1;
+
+	    $token_data = $token_and_login_data['token'];
+	    $login_check = $token_and_login_data['login_check'];
 
 		// 응답 데이터
 		$response_data = array();
@@ -19,12 +25,16 @@ class PoliticianModel extends CI_Model
 
 		// 사용자가 가지고 있는 랜덤 카드 인덱스 - RandomCard 인덱스
 		$current_rand_idx = $random_card_idx;
-		if($current_rand_idx == -1){
+
+		// 첫페이지 요청
+		if($current_rand_idx == $RANDOM_CARD_INIT_DATA){
 			// 카드 인덱스, 카드 정보 가져오기 ( 정치인 인덱스가 들어있음 )
 			$random_card_select_result = $this->db->query("select idx, card_number from RandomCard ORDER BY rand() limit 1")->row();
 			$current_rand_idx = $random_card_select_result->idx;
 		}
-		else{
+
+        // 첫페이지 이상 요청
+        else{
 			$random_card_select_result = $this->db->query("select idx, card_number from RandomCard where idx = '$current_rand_idx'")->row();
 		}
 
@@ -40,25 +50,25 @@ class PoliticianModel extends CI_Model
 		// 카드 모음 리스트
 		$card_list = array();
 
-		// jwt 토큰에서 받은 아이디
-		$user_id = $token_data->id;
-
-		// 북마크한 정치인의 인덱스를 담을 배열
-		$book_mark_array = array();
-
-		$user_select_result = $this->db->query("select idx from User where id = '$user_id'")->row();
-		if ($user_select_result){
-			$user_idx = $user_select_result->idx;
+        // 북마크한 정치인의 인덱스를 담을 배열
+        $book_mark_array = array();
 
 
-			//사용자의 인덱스로 찾은 정치인 북마크 인덱스
-			$book_mark_select_result = $this->db->query("select politician_idx from BookMark where user_idx = '$user_idx'")->result();
+        // 사용자가 로그인 했을때만 북마크 정보 저장
+        if($login_check == true){
+            // jwt 토큰에서 받은 아이디
+                $user_idx = $token_data->idx;
 
-			// 배열에 정치인 북마크 인덱스 담기
-			for ($i = 0 ;$i < count($book_mark_select_result); $i++ ){
-				$book_mark_array[$i] = $book_mark_select_result[$i]->politician_idx;
-			}
-		}
+                //사용자의 인덱스로 찾은 정치인 북마크 인덱스
+                $book_mark_select_result = $this->db->query("select politician_idx from BookMark where user_idx = '$user_idx'")->result();
+
+
+                // 배열에 정치인 북마크 인덱스 담기
+                for ($i = 0 ;$i < count($book_mark_select_result); $i++ ){
+                    $book_mark_array[$i] = $book_mark_select_result[$i]->politician_idx;
+                }
+        }
+
 
 		for ($i = $per_page_data * ($request_page-1); $i < $per_page_data * ($request_page-1) + $per_page_data; $i++){
 
@@ -75,7 +85,7 @@ class PoliticianModel extends CI_Model
 			// 당선 지역
 			// 카테고리
 			$politician_pledge_result = $this->db->query("SELECT
-                idx, kr_name, party_idx, profile_image_url, elect_area, category, affiliation_committee
+                idx, kr_name ,profile_image_url
                 FROM Politician where idx = '$card_number[$i]'")->result();
 
 			foreach ($politician_pledge_result as $row) {
@@ -83,26 +93,45 @@ class PoliticianModel extends CI_Model
 				// 카드 하나에 들어있는 데이터
 				$card_data = array();
 
-				// 정당 인덱스로 정당의 이름을 조회
-				$party_select_result = $this->db->query("SELECT
-                    party_name
-                    FROM Party where idx = '$row->party_idx'")->row();
+				//의원 인덱스로 의원 상세정보 조회
+                $politician_info_result=$this->db->query("select * from PoliticianInfo where politician_idx=$row->idx order by elect_generation desc limit 1")->row();
 
-				if (in_array($row->idx, $book_mark_array)){
-					$card_data['bookmark'] = true;
-				}
-				else{
-					$card_data['book_mark'] = false;
-				}
+				// 정당 인덱스로 정당의 이름을 조회 --> 정당 테이블 만들고 수정해야함
+//				$party_select_result = $this->db->query("SELECT
+//                    party_name
+//                    FROM Party where idx = '$row->party_idx'")->row();
+
+                // 사용자가 로그인했을때만 북마크 여부를 보여준다.
+                if($login_check == true){
+                    if (in_array($row->idx, $book_mark_array)){
+                        $card_data['bookmark'] = true;
+                    }
+                    else{
+                        $card_data['bookmark'] = false;
+                    }
+                }
+
 
 				// 정치인 카드에 들어갈 정보
 				$card_data['politician_idx'] = (int)$row->idx;
 				$card_data['kr_name'] = $row->kr_name;
-				$card_data['party_name'] = $party_select_result->party_name;
-				$card_data['affiliation_committee'] = $row->affiliation_committee;
-				$card_data['elect_area'] = $row->elect_area;
+				$card_data['party_name'] = $politician_info_result->party_idx;
+				$card_data['affiliation_committee'] = $politician_info_result->affiliation_committee;
+				$card_data['elect_area'] = $politician_info_result->elect_area;
 				$card_data['profile_image_url'] = $row->profile_image_url;
-				$card_data['category'] = $row->category;
+				$elect_generation=$this->db->query("select elect_generation from PoliticianInfo where politician_idx=$row->idx order by elect_generation asc")->result();
+				if(count($elect_generation)==1){
+                    $card_data['category'] = '#초선';
+
+                }else{
+				    $data='';
+				    foreach ($elect_generation as $elect_row){
+                        $data =$data.'#'.$elect_row->elect_generation.'대 ';
+                    }
+				$card_data['category'] = $data;
+
+                }
+//				$card_data['category'] = $politician_info_result->category;
 
 				// 정치인 카드 리스트에 추가
 				array_push($card_list,$card_data);
@@ -297,15 +326,19 @@ class PoliticianModel extends CI_Model
         // 클라에게 보내줄 응답 데이터
         $response_data = array();
 
-	    $user_id = $token_data->id; // 토큰에서 받은 유저 아이디
-
-	    // jwt 토큰에서 받은 유저 아이디
-        $politician_select_result = $this->db->query("SELECT
-                idx FROM User where 
-                id = '$user_id'")->row();
+//	    $user_id = $token_data['token']->id; // 토큰에서 받은 유저 아이디
+//
+//	    // jwt 토큰에서 받은 유저 아이디
+//        $politician_select_result = $this->db->query("SELECT
+//                idx FROM User where
+//                id = '$user_id'")->row();
 
         // 유저 인덱스
-        $user_idx = $politician_select_result->idx;
+        $user_idx = $token_data['token']->idx;
+        if($token_data['login_check']==false){
+            $response_data['result'] = '로그인 필요';
+            return json_encode($response_data);
+        }
 
         // 사용자가 해당 정치인을 북마크 했는지 여부 보기
         $bookmark_select_result = $this->db->query("SELECT
@@ -333,7 +366,7 @@ class PoliticianModel extends CI_Model
         $response_data = array();
 
         // 사용자 인덱스
-        $user_idx = $token_data->idx;
+        $user_idx = $token_data['token']->idx;
 
         // 좋아요 싫어요 정보조회
         $result = $this->db->query("SELECT * , count(*) as `count` FROM BookMark where 
@@ -350,51 +383,58 @@ class PoliticianModel extends CI_Model
 
     // 정치인 좋아요 싫어요 정보수정
     public function postUserEvaluation($politician_idx, $like_status, $token_data){
-        // 클라에게 보내줄 응답 데이터
-        $response_data = array();
+        if($token_data['login_check'] == true){
+            // 클라에게 보내줄 응답 데이터
+            $response_data = array();
 
-        // 클라이언트가 좋아요를 요청한경우
-        if($like_status == "like"){
-            $status = 1;
-        }
+            // 클라이언트가 좋아요를 요청한경우
+            if($like_status == "like"){
+                $status = 1;
+            }
 
-        // 클라이언트가 싫어요를 요청한경우
-        else{
-            $status = 0;
-        }
+            // 클라이언트가 싫어요를 요청한경우
+            else{
+                $status = 0;
+            }
 
-        // 사용자 인덱스
-        $user_idx = $token_data->idx;
+            // 사용자 인덱스
+            $user_idx = $token_data['token']->idx;
 
-        // 사용자의 정치인에 대한 좋아요 데이터가 있는지 확인
-        $bookmark_select_result = $this->db->query("SELECT
+            // 사용자의 정치인에 대한 좋아요 데이터가 있는지 확인
+            $bookmark_select_result = $this->db->query("SELECT
                 count(idx) as `count`  FROM UserEvaluationBill where 
                 user_idx = '$user_idx' and politician_idx = '$politician_idx'")->row();
 
-        // 좋아요 싫어요 데이터가 있는 경우
-        if ($bookmark_select_result->count == 1){
+            // 좋아요 싫어요 데이터가 있는 경우
+            if ($bookmark_select_result->count == 1){
 
-            // 사용자의 정치인 좋아요에 대한 데이터가 있는가?
-            $result = $this->db->query("select count(*) as `count` from UserEvaluationBill where 
+                // 사용자의 정치인 좋아요에 대한 데이터가 있는가?
+                $result = $this->db->query("select count(*) as `count` from UserEvaluationBill where 
                 user_idx = '$user_idx' and politician_idx = '$politician_idx'")->row();
 
-            // 데이터가 같은 경우 - 데이터 삭제
-            if($result->count == 1){
-                if ($status==1){
-                    $result=$this->db->query("update UserEvaluationBill set status=1 where user_idx='$user_idx' and politician_idx='$politician_idx'");
-                }else if ($status==0){
-                    $result=$this->db->query("update UserEvaluationBill set status=0 where user_idx='$user_idx' and politician_idx='$politician_idx'");
+                // 데이터가 같은 경우 - 데이터 삭제
+                if($result->count == 1){
+                    if ($status==1){
+                        $result=$this->db->query("update UserEvaluationBill set status=1 where user_idx='$user_idx' and politician_idx='$politician_idx'");
+                    }else if ($status==0){
+                        $result=$this->db->query("update UserEvaluationBill set status=0 where user_idx='$user_idx' and politician_idx='$politician_idx'");
+                    }
                 }
             }
-        }
 
-        // 좋아요 싫어요 데이터가 없는 경우
-        else{
-            $result = $this->db->query("INSERT INTO UserEvaluationBill VALUES 
+            // 좋아요 싫어요 데이터가 없는 경우
+            else{
+                $result = $this->db->query("INSERT INTO UserEvaluationBill VALUES 
                 (null, null ,$politician_idx,$user_idx,$status)" );
+            }
+
+            $response_data['result'] = (boolean)$result;
         }
 
-        $response_data['result'] = (boolean)$result;
+        else{
+            $response_data['result'] = '로그인 필요';
+            return $response_data;
+        }
         return json_encode($response_data);
     }
 
@@ -404,8 +444,11 @@ class PoliticianModel extends CI_Model
         $response_data = array();
 
         // 사용자 인덱스
-        $user_idx = $token_data->idx;
-
+        $user_idx = $token_data['token']->idx;
+        if($token_data['login_check']==false){
+            $response_data['status']='로그인 필요';
+            return json_encode($response_data);
+        }
         // 좋아요 싫어요 정보조회
         $result = $this->db->query("SELECT * , count(*) as `count` FROM UserEvaluationBill where 
                 user_idx = $user_idx and politician_idx = $politician_idx")->row();

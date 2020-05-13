@@ -16,6 +16,7 @@ import os
 
 
 """
+
 def votePolitician(write_result,num,i,k):
     write_result.cell(row=num + i, column=27).value = k['huboid']
     write_result.cell(row=num + i, column=28).value = k['sggName']
@@ -92,6 +93,12 @@ def votePolitician(write_result,num,i,k):
         write_result.cell(row=num + i, column=47).value = k['dugyul']
     except:
         write_result.cell(row=num + i, column=47).value = ''
+    try:
+        write_result.cell(row=num + i, column=48).value = k['sgId']
+    except:
+        write_result.cell(row=num + i, column=48).value = ''
+
+#당선정보를 가져오기위해 선거코드와 선거종류코드를 가지고 api신청
 code_list=[['20160413',4],['20160413',5],['20160413',6],['20160413',7],
            ['20170509',1],['20170509',5],['20170509',6]
            ,['20180613',2],['20180613',3],['20180613',4],['20180613',5],['20180613',6],['20180613',8],['20180613',9],['20180613',10],['20180613',11]
@@ -128,8 +135,7 @@ for i in code_list:
     print(vote_data)
     print(len(vote_result_data))
 
-# print(vote_result_data)
-# exit()
+
 #국회의원 현황조회
 url='http://apis.data.go.kr/9710000/NationalAssemblyInfoService/getMemberCurrStateList'
 data = {
@@ -300,7 +306,7 @@ for i,v in enumerate(request_data['response']['body']['items']['item']):
         write_result.cell(row=num+i,column=26).value=politician_request_data['memTitle']
     except:
         write_result.cell(row=num+i,column=26).value=''
-    #당선일 정보 api와 국회의원 상세정보 aspi를 비교해서 데이터를 추가함
+    #당선인 정보 api와 국회의원 상세정보 aspi를 비교해서 데이터를 추가함
     #키값이 없기때문에 이름 , 선거구 를 비교해서 맞는것끼리만 매칭
     for k in vote_result_data:
         # print(str(k['sdName']),str(k['sggName']),v['origNm'],str(k['name']),str(v['empNm']))
@@ -308,6 +314,7 @@ for i,v in enumerate(request_data['response']['body']['items']['item']):
         #1. 의원의 (한글,한자)이름이 같다 and 비례대표이다
         #2. 의원의 이름이 같다 and 선거구 이름이 같을때 (서울 동작구 or 전남 OO시 or 세종특별자치시)
         if (str(v['origNm'])=='비례대표' and str(k['sggName'])=='비례대표' and str(k['name'])==str(v['empNm'])):
+            #데이터를 담당하는 기관이 달라서 한자 이름이 조금씩 다름 이름이 같고 한자가 2글자 이상 같다면 같은사람으로 표시
             name_check=0
             if (str(k['hanjaName'])[0]==str(v['hjNm'])[0]):
                 name_check += 1
@@ -323,7 +330,14 @@ for i,v in enumerate(request_data['response']['body']['items']['item']):
             count1+=1
             votePolitician(write_result, num, i, k)
             break
-
+        elif(str(k['sdName'])!="전국" and(str(k['name'])==str(v['empNm']) and str(k['sdName'])[:2]+" "+str(k['sggName'])=='인천 남구갑' and str(v['origNm'])=='인천 미추홀구갑')):
+            count1+=1
+            votePolitician(write_result, num, i, k)
+            break
+        elif(str(k['sdName'])!="전국" and(str(k['name'])==str(v['empNm']) and str(k['sdName'])[:2]+" "+str(k['sggName'])=='인천 남구을' and str(v['origNm'])=='인천 미추홀구을')):
+            count1+=1
+            votePolitician(write_result, num, i, k)
+            break
 
 if not (os.path.isdir('국회의원_현황')):
     os.makedirs(os.path.join('국회의원_현황'))

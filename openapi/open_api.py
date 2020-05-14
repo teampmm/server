@@ -15,7 +15,7 @@ sgName == 선거명
 sgTypecode == 선거종류코드 1.대통형 2.국회의원 3.시도지사 4.구시군장 5.시도의원 6.구시군의회의원 7.국회의원비례대표 8.광역의원비례대표 9.기초의원비례대표 10.교육의원 11.교육감
 sgVotedate == 선거일자
 """
-url = 'http://apis.data.go.kr/9760000/PartyPlcInfoInqireService'
+url = 'http://apis.data.go.kr/9760000/CommonCodeService/getCommonSgCodeList'
 data={'ServiceKey':"NXjYP6Ks1pRP2JTAbmAel7rQANhWPadkC8BvdLFpmDqVFsMI72sW3ukkWMm3WsXlPmucYg/fxi/WfVJQSLTzkA==",'numOfRows':'1000'}
 resp=requests.get(url,params=data)
 

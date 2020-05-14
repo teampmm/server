@@ -59,7 +59,6 @@ class Politician extends CI_Controller
 	    // 클라이언트가 요청한 덱 번호
         $random_card_idx = $request_data['random_card_idx'];
 
-	    // db에 사용자가 보낸 이메일이 있는지 확인한다. ( 중복체크 과정 ).
         $this->load->model('PoliticianModel');
         $result = $this->PoliticianModel->getPoliticianCard($request_page, $random_card_idx, $token_data);
         echo $result;
@@ -73,7 +72,6 @@ class Politician extends CI_Controller
 	    $error=jsonNullCheck($politician_idx,array('politician_idx'));
 	    if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
-	    // db에 사용자가 보낸 이메일이 있는지 확인한다. ( 중복체크 과정 ).
         $this->load->model('PoliticianModel');
         $result = $this->PoliticianModel->getInfo($politician_idx['politician_idx']);
 	    echo $result;
@@ -87,7 +85,6 @@ class Politician extends CI_Controller
 	    $error=jsonNullCheck($politician_idx,array('politician_idx'));
 	    if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
-	    // db에 사용자가 보낸 이메일이 있는지 확인한다. ( 중복체크 과정 ).
         $this->load->model('PoliticianModel');
         $result = $this->PoliticianModel->getNews($politician_idx['politician_idx']);
 	    echo $result;
@@ -101,7 +98,6 @@ class Politician extends CI_Controller
 	    $error=jsonNullCheck($politician_idx,array('politician_idx'));
 	    if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
-        // db에 사용자가 보낸 이메일이 있는지 확인한다. ( 중복체크 과정 ).
         $this->load->model('PoliticianModel');
         $result = $this->PoliticianModel->getPledgeInfo($politician_idx['politician_idx']);
 	    echo $result;
@@ -117,7 +113,6 @@ class Politician extends CI_Controller
 
 	    if ( $politician_idx == null or $politician_idx < 1) return "invaild_data_politician_idx";
 
-        // db에 사용자가 보낸 이메일이 있는지 확인한다. ( 중복체크 과정 ).
         $this->load->model('PoliticianModel');
         $result = $this->PoliticianModel->postBookmarkModify($politician_idx, $token_data);
 	    echo $result;
@@ -133,7 +128,6 @@ class Politician extends CI_Controller
         $error=jsonNullCheck($politician_idx,array('politician_idx'));
         if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
-        // db에 사용자가 보낸 이메일이 있는지 확인한다. ( 중복체크 과정 ).
         $this->load->model('PoliticianModel');
         $result = $this->PoliticianModel->getBookmark($politician_idx['politician_idx'], $token_data);
         echo $result;
@@ -151,7 +145,6 @@ class Politician extends CI_Controller
         $error=jsonNullCheck($input_json,array('politician_idx','status'));
         if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
-        // db에 사용자가 보낸 이메일이 있는지 확인한다. ( 중복체크 과정 ).
         $this->load->model('PoliticianModel');
         $result = $this->PoliticianModel->postUserEvaluation($input_json['politician_idx'], $input_json['status'], $token_data);
         echo $result;
@@ -168,9 +161,15 @@ class Politician extends CI_Controller
         $error=jsonNullCheck($politician_idx,array('politician_idx'));
         if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
-        // db에 사용자가 보낸 이메일이 있는지 확인한다. ( 중복체크 과정 ).
         $this->load->model('PoliticianModel');
         $result = $this->PoliticianModel->getUserEvaluation($politician_idx['politician_idx'], $token_data);
+        echo $result;
+    }
+
+    public function postMakeRandomCard(){
+        // db에 사용자가 보낸 이메일이 있는지 확인한다. ( 중복체크 과정 ).
+        $this->load->model('PoliticianModel');
+        $result = $this->PoliticianModel->postMakeRandomCard();
         echo $result;
     }
 
@@ -222,6 +221,10 @@ class Politician extends CI_Controller
             // 정치인 좋아요 / 싫어요
             else if($client_data == "politician_user_evaluation"){
                 $this->postUserEvaluation();
+            }
+            // 랜덤카드 만들기
+            else if($client_data == "make_card"){
+                $this->postMakeRandomCard();
             }
         }else if ($this->http_method == "PATCH" or $this->http_method=='patch'){
 

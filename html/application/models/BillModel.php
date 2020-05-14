@@ -138,22 +138,33 @@ class BillModel extends CI_Model
     //법안인덱스로 -> 법안을 발의한 정치인들의 정보를 반한다  //정치인 idx , 정치인 이름 , 대표발의여부 , 정당인덱스, 정당이름
     private function billIndexToPoliticians($bill_idx)
     {
-        $proposer = $this->db->query("select politician_idx,representative from Proposer where bill_idx=$bill_idx")->result();
-        $proposer_array = array();
-        foreach ($proposer as $proposer_row) {
-            $proposer_data = array();
-            $politicians = $this->db->query("select idx,party_idx,kr_name from Politician where idx=$proposer_row->politician_idx")->row();
-            $proposer_data['idx'] = (int)$politicians->idx;
-            $proposer_data['kr_name'] = $politicians->kr_name;
-            $proposer_data['representative'] = (int)$proposer_row->representative;
-            //정당인덱스로 정당 이름 찾기
-            $party = $this->db->query("select idx,party_name from Party where idx=$politicians->party_idx")->row();
-            $proposer_data['party_idx'] = (int)$party->idx;
-            $proposer_data['party_name'] = $party->party_name;
+//        //20대 일때만 가정해서 만들어졌음
+//        //실제로 법안이 추가되면 대수도 같이 검색해야함
+//        //법안 인덱스로 의원들 인덱스 가져옴
+//        $proposer = $this->db->query("select politician_info_idx,representative from Proposer where bill_idx=$bill_idx")->result();
+//        $proposer_array = array();
+//        foreach ($proposer as $proposer_row) {
+//            $proposer_data = array();
+//            //의원들 인덱스로 해당대수의 의원 정보 가져옴
+//            $politicians = $this->db->query("select politician_idx,party_idx from PoliticianInfo where idx=$proposer_row->politician_info_idx  and elect_area is not NULL")->row();
+//            if ($politicians==null){
+//                return null;
+//            }
+////            return "select politician_idx,party_idx from PoliticianInfo where idx=$proposer_row->politician_info_idx  and elect_area is not NULL";
+//            //대수 의원 인덱스로 해당 의원의 정보 가져옴
+//            $aa=$this->db->query("select * from Politician where idx=$politicians->politician_idx")->row();
+//            $proposer_data['idx'] = (int)$aa->idx;
+//            $proposer_data['kr_name'] = $aa->kr_name;
+//            $proposer_data['representative'] = (int)$proposer_row->representative;
+//            //정당인덱스로 정당 이름 찾기
+//            $party = $this->db->query("select idx,name from PartyName where idx=$politicians->party_idx")->row();
+//            $proposer_data['party_idx'] = (int)$party->idx;
+//            $proposer_data['party_name'] = $party->name;
+//
+//            array_push($proposer_array, $proposer_data);
+//        }
+//        return $proposer_array;
 
-            array_push($proposer_array, $proposer_data);
-        }
-        return $proposer_array;
     }
 
 
@@ -162,7 +173,7 @@ class BillModel extends CI_Model
     {
         $result = array();
 //        $total_array=array();
-        $vote_rows = $this->db->query("select politician_idx,vote_status from BillVote where bill_idx=$index")->result();
+        $vote_rows = $this->db->query("select politician_info_idx,vote_status from BillVote where bill_idx=$index")->result();
         $result['total'] = count($vote_rows);
 
         //찬성한 사람들을 담는 배열
@@ -175,18 +186,18 @@ class BillModel extends CI_Model
         $absence_array = array();
         foreach ($vote_rows as $row) {
             if ($row->vote_status == 0) {
-                $politician_idx = (int)$row->politician_idx;
-                array_push($agreement_array, $this->votePerson($politician_idx));
+                $politician_info_idx = (int)$row->politician_info_idx;
+                array_push($agreement_array, $this->votePerson($politician_info_idx));
 
             } else if ($row->vote_status == 1) {
-                $politician_idx = (int)$row->politician_idx;
-                array_push($opposition_array, $this->votePerson($politician_idx));
+                $politician_info_idx = (int)$row->politician_info_idx;
+                array_push($opposition_array, $this->votePerson($politician_info_idx));
             } else if ($row->vote_status == 2) {
-                $politician_idx = (int)$row->politician_idx;
-                array_push($abstention_array, $this->votePerson($politician_idx));
+                $politician_info_idx = (int)$row->politician_info_idx;
+                array_push($abstention_array, $this->votePerson($politician_info_idx));
             } else {
-                $politician_idx = (int)$row->politician_idx;
-                array_push($absence_array, $this->votePerson($politician_idx));
+                $politician_info_idx = (int)$row->politician_info_idx;
+                array_push($absence_array, $this->votePerson($politician_info_idx));
             }
 
         }
@@ -205,13 +216,22 @@ class BillModel extends CI_Model
     //해당 인덱스를 가지고 의원의 이름 , 정당 을 반환
     private function votePerson($index)
     {
-        $politician_row = $this->db->query("select party_idx,kr_name from Politician where idx=$index")->row();
-        $data['idx'] = (int)$index;
-        $data['party_idx'] = (int)$politician_row->party_idx;
-        $data['kr_name'] = $politician_row->kr_name;
-        $party_name = $this->db->query("select party_name from Party where idx=" . $data['party_idx'])->row();
-        $data['party_name'] = $party_name->party_name;
-        return $data;
+////        return $index;
+//        $politician_row = $this->db->query("select politician_idx,party_idx from PoliticianInfo where idx=$index ")->row();
+////        return var_dump($politician_row);
+////        $politician = $this->db->query("select * from Politician where idx=$politician_row->politician_idx")->row();
+////
+////        return
+//            $data['idx'] = (int)$index;
+////        return "select * from PartyName where idx in (select party_idx from PartyInfo where idx=$politician_row->party_idx)";
+////        return $politician_row->party_idx;
+//        $party_idx=(int)$politician_row->party_idx;
+//            $party_indo = $this->db->query("select * from PartyName where idx in (select party_idx from PartyInfo where idx=$party_idx)");
+//            $data['party_idx'] = $party_indo->idx;
+//            $data['kr_name'] = $this->db->query("select * from Politician where idx=$politician_row->politician_idx")->row()->kr_name;
+////        $party_name = $this->db->query("select name from PartyName where idx=" . $data['party_idx'])->row();
+//            $data['party_name'] = $party_indo->name;
+//            return $data;
     }
 
     //법안에 대한 좋아요 싫어요 보여주는 메소드

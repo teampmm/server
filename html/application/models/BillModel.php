@@ -226,10 +226,12 @@ class BillModel extends CI_Model
         $result['agreement_total'] = (int)$agreement_count->agreement;
         $result['opposition_total'] = (int)$opposition_count->opposition;
 
-        $like_and_dislike_status = $this->db->query("select *, count(idx) as `count` from UserEvaluationBill where bill_idx =$index and user_idx = $user_idx")->row();
-
+        if($user_idx=='토큰없음'){
+            $result['user_check'] = '좋아요, 싫어요 데이터 없음';
+            return json_encode($result);
+        }
         // 법안에 대한 좋아요, 싫어요 데이터 여부 조회
-
+        $like_and_dislike_status = $this->db->query("select *, count(idx) as `count` from UserEvaluationBill where bill_idx =$index and user_idx = $user_idx")->row();
         // 좋아요 또는 싫어요 데이터가 있다면
         if ($like_and_dislike_status->idx != null){
              // 사용자가 법안에 대해 좋아요함.
@@ -272,6 +274,11 @@ class BillModel extends CI_Model
             //댓글에 대한 좋아요와 싫어요 갯수 and (사용자가 좋아요 or 싫어요를 클릭 했는지 여부)
             $data['agreement'] = (int)$this->db->query("select count(idx) as count from CommentRating where comment_idx=$row->idx and status=0")->row()->count;
             $data['opposition'] = (int)$this->db->query("select count(idx) as count from CommentRating where comment_idx=$row->idx and status=1 ")->row()->count;
+            if($token_data->idx =="토큰실패"){
+                $data['like_status'] = "좋아요, 싫어요 안함";
+
+            }else{
+
             $like_status = $this->db->query("select status, count(idx) as count from CommentRating where user_idx = $token_data->idx and comment_idx=$row->idx")->row();
             if ($like_status->count == 0){
                 $data['like_status'] = "좋아요, 싫어요 안함";
@@ -281,6 +288,7 @@ class BillModel extends CI_Model
                     $data['like_status']= '좋아요';
                 else
                     $data['like_status']= '싫어요';
+            }
             }
             //대댓글이 몇개있는지 카운트로 알려줌
             $data['child'] = (int)$this->db->query("select count(idx) as count from SubComment where comment_idx=$row->idx")->row()->count;
@@ -313,6 +321,9 @@ class BillModel extends CI_Model
             $data['content'] = $row->content;
             $data['agreement'] = (int)$this->db->query("select count(idx) as count from CommentRating where sub_comment_idx=$row->idx and status=0")->row()->count;
             $data['opposition'] = (int)$this->db->query("select count(idx) as count from CommentRating where sub_comment_idx=$row->idx and status=1 ")->row()->count;
+            if($token_data->idx=="토큰실패"){
+                $data['like_status'] = "좋아요, 싫어요 안함";
+            }else{
 
             $like_status = $this->db->query("select status, count(idx) as count from CommentRating where user_idx = $token_data->idx and sub_comment_idx=$row->idx")->row();
             if ($like_status->count == 0){
@@ -323,6 +334,7 @@ class BillModel extends CI_Model
                     $data['like_status']= '좋아요';
                 else
                     $data['like_status']= '싫어요';
+            }
             }
 
             //답글에 대한 답글일경우 부모 유저를 링크해준다
@@ -347,6 +359,8 @@ class BillModel extends CI_Model
     //사용자가 법안에 대해 댓글을 작성할 경우
     public function billCommentWrite($bill_idx, $content, $status,$token_data)
     {
+
+        if($token_data->idx=="토큰실패"){$result_json=array();$result_json['result']='로그인 필요';header("HTTP/1.1 401 ");return json_encode($result_json);}
         if ($status == 'agreement') {
             $this->db->query("insert into Comment(user_idx,bill_idx,content,create_at,status) values ($token_data->idx,$bill_idx,'$content',NOW(),0)");
 
@@ -366,6 +380,8 @@ class BillModel extends CI_Model
     // 사용자가 답글에 대한 답글을 작성 할 경우 (부모 인덱스가 있는경우)
     public function billSubCommmentWrite($comment_idx, $content, $parent_idx, $token_data)
     {
+        if($token_data->idx=="토큰실패"){$result_json=array();$result_json['result']='로그인 필요';header("HTTP/1.1 401 ");return json_encode($result_json);}
+
         if ($parent_idx == null) {
             $this->db->query("insert into SubComment(comment_idx,user_idx,content,create_at) values ($comment_idx,$token_data->idx,'$content',NOW())");
         } else {
@@ -382,6 +398,8 @@ class BillModel extends CI_Model
     //사용자가 좋아요 해제 , 싫어요 해제  클릭시 row 삭제
     public function billEvaluationWrite($bill_idx, $status, $token_data)
     {
+        if($token_data->idx=="토큰실패"){$result_json=array();$result_json['result']='로그인 필요';header("HTTP/1.1 401 ");return json_encode($result_json);}
+
         $result = $this->db->query("select count(*) as 'count' from UserEvaluationBill where bill_idx=$bill_idx")->row();
 
 //        return $result->count;
@@ -411,6 +429,8 @@ class BillModel extends CI_Model
 
     public function commentEvaluationWrite($comment_check, $comment_idx, $status, $token_data)
     {
+        if($token_data->idx=="토큰실패"){$result_json=array();$result_json['result']='로그인 필요';header("HTTP/1.1 401 ");return json_encode($result_json);}
+
         $result = $this->db->query("select count(*) as 'count' from CommentRating where $comment_check=$comment_idx")->row();
         if ($result->count >= 1) {
             if ($status == 'agreement') {

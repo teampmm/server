@@ -109,7 +109,7 @@ class PoliticianModel extends CI_Model
                 $party_name = $party_name_select_result->name;
 
                 // 정치인 카드에 들어갈 정보
-				$card_data['politician_idx'] = $row->idx;
+				$card_data['politician_idx'] = (int)$row->idx;
 				$card_data['kr_name'] = $row->kr_name;
 				$card_data['profile_image_url'] = $row->profile_image_url;
                 $card_data['committee_name'] = $politician_info_result->committee_idx;
@@ -424,15 +424,34 @@ class PoliticianModel extends CI_Model
             if ($bookmark_select_result->count == 1){
 
                 // 사용자의 정치인 좋아요에 대한 데이터가 있는가?
-                $result = $this->db->query("select count(*) as `count` from UserEvaluationBill where 
+                $result = $this->db->query("select *, count(*) as `count` from UserEvaluationBill where 
                 user_idx = '$user_idx' and politician_idx = '$politician_idx'")->row();
 
                 // 데이터가 같은 경우 - 데이터 삭제
                 if($result->count == 1){
-                    if ($status==1){
-                        $result=$this->db->query("update UserEvaluationBill set status=1 where user_idx='$user_idx' and politician_idx='$politician_idx'");
-                    }else if ($status==0){
-                        $result=$this->db->query("update UserEvaluationBill set status=0 where user_idx='$user_idx' and politician_idx='$politician_idx'");
+
+                    $current_status = (int)$result->status;
+
+                    if($current_status == $status){
+                        // 좋아요 해제
+                        $this->db->query("delete from UserEvaluationBill where user_idx= $user_idx and politician_idx= $politician_idx");
+                        if($current_status == 1){
+                            $response_data['result'] = "좋아요 해제";
+                        }
+                        // 싫어요 해제
+                        else{
+                            $response_data['result'] = "싫어요 해제";
+                        }
+                    }
+                    else{
+                        // 클라이언트가 좋아요 요청
+                        if ($status==1){
+                            $result=$this->db->query("update UserEvaluationBill set status=1 where user_idx='$user_idx' and politician_idx='$politician_idx'");
+                            $response_data['result'] = "좋아요 활성화 싫어요 해제";
+                        }else if ($status==0){
+                            $result=$this->db->query("update UserEvaluationBill set status=0 where user_idx='$user_idx' and politician_idx='$politician_idx'");
+                            $response_data['result'] = "좋아요 해제 싫어요 활성화";
+                        }
                     }
                 }
             }
@@ -441,10 +460,13 @@ class PoliticianModel extends CI_Model
             else{
                 $result = $this->db->query("INSERT INTO UserEvaluationBill VALUES 
                 (null, null ,$politician_idx,$user_idx,$status)" );
+                if($status == 1){
+                    $response_data['result'] = "좋아요 활성화";
+                }
+                else{
+                    $response_data['result'] = "싫어요 활성화";
+                }
             }
-
-            $response_data['result'] = (boolean)$result;
-
         return json_encode($response_data);
     }
 
@@ -468,7 +490,32 @@ class PoliticianModel extends CI_Model
             $response_data['status'] = $result->status;
         }
         return json_encode($response_data);
+    }
 
+    // 정치인 랜덤 카드 덱 만들기
+    public function postMakeRandomCard(){
+
+        $result = $this->db->query("SELECT idx FROM Politician")->result();
+
+        $temp = array();
+
+        for ($i = 0; $i < 1000; $i++) {
+
+            $random_idx_array = array();
+
+            foreach ($result as $row) {
+                array_push($random_idx_array, (int)$row->idx);
+                shuffle($random_idx_array);
+            }
+            $temp[$i] = $random_idx_array;
+
+            $card_number_str = "";
+
+            for($j = 0; $j<count($temp[$i]); $j++){
+                $card_number_str = $card_number_str.$temp[$i][$j].",";
+            }
+            $this->db->query("INSERT INTO RandomCard VALUES (null, '$card_number_str')" );
+        }
     }
 
 }

@@ -9,13 +9,13 @@ class PoliticianModel extends CI_Model
 	}
 
 	// 정치인 카드 모아보기 정보
-	public function getPoliticianCard($request_page, $random_card_idx, $token_and_login_data){
+	public function getPoliticianCard($request_page, $random_card_idx, $token_data){
+
+        /** 클라이언트가 요청한 대수 - 지금은 하드코딩 / 대수 : 20 으로 되었있다.*/
+        $elect_generation = 20;
 
 	    // 클라이언트가 첫 페이지 요청할때, 덱 번호가 정해져 있지 않아서 -1값으로 요청이 들어온다.
 	    $RANDOM_CARD_INIT_DATA = -1;
-
-	    $token_data = $token_and_login_data['token'];
-	    $login_check = $token_and_login_data['login_check'];
 
 		// 응답 데이터
 		$response_data = array();
@@ -55,13 +55,12 @@ class PoliticianModel extends CI_Model
 
 
         // 사용자가 로그인 했을때만 북마크 정보 저장
-        if($login_check == true){
+        if($token_data != null){
             // jwt 토큰에서 받은 아이디
                 $user_idx = $token_data->idx;
 
                 //사용자의 인덱스로 찾은 정치인 북마크 인덱스
                 $book_mark_select_result = $this->db->query("select politician_idx from BookMark where user_idx = '$user_idx'")->result();
-
 
                 // 배열에 정치인 북마크 인덱스 담기
                 for ($i = 0 ;$i < count($book_mark_select_result); $i++ ){
@@ -84,25 +83,16 @@ class PoliticianModel extends CI_Model
 			// 정치인 정당 인덱스
 			// 당선 지역
 			// 카테고리
-			$politician_pledge_result = $this->db->query("SELECT
-                idx, kr_name ,profile_image_url
-                FROM Politician where idx = '$card_number[$i]'")->result();
+			$politician_result = $this->db->query("SELECT
+                * FROM Politician where idx = '$card_number[$i]'")->result();
 
-			foreach ($politician_pledge_result as $row) {
+			foreach ($politician_result as $row) {
 
 				// 카드 하나에 들어있는 데이터
 				$card_data = array();
 
-				//의원 인덱스로 의원 상세정보 조회
-                $politician_info_result=$this->db->query("select * from PoliticianInfo where politician_idx=$row->idx order by elect_generation desc limit 1")->row();
-
-				// 정당 인덱스로 정당의 이름을 조회 --> 정당 테이블 만들고 수정해야함
-//				$party_select_result = $this->db->query("SELECT
-//                    party_name
-//                    FROM Party where idx = '$row->party_idx'")->row();
-
                 // 사용자가 로그인했을때만 북마크 여부를 보여준다.
-                if($login_check == true){
+                if($token_data != null){
                     if (in_array($row->idx, $book_mark_array)){
                         $card_data['bookmark'] = true;
                     }
@@ -111,27 +101,32 @@ class PoliticianModel extends CI_Model
                     }
                 }
 
+                // 정치인 인덱스로 정치인 상세정보 조회 - 20대 ( 최신 ) 카드정보만 준다.
+                $politician_info_result=$this->db->query("select * from PoliticianInfo where politician_idx=$row->idx and elect_generation = $elect_generation")->row();
 
-				// 정치인 카드에 들어갈 정보
-				$card_data['politician_idx'] = (int)$row->idx;
+                // 정치인 인덱스로 정당이름 조회
+                $party_name_select_result = $this->db->query("SELECT * FROM PartyName where idx = $politician_info_result->party_idx")->row();
+                $party_name = $party_name_select_result->name;
+
+                // 정치인 카드에 들어갈 정보
+				$card_data['politician_idx'] = $row->idx;
 				$card_data['kr_name'] = $row->kr_name;
-				$card_data['party_name'] = $politician_info_result->party_idx;
-				$card_data['affiliation_committee'] = $politician_info_result->affiliation_committee;
-				$card_data['elect_area'] = $politician_info_result->elect_area;
 				$card_data['profile_image_url'] = $row->profile_image_url;
-				$elect_generation=$this->db->query("select elect_generation from PoliticianInfo where politician_idx=$row->idx order by elect_generation asc")->result();
-				if(count($elect_generation)==1){
+                $card_data['committee_name'] = $politician_info_result->committee_idx;
+                $card_data['party_name'] = $party_name;
+
+				$elect_generation_result=$this->db->query("select elect_generation from PoliticianInfo where politician_idx=$row->idx order by elect_generation asc")->result();
+
+				if(count($elect_generation_result)==1){
                     $card_data['category'] = '#초선';
 
                 }else{
 				    $data='';
-				    foreach ($elect_generation as $elect_row){
+				    foreach ($elect_generation_result as $elect_row){
                         $data =$data.'#'.$elect_row->elect_generation.'대 ';
                     }
 				$card_data['category'] = $data;
-
                 }
-//				$card_data['category'] = $politician_info_result->category;
 
 				// 정치인 카드 리스트에 추가
 				array_push($card_list,$card_data);
@@ -173,6 +168,7 @@ class PoliticianModel extends CI_Model
 	// output : 정치인 사진경로, 공약 이행률, 카테고리, 이름, 정당이름, 약력
 	public function getInfo($politician_idx)
 	{
+
 		// 클라이언트에게 응답 해줄 데이터
 		$response_data = array();
 
@@ -188,68 +184,93 @@ class PoliticianModel extends CI_Model
 
 		// 정치인 조회 결과가 있음
 		else{
-			// 정치인 인덱스로 정당 테이블에 있는 정당 이름 조회
-			$party_select_result = $this->db->query("SELECT party_name FROM Party where idx = '$politician_idx'")->row();
+		    // Politician 테이블에서 조회한 데이터
+            // 한글, 한자, 영어 이름 및 약력, 생년월일, 프로필 이미지 경로
+            $response_data['politician_idx'] = $politician_select_result->idx;
+            $response_data['kr_name'] = $politician_select_result->kr_name;
+            $response_data['ch_name'] = $politician_select_result->ch_name;
+            $response_data['en_name'] = $politician_select_result->en_name;
+            $response_data['history'] = $politician_select_result->history;
+            $response_data['birthday'] = $politician_select_result->birthday;
+            $response_data['profile_image_url'] = $politician_select_result->profile_image_url;
 
-			$response_data['kr_name'] = $politician_select_result->kr_name;
-			$response_data['ch_name'] = $politician_select_result->ch_name;
-			$response_data['en_name'] = $politician_select_result->en_name;
-			$response_data['party_name'] = $party_select_result->party_name;
-			$response_data['office_number'] = $politician_select_result->office_number;
-			$response_data['history'] = $politician_select_result->history;
-			$response_data['profile_image_url'] = $politician_select_result->profile_image_url;
-			$response_data['affiliation_committee'] = $politician_select_result->affiliation_committee;
-			$response_data['email_id'] = $politician_select_result->email_id;
-			$response_data['email_address'] = $politician_select_result->email_address;
-			$response_data['aide'] = $politician_select_result->aide;
-			$response_data['secretary'] = $politician_select_result->secretary;
-			$response_data['category'] = $politician_select_result->category;
-			$response_data['elect_generation'] = $politician_select_result->elect_generation;
-			$response_data['elect_area'] = $politician_select_result->elect_area;
+            // 정치인 인덱스로 PoliticianInfo에서 조회한 데이터
+            // 정치인인덱스, 소속위원회인덱스, 정당인덱스,
+            // 선거대수, 선거구, 사무실번호, 이메일 아이디, 이메일 주소
+            // 보좌관, 비서, 카테고리, 표결점수, 홈페이지
 
-			// 정치인 테이블에서 정치인 인덱스로 정치인 공약 모음 테이블에 있는 공약을 조회
-			// 공약 이행률 계산
-			// 공약 전체 갯수 : 공약 데이터중 정치인 테이블에서 정치인 인덱스가 포함된 데이터 찾기
-			// 공약 이행 갯수 : 공약 이행 과정 - 완전이행 된것만 찾음
-			// 공약 이행률 = (공약 이행 갯수 / 공약 전체 갯수) * 100
-			$politician_pledge_select_result = $this->db->query("SELECT pledge_implement_status FROM PoliticianPledge where politician_idx = '$politician_idx'")->result();
+            /** 여기 아래 부터 작업해야함. */
 
-			// 공약 전체 갯수
-			$pledge_total = count($politician_pledge_select_result);
+            $politician_info_select_result = $this->db->query("SELECT
+                * FROM PoliticianInfo where politician_idx = '$politician_idx' ")->result();
 
-			$success_pledge = 0;    // 완전이행
-			$part_success_pledge = 0; // 부분이행
-			$retreat_pledge = 0; // 퇴각이행
-			$not_execute_pledge = 0; // 미이행
-			$impossible_judge = 0; // 판단불가
+            $politician_detail_info = array();
+            foreach ($politician_info_select_result as $info_row){
+                // 정치인 정보를 담을 배열
+                $temp = array();
+                $temp['elect_generation'] = (int)$info_row->elect_generation;
+                $temp['elect_area'] = $info_row->elect_area;
+                $temp['committee_name'] = $info_row->committee_idx;
 
-			foreach ($politician_pledge_select_result as $row) {
-				$pledge_status = $row->pledge_implement_status;
+                if($info_row->party_idx != null){
+                    $party_name_select_result = $this->db->query("SELECT * FROM PartyName where idx = $info_row->party_idx")->row();
+                    $party_name = $party_name_select_result->name;
+                    $temp['party_name'] = $party_name;
+                }
+                $temp['office_number'] = $info_row->office_number;
+                $temp['email_id'] = $info_row->email_id;
+                $temp['email_address'] = $info_row->email_address;
+                $temp['aide'] = $info_row->aide;
+                $temp['secretary'] = $info_row->secretary;
+                $temp['category'] = $info_row->category;
+                $temp['vote_score'] = $info_row->vote_score;
+                array_push($politician_detail_info,$temp);
+            }
+            $response_data['politician_detail_info'] = $politician_detail_info;
 
-				if ($pledge_status == "완전이행") {
-					$success_pledge++;
-				} else if ($pledge_status == "부분이행") {
-					$part_success_pledge++;
-				} else if ($pledge_status == "퇴각이행") {
-					$retreat_pledge++;
-				} else if ($pledge_status == "미이행") {
-					$not_execute_pledge++;
-				} else if ($pledge_status == "판단불가") {
-					$impossible_judge++;
-				}
-			}
-
-			// 공약 이행 데이터
-			$pledge_data = array();
-
-			$pledge_data['total_pledge_num'] = $pledge_total;
-			$pledge_data['success_pledge_num'] = $success_pledge;
-			$pledge_data['part_success_pledge_num'] = $part_success_pledge;
-			$pledge_data['retreat_pledge_num'] = $retreat_pledge;
-			$pledge_data['not_execute_pledge_num'] = $not_execute_pledge;
-			$pledge_data['impossible_judge_num'] = $impossible_judge;
-
-			$response_data['pledge_data'] = $pledge_data;
+//			// 정치인 테이블에서 정치인 인덱스로 정치인 공약 모음 테이블에 있는 공약을 조회
+//			// 공약 이행률 계산
+//			// 공약 전체 갯수 : 공약 데이터중 정치인 테이블에서 정치인 인덱스가 포함된 데이터 찾기
+//			// 공약 이행 갯수 : 공약 이행 과정 - 완전이행 된것만 찾음
+//			// 공약 이행률 = (공약 이행 갯수 / 공약 전체 갯수) * 100
+//			$politician_pledge_select_result = $this->db->query("SELECT pledge_implement_status FROM PoliticianPledge where politician_idx = '$politician_idx'")->result();
+//
+//			// 공약 전체 갯수
+//			$pledge_total = count($politician_pledge_select_result);
+//
+//			$success_pledge = 0;    // 완전이행
+//			$part_success_pledge = 0; // 부분이행
+//			$retreat_pledge = 0; // 퇴각이행
+//			$not_execute_pledge = 0; // 미이행
+//			$impossible_judge = 0; // 판단불가
+//
+//			foreach ($politician_pledge_select_result as $row) {
+//				$pledge_status = $row->pledge_implement_status;
+//
+//				if ($pledge_status == "완전이행") {
+//					$success_pledge++;
+//				} else if ($pledge_status == "부분이행") {
+//					$part_success_pledge++;
+//				} else if ($pledge_status == "퇴각이행") {
+//					$retreat_pledge++;
+//				} else if ($pledge_status == "미이행") {
+//					$not_execute_pledge++;
+//				} else if ($pledge_status == "판단불가") {
+//					$impossible_judge++;
+//				}
+//			}
+//
+//			// 공약 이행 데이터
+//			$pledge_data = array();
+//
+//			$pledge_data['total_pledge_num'] = $pledge_total;
+//			$pledge_data['success_pledge_num'] = $success_pledge;
+//			$pledge_data['part_success_pledge_num'] = $part_success_pledge;
+//			$pledge_data['retreat_pledge_num'] = $retreat_pledge;
+//			$pledge_data['not_execute_pledge_num'] = $not_execute_pledge;
+//			$pledge_data['impossible_judge_num'] = $impossible_judge;
+//
+//			$response_data['politician_pledge_data'] = $pledge_data;
 
 			return json_encode($response_data);
 		}
@@ -281,13 +302,14 @@ class PoliticianModel extends CI_Model
 	// output : 공약내용, 공약대수, 공약 이행 상태
 	public function getPledgeInfo($politician_idx){
 
+	    return "정치인 공약 데이터 없음 - 데이터 수집 못했음 ( 데이터 없어서 수작업 해야 할 수도 있음 )";
+
 		// 클라에게 보내줄 응답 데이터
 		$response_data = array();
 
 		// 정치인 인덱스로 정치인 공약 모음 - 당선대수, 당선지역
 		$politician_select_result = $this->db->query("SELECT
-                elect_generation, elect_area, kr_name
-                FROM Politician where idx = '$politician_idx'")->row();
+                * FROM Politician where idx = '$politician_idx'")->row();
 
 		// 당선 대수
 		$elect_generation = explode(',',$politician_select_result->elect_generation);
@@ -326,19 +348,10 @@ class PoliticianModel extends CI_Model
         // 클라에게 보내줄 응답 데이터
         $response_data = array();
 
-//	    $user_id = $token_data['token']->id; // 토큰에서 받은 유저 아이디
-//
-//	    // jwt 토큰에서 받은 유저 아이디
-//        $politician_select_result = $this->db->query("SELECT
-//                idx FROM User where
-//                id = '$user_id'")->row();
-
         // 유저 인덱스
-        $user_idx = $token_data['token']->idx;
-        if($token_data['login_check']==false){
-            $response_data['result'] = '로그인 필요';
-            return json_encode($response_data);
-        }
+        $user_idx = $token_data->idx;
+        if($token_data->idx=="토큰실패"){$result_json=array();$result_json['result']='로그인 필요';header("HTTP/1.1 401 ");return json_encode($result_json);}
+
 
         // 사용자가 해당 정치인을 북마크 했는지 여부 보기
         $bookmark_select_result = $this->db->query("SELECT
@@ -364,28 +377,30 @@ class PoliticianModel extends CI_Model
     public function getBookmark($politician_idx, $token_data){
         // 클라에게 보내줄 응답 데이터
         $response_data = array();
+        if($token_data->idx=="토큰실패"){$result_json=array();$result_json['result']='로그인 필요';header("HTTP/1.1 401 ");return json_encode($result_json);}
 
-        // 사용자 인덱스
-        $user_idx = $token_data['token']->idx;
+            // 사용자 인덱스
+            $user_idx = $token_data->idx;
 
-        // 좋아요 싫어요 정보조회
-        $result = $this->db->query("SELECT * , count(*) as `count` FROM BookMark where 
+            // 좋아요 싫어요 정보조회
+            $result = $this->db->query("SELECT * , count(*) as `count` FROM BookMark where 
                 user_idx = $user_idx and politician_idx = $politician_idx")->row();
 
-        if($result->count == 0){
-            $response_data['status'] = '조회된 데이터가 없습니다';
-        }
-        else{
-            $response_data['status'] = '현재 북마크중';
-        }
-        return json_encode($response_data);
+            if($result->count == 0){
+                $response_data['status'] = '조회된 데이터가 없습니다';
+            }
+            else{
+                $response_data['status'] = '현재 북마크중';
+            }
+            return json_encode($response_data);
     }
 
     // 정치인 좋아요 싫어요 정보수정
     public function postUserEvaluation($politician_idx, $like_status, $token_data){
-        if($token_data['login_check'] == true){
             // 클라에게 보내줄 응답 데이터
-            $response_data = array();
+        if($token_data->idx=="토큰실패"){$result_json=array();$result_json['result']='로그인 필요';header("HTTP/1.1 401 ");return json_encode($result_json);}
+
+        $response_data = array();
 
             // 클라이언트가 좋아요를 요청한경우
             if($like_status == "like"){
@@ -398,7 +413,7 @@ class PoliticianModel extends CI_Model
             }
 
             // 사용자 인덱스
-            $user_idx = $token_data['token']->idx;
+            $user_idx = $token_data->idx;
 
             // 사용자의 정치인에 대한 좋아요 데이터가 있는지 확인
             $bookmark_select_result = $this->db->query("SELECT
@@ -429,12 +444,7 @@ class PoliticianModel extends CI_Model
             }
 
             $response_data['result'] = (boolean)$result;
-        }
 
-        else{
-            $response_data['result'] = '로그인 필요';
-            return $response_data;
-        }
         return json_encode($response_data);
     }
 
@@ -444,11 +454,9 @@ class PoliticianModel extends CI_Model
         $response_data = array();
 
         // 사용자 인덱스
-        $user_idx = $token_data['token']->idx;
-        if($token_data['login_check']==false){
-            $response_data['status']='로그인 필요';
-            return json_encode($response_data);
-        }
+        $user_idx = $token_data->idx;
+        if($token_data->idx=="토큰실패"){$result_json=array();$result_json['result']='로그인 필요';header("HTTP/1.1 401 ");return json_encode($result_json);}
+
         // 좋아요 싫어요 정보조회
         $result = $this->db->query("SELECT * , count(*) as `count` FROM UserEvaluationBill where 
                 user_idx = $user_idx and politician_idx = $politician_idx")->row();

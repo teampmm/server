@@ -32,26 +32,20 @@ class Politician extends CI_Controller
 
         // 클라이언트의 토큰으로 인코딩도니 문자열을 해독한다.
         // == jwt_data에는 클라이언트가보낸 토큰의 정보들이 담겨있다.
-
-        // 토큰값이랑, 로그인 체크 여부가 들어간다.
-        $return_data = array();
-
         if(empty($header_data['Authorization'])){
-            $return_data['token'] = null;
-            $return_data['login_check'] = false;
+            return (object)$result=array("idx"=>"토큰실패");
         }else{
-            $jwt_data = $pmm_jwt->tokenParsing($header_data['Authorization']);
-            $return_data['token'] = $jwt_data;
-            $return_data['login_check'] = true;
+            $token_data = $pmm_jwt->tokenParsing($header_data['Authorization']);
+            return $token_data;
+
         }
-        return $return_data;
     }
 
     // 정치인 카드 모아 보기 정보 가져오기
     public function getPoliticianCard(){
 
-        // 클라이언트가 보낸 토큰 정보와 로그인 체크 여부가 담겨있다.
-        $return_data = $this->headerData();
+        // 클라이언트가 보낸 토큰 정보가 담겨있다.
+        $token_data = $this->headerData();
 
         // 정치인 카드 정보 요청 - 받았던 카드의 인덱스 정보를 가지고 온다.
         $request_data = $this->input->get(null, True);
@@ -59,12 +53,15 @@ class Politician extends CI_Controller
 	    $error=jsonNullCheck($request_data,array('page','random_card_idx'));
 	    if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
+	    // 클라이언트가 요청한 페이지
 	    $request_page = $request_data['page'];
+
+	    // 클라이언트가 요청한 덱 번호
         $random_card_idx = $request_data['random_card_idx'];
 
 	    // db에 사용자가 보낸 이메일이 있는지 확인한다. ( 중복체크 과정 ).
         $this->load->model('PoliticianModel');
-        $result = $this->PoliticianModel->getPoliticianCard($request_page, $random_card_idx, $return_data);
+        $result = $this->PoliticianModel->getPoliticianCard($request_page, $random_card_idx, $token_data);
         echo $result;
     }
 
@@ -150,9 +147,6 @@ class Politician extends CI_Controller
 
         $input=$this->input->post("evaluation_write",true);
         $input_json=json_decode($input,true);
-
-//        echo $input_json;
-//        return;
 
         $error=jsonNullCheck($input_json,array('politician_idx','status'));
         if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}

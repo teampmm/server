@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="d2ea0643-2911-4e57-b6ec-e2d64a69e295" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/openapi/국회의원/국회의원.xlsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/openapi/의안 정보/의안목록검색/1인발의자추가.py" beforeDir="false" afterPath="$PROJECT_DIR$/openapi/의안 정보/의안목록검색/1인발의자추가.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/openapi/의안 정보/의안목록검색/공동발의자추가.py" beforeDir="false" afterPath="$PROJECT_DIR$/openapi/의안 정보/의안목록검색/공동발의자추가.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/openapi/의안 정보/의안목록검색/공동발의자추가.xlsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/openapi/의안 정보/의안목록검색/도움말.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/openapi/의안 정보/의안목록검색/의안목록_대표발의_1인발의검색결과.xlsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/openapi/의안 정보/의안목록검색/의안목록_대표발의_1인발의검색결과backup.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/openapi/의안 정보/의안목록검색/의안목록_대표발의_1인발의검색결과backup.xlsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/openapi/의안 정보/의안목록검색/의안목록_대표발의_검색결과.xlsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/openapi/의안 정보/의안목록검색/의안목록_대표발의_검색결과backup.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/openapi/의안 정보/의안목록검색/의안목록_대표발의_검색결과backup.xlsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/openapi/의안 정보/의안목록검색/의안목록검색_대표발의.py" beforeDir="false" afterPath="$PROJECT_DIR$/openapi/의안 정보/의안목록검색/의안목록검색_대표발의.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ComposerSettings" doNotAsk="true" synchronizationState="SYNCHRONIZE">
+    <pharConfigPath>$PROJECT_DIR$/html/composer.json</pharConfigPath>
+    <execution />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectId" id="1bcQWiKqQdBkGfzk1GG7vQGx8Rl" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="true" />
+    <property name="WebServerToolWindowPanel.toolwindow.highlight.mappings" value="true" />
+    <property name="WebServerToolWindowPanel.toolwindow.highlight.symlinks" value="true" />
+    <property name="WebServerToolWindowPanel.toolwindow.show.date" value="false" />
+    <property name="WebServerToolWindowPanel.toolwindow.show.permissions" value="false" />
+    <property name="WebServerToolWindowPanel.toolwindow.show.size" value="false" />
+    <property name="aspect.path.notification.shown" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/openapi/의안 정보/의안목록검색" />
+    <property name="project.structure.last.edited" value="Project" />
+    <property name="project.structure.proportion" value="0.0" />
+    <property name="project.structure.side.proportion" value="0.0" />
+    <property name="settings.editor.selected.configurable" value="preferences.lookFeel" />
+  </component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\ehdgn\teamPmmGit\server\server\openapi\국회의원" />
+      <recent name="C:\Users\ehdgn\teamPmmGit\server\server\openapi\국회의원_현황" />
+    </key>
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\ehdgn\teamPmmGit\server\server\openapi\의안 정보\의안목록검색" />
+      <recent name="C:\Users\ehdgn\teamPmmGit\server\server\openapi" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Python.공동발의자추가">
+    <configuration name="1인발의자추가" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="server" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/openapi/의안 정보/의안목록검색" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/openapi/의안 정보/의안목록검색/1인발의자추가.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="공동발의자추가" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="server" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/openapi/의안 정보/의안목록검색" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/openapi/의안 정보/의안목록검색/공동발의자추가.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="의안목록검색_대표발의 (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="server" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/openapi/의안 정보/의안목록검색" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/openapi/의안 정보/의안목록검색/의안목록검색_대표발의.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="대표발의에공동발의자추가" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="server" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/openapi/의안 정보/의안목록검색" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/openapi/의안 정보/의안목록검색/대표발의에공동발의자추가.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="의안목록검색_대표발의" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="server" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/openapi/의안 정보/의안목록검색" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="C:\Users\ehdgn\teamPmmGit\server\server\openapi\의안 정보\의안목록검색\의안목록검색_대표발의.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="empty행지우기" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="server" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/openapi/의안 정보/의안목록검색" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/openapi/의안 정보/의안목록검색/empty행지우기.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.공동발의자추가" />
+        <item itemvalue="Python.1인발의자추가" />
+        <item itemvalue="Python.의안목록검색_대표발의 (1)" />
+        <item itemvalue="Python.의안목록검색_대표발의" />
+        <item itemvalue="Python.empty행지우기" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="d2ea0643-2911-4e57-b6ec-e2d64a69e295" name="Default Changelist" comment="" />
+      <created>1588928935685</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1588928935685</updated>
+      <workItem from="1588928937137" duration="832000" />
+      <workItem from="1588939328067" duration="8123000" />
+      <workItem from="1588991847111" duration="4900000" />
+      <workItem from="1589159454490" duration="28392000" />
+      <workItem from="1589192650221" duration="600000" />
+      <workItem from="1589202494249" duration="964000" />
+      <workItem from="1589246848119" duration="1560000" />
+      <workItem from="1589248642260" duration="23612000" />
+      <workItem from="1589332160492" duration="37991000" />
+      <workItem from="1589380703186" duration="3216000" />
+      <workItem from="1589393337943" duration="182000" />
+      <workItem from="1589418257377" duration="48533000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="2" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="-948" y="58" key="#Deployment" timestamp="1589516125833">
+      <screen x="-1080" y="-540" width="1080" height="1880" />
+    </state>
+    <state x="-948" y="58" key="#Deployment/0.0.1536.824/-1080.-540.1080.1880@-1080.-540.1080.1880" timestamp="1589516125833" />
+    <state x="188" y="142" key="#Deployment/0.0.1536.824/-1080.-540.1080.1880@0.0.1536.824" timestamp="1589163401158" />
+    <state x="-964" y="45" key="#SSH_Configurations" timestamp="1589365315096">
+      <screen x="-1080" y="-540" width="1080" height="1880" />
+    </state>
+    <state x="-964" y="45" key="#SSH_Configurations/0.0.1536.824/-1080.-540.1080.1880@-1080.-540.1080.1880" timestamp="1589365315096" />
+    <state x="165" y="115" key="#SSH_Configurations/0.0.1536.824/-1080.-540.1080.1880@0.0.1536.824" timestamp="1589163393917" />
+    <state x="-798" y="200" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1589258322915">
+      <screen x="-1080" y="-540" width="1080" height="1880" />
+    </state>
+    <state x="-798" y="200" key="#com.intellij.fileTypes.FileTypeChooser/0.0.1536.824/-1080.-540.1080.1880@-1080.-540.1080.1880" timestamp="1589258322915" />
+    <state x="2611" y="291" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog" timestamp="1589510556736">
+      <screen x="1920" y="0" width="1920" height="1040" />
+    </state>
+    <state x="-691" y="-14" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.0.1536.824/-1080.-540.1080.1880@-1080.-540.1080.1880" timestamp="1589445124654" />
+    <state x="2611" y="291" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.0.1536.824/1920.0.1920.1040@1920.0.1920.1040" timestamp="1589510556736" />
+    <state x="692" y="291" key="#com.intellij.refactoring.safeDelete.UnsafeUsagesDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1589380713001" />
+    <state x="-760" y="155" key="FileChooserDialogImpl" timestamp="1589365312821">
+      <screen x="-1080" y="-540" width="1080" height="1880" />
+    </state>
+    <state x="-760" y="155" key="FileChooserDialogImpl/0.0.1536.824/-1080.-540.1080.1880@-1080.-540.1080.1880" timestamp="1589365312821" />
+    <state x="455" y="305" key="FileChooserDialogImpl/0.0.1536.824/-1080.-540.1080.1880@0.0.1536.824" timestamp="1589163391278" />
+    <state width="1493" height="332" key="GridCell.Tab.0.bottom" timestamp="1589515816715">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state width="1037" height="350" key="GridCell.Tab.0.bottom/0.0.1536.824/-1080.-540.1080.1880@-1080.-540.1080.1880" timestamp="1589458684061" />
+    <state width="1493" height="332" key="GridCell.Tab.0.bottom/0.0.1536.824/-1080.-540.1080.1880@0.0.1536.824" timestamp="1589515816715" />
+    <state width="1168" height="332" key="GridCell.Tab.0.bottom/0.0.1536.824/1920.0.1920.1040@0.0.1536.824" timestamp="1589478207733" />
+    <state width="1877" height="332" key="GridCell.Tab.0.bottom/0.0.1536.824/1920.0.1920.1040@1920.0.1920.1040" timestamp="1589511479914" />
+    <state width="1747" height="193" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1589393520044" />
+    <state width="1493" height="332" key="GridCell.Tab.0.center" timestamp="1589515816715">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state width="1037" height="350" key="GridCell.Tab.0.center/0.0.1536.824/-1080.-540.1080.1880@-1080.-540.1080.1880" timestamp="1589458684061" />
+    <state width="1493" height="332" key="GridCell.Tab.0.center/0.0.1536.824/-1080.-540.1080.1880@0.0.1536.824" timestamp="1589515816715" />
+    <state width="1168" height="332" key="GridCell.Tab.0.center/0.0.1536.824/1920.0.1920.1040@0.0.1536.824" timestamp="1589478207733" />
+    <state width="1877" height="332" key="GridCell.Tab.0.center/0.0.1536.824/1920.0.1920.1040@1920.0.1920.1040" timestamp="1589511479913" />
+    <state width="1747" height="193" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1589393520043" />
+    <state width="1493" height="332" key="GridCell.Tab.0.left" timestamp="1589515816714">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state width="1037" height="350" key="GridCell.Tab.0.left/0.0.1536.824/-1080.-540.1080.1880@-1080.-540.1080.1880" timestamp="1589458684061" />
+    <state width="1493" height="332" key="GridCell.Tab.0.left/0.0.1536.824/-1080.-540.1080.1880@0.0.1536.824" timestamp="1589515816714" />
+    <state width="1168" height="332" key="GridCell.Tab.0.left/0.0.1536.824/1920.0.1920.1040@0.0.1536.824" timestamp="1589478207733" />
+    <state width="1877" height="332" key="GridCell.Tab.0.left/0.0.1536.824/1920.0.1920.1040@1920.0.1920.1040" timestamp="1589511479913" />
+    <state width="1747" height="193" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1589393520043" />
+    <state width="1493" height="332" key="GridCell.Tab.0.right" timestamp="1589515816715">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state width="1037" height="350" key="GridCell.Tab.0.right/0.0.1536.824/-1080.-540.1080.1880@-1080.-540.1080.1880" timestamp="1589458684061" />
+    <state width="1493" height="332" key="GridCell.Tab.0.right/0.0.1536.824/-1080.-540.1080.1880@0.0.1536.824" timestamp="1589515816715" />
+    <state width="1168" height="332" key="GridCell.Tab.0.right/0.0.1536.824/1920.0.1920.1040@0.0.1536.824" timestamp="1589478207733" />
+    <state width="1877" height="332" key="GridCell.Tab.0.right/0.0.1536.824/1920.0.1920.1040@1920.0.1920.1040" timestamp="1589511479913" />
+    <state width="1747" height="193" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1589393520043" />
+    <state x="-1040" y="-198" key="SettingsEditor" timestamp="1589332172965">
+      <screen x="-1080" y="-540" width="1080" height="1880" />
+    </state>
+    <state x="-1040" y="-198" key="SettingsEditor/0.0.1536.824/-1080.-540.1080.1880@-1080.-540.1080.1880" timestamp="1589332172965" />
+    <state x="2382" y="189" key="SettingsEditor/0.0.1536.824/1920.0.1920.1040@1920.0.1920.1040" timestamp="1588941008760" />
+    <state x="100" y="0" width="915" height="830" key="com.intellij.history.integration.ui.views.FileHistoryDialog" timestamp="1589427992323">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state x="100" y="0" width="915" height="830" key="com.intellij.history.integration.ui.views.FileHistoryDialog/0.0.1536.824/-1080.-540.1080.1880@-1080.-540.1080.1880" timestamp="1589427992323" />
+    <state x="2069" y="158" width="1625" height="774" key="com.intellij.history.integration.ui.views.FileHistoryDialog/0.0.1536.824/1920.0.1920.1040@1920.0.1920.1040" timestamp="1588945003850" />
+    <state x="-735" y="313" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1589248650780">
+      <screen x="-1080" y="-540" width="1080" height="1880" />
+    </state>
+    <state x="-735" y="313" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/0.0.1536.824/-1080.-540.1080.1880@-1080.-540.1080.1880" timestamp="1589248650780" />
+    <state x="668" y="0" width="707" height="910" maximized="true" key="dock-window-1" timestamp="1589449992362">
+      <screen x="0" y="0" width="1536" height="824" />
+    </state>
+    <state x="668" y="0" width="707" height="910" maximized="true" key="dock-window-1/0.0.1536.824/-1080.-540.1080.1880@-1080.-540.1080.1880" timestamp="1589449992362" />
+    <state x="-877" y="-105" width="672" height="678" key="search.everywhere.popup" timestamp="1589447036726">
+      <screen x="-1080" y="-540" width="1080" height="1880" />
+    </state>
+    <state x="-877" y="-105" width="672" height="678" key="search.everywhere.popup/0.0.1536.824/-1080.-540.1080.1880@-1080.-540.1080.1880" timestamp="1589447036726" />
+    <state x="-731" y="267" key="webDeployment.PermissionsDialog" timestamp="1589202630891">
+      <screen x="-1080" y="-540" width="1080" height="1880" />
+    </state>
+    <state x="-731" y="267" key="webDeployment.PermissionsDialog/0.0.1536.824/-1080.-540.1080.1880@-1080.-540.1080.1880" timestamp="1589202630891" />
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/server$__.coverage" NAME="정당정책 정보 조회 Coverage Results" MODIFIED="1589257037008" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/openapi/정당정책 정보 조회 서비스" />
+    <SUITE FILE_PATH="coverage/server$1.coverage" NAME="1인발의자추가 Coverage Results" MODIFIED="1589463168304" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/openapi/의안 정보/의안목록검색" />
+    <SUITE FILE_PATH="coverage/server$empty.coverage" NAME="empty행지우기 Coverage Results" MODIFIED="1589363014741" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/openapi/의안 정보/의안목록검색" />
+    <SUITE FILE_PATH="coverage/server$.coverage" NAME="공동발의자추가 Coverage Results" MODIFIED="1589515816708" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/openapi/의안 정보/의안목록검색" />
+    <SUITE FILE_PATH="coverage/server$test.coverage" NAME="test Coverage Results" MODIFIED="1589161595433" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/openapi" />
+    <SUITE FILE_PATH="coverage/server$open_api.coverage" NAME="open_api Coverage Results" MODIFIED="1589247921019" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/openapi" />
+    <SUITE FILE_PATH="coverage/server$___1_.coverage" NAME="의안목록검색_대표발의 (1) Coverage Results" MODIFIED="1589461023340" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/openapi/의안 정보/의안목록검색" />
+  </component>
+</project>

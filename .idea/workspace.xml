@@ -2,14 +2,14 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="d2ea0643-2911-4e57-b6ec-e2d64a69e295" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/openapi/국회의원/국회의원.xlsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/openapi/의안 정보/의안목록검색/1인발의자추가.py" beforeDir="false" afterPath="$PROJECT_DIR$/openapi/의안 정보/의안목록검색/1인발의자추가.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/openapi/의안 정보/의안목록검색/공동발의자추가.py" beforeDir="false" afterPath="$PROJECT_DIR$/openapi/의안 정보/의안목록검색/공동발의자추가.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/openapi/의안 정보/의안목록검색/공동발의자추가.xlsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/openapi/의안 정보/의안목록검색/공동발의자추가.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/openapi/의안 정보/의안목록검색/공동발의자추가.xlsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/openapi/의안 정보/의안목록검색/도움말.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/openapi/의안 정보/의안목록검색/의안목록_대표발의_1인발의검색결과.xlsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/openapi/의안 정보/의안목록검색/의안목록_대표발의_1인발의검색결과.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/openapi/의안 정보/의안목록검색/의안목록_대표발의_1인발의검색결과.xlsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/openapi/의안 정보/의안목록검색/의안목록_대표발의_1인발의검색결과backup.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/openapi/의안 정보/의안목록검색/의안목록_대표발의_1인발의검색결과backup.xlsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/openapi/의안 정보/의안목록검색/의안목록_대표발의_검색결과.xlsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/openapi/의안 정보/의안목록검색/의안목록_대표발의_검색결과.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/openapi/의안 정보/의안목록검색/의안목록_대표발의_검색결과.xlsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/openapi/의안 정보/의안목록검색/의안목록_대표발의_검색결과backup.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/openapi/의안 정보/의안목록검색/의안목록_대표발의_검색결과backup.xlsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/openapi/의안 정보/의안목록검색/의안목록검색_대표발의.py" beforeDir="false" afterPath="$PROJECT_DIR$/openapi/의안 정보/의안목록검색/의안목록검색_대표발의.py" afterDir="false" />
     </list>
@@ -227,7 +227,7 @@
       <workItem from="1589332160492" duration="37991000" />
       <workItem from="1589380703186" duration="3216000" />
       <workItem from="1589393337943" duration="182000" />
-      <workItem from="1589418257377" duration="48533000" />
+      <workItem from="1589418257377" duration="49941000" />
     </task>
     <servers />
   </component>

@@ -6,6 +6,8 @@
 
 class BillModel extends CI_Model
 {
+    public $dummy=20;
+
     function __construct()//생성자, 제일 먼저 실행되는 일종의 초기화
     {
         parent::__construct();
@@ -144,7 +146,7 @@ class BillModel extends CI_Model
         foreach ($proposer_people_idx as $row){
             $politician_info=$this->db->query("select * from PoliticianInfo where idx=$row->politician_info_idx")->row();
             //현재 DB에 있는 데이터(실데이터,더미데이터)들 간에 관계가 맺어지지않아 일단 20으로 하드코딩
-            if($politician_info->elect_generation!=20){
+            if($politician_info->elect_generation!=$this->dummy){
                 continue;
             }
             $politician=$this->db->query("select * from Politician where idx=$politician_info->politician_idx")->row();
@@ -208,27 +210,35 @@ class BillModel extends CI_Model
     }
 
 
-    //input으로 찬성,반대,기권,불참 한 사람들의 배열이 들어옴
+    //input으로 찬성,반대,기권,불참 한 사람들의 idx가 들어옴
     //해당 인덱스를 가지고 의원의 이름 , 정당 을 반환
     private function votePerson($index)
     {
-        return$index;
+        $poltician_info=$this->db->query("select * from PoliticianInfo where idx=$index")->row();
+        if((int)$poltician_info->elect_generation != $this->dummy){
+            return;
+        }
+        $politician=$this->db->query("select * from Politician where idx=$poltician_info->politician_idx")->row();
+//        return$index;
 ////        return $index;
 //        $politician_row = $this->db->query("select politician_idx,party_idx from PoliticianInfo where idx=$index ")->row();
 ////        return var_dump($politician_row);
 ////        $politician = $this->db->query("select * from Politician where idx=$politician_row->politician_idx")->row();
 ////
 ////        return
-//            $data['idx'] = (int)$index;
+            $data['idx'] = (int)$politician->idx;
+        $data['kr_name'] = $politician->kr_name;
+            $data['party_idx'] = $poltician_info->party_idx;
+            $data['party_name'] = $this->db->query("select * from PartyName where idx=$poltician_info->party_idx")->row()->name;
 ////        return "select * from PartyName where idx in (select party_idx from PartyInfo where idx=$politician_row->party_idx)";
 ////        return $politician_row->party_idx;
 //        $party_idx=(int)$politician_row->party_idx;
 //            $party_indo = $this->db->query("select * from PartyName where idx in (select party_idx from PartyInfo where idx=$party_idx)");
-//            $data['party_idx'] = $party_indo->idx;
+
 //            $data['kr_name'] = $this->db->query("select * from Politician where idx=$politician_row->politician_idx")->row()->kr_name;
 ////        $party_name = $this->db->query("select name from PartyName where idx=" . $data['party_idx'])->row();
 //            $data['party_name'] = $party_indo->name;
-//            return $data;
+            return $data;
     }
 
     //법안에 대한 좋아요 싫어요 보여주는 메소드

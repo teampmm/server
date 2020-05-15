@@ -138,32 +138,28 @@ class BillModel extends CI_Model
     //법안인덱스로 -> 법안을 발의한 정치인들의 정보를 반한다  //정치인 idx , 정치인 이름 , 대표발의여부 , 정당인덱스, 정당이름
     private function billIndexToPoliticians($bill_idx)
     {
-//        //20대 일때만 가정해서 만들어졌음
-//        //실제로 법안이 추가되면 대수도 같이 검색해야함
-//        //법안 인덱스로 의원들 인덱스 가져옴
-//        $proposer = $this->db->query("select politician_info_idx,representative from Proposer where bill_idx=$bill_idx")->result();
-//        $proposer_array = array();
-//        foreach ($proposer as $proposer_row) {
-//            $proposer_data = array();
-//            //의원들 인덱스로 해당대수의 의원 정보 가져옴
-//            $politicians = $this->db->query("select politician_idx,party_idx from PoliticianInfo where idx=$proposer_row->politician_info_idx  and elect_area is not NULL")->row();
-//            if ($politicians==null){
-//                return null;
-//            }
-////            return "select politician_idx,party_idx from PoliticianInfo where idx=$proposer_row->politician_info_idx  and elect_area is not NULL";
-//            //대수 의원 인덱스로 해당 의원의 정보 가져옴
-//            $aa=$this->db->query("select * from Politician where idx=$politicians->politician_idx")->row();
-//            $proposer_data['idx'] = (int)$aa->idx;
-//            $proposer_data['kr_name'] = $aa->kr_name;
-//            $proposer_data['representative'] = (int)$proposer_row->representative;
-//            //정당인덱스로 정당 이름 찾기
-//            $party = $this->db->query("select idx,name from PartyName where idx=$politicians->party_idx")->row();
-//            $proposer_data['party_idx'] = (int)$party->idx;
-//            $proposer_data['party_name'] = $party->name;
-//
-//            array_push($proposer_array, $proposer_data);
-//        }
-//        return $proposer_array;
+        $proposer_array = array();
+
+        $proposer_people_idx=$this->db->query("select politician_info_idx,representative from Proposer where bill_idx=$bill_idx")->result();
+        foreach ($proposer_people_idx as $row){
+            $politician_info=$this->db->query("select * from PoliticianInfo where idx=$row->politician_info_idx")->row();
+            //현재 DB에 있는 데이터(실데이터,더미데이터)들 간에 관계가 맺어지지않아 일단 20으로 하드코딩
+            if($politician_info->elect_generation!=20){
+                continue;
+            }
+            $politician=$this->db->query("select * from Politician where idx=$politician_info->politician_idx")->row();
+            $proposer_data['idx'] = (int)$politician->idx;
+            $proposer_data['kr_name'] = $politician->kr_name;
+            $proposer_data['representative'] = (int)$row->representative;
+            //정당인덱스로 정당 이름 찾기
+                $party = $this->db->query("select * from PartyName where idx=$politician_info->party_idx")->row();
+                    $proposer_data['party_idx'] = (int)$party->idx;
+                    $proposer_data['party_name'] = $this->db->query("select * from PartyName where idx=$politician_info->party_idx")->row()->name;
+            array_push($proposer_array, $proposer_data);
+
+        }
+        return $proposer_array;
+
 
     }
 
@@ -216,6 +212,7 @@ class BillModel extends CI_Model
     //해당 인덱스를 가지고 의원의 이름 , 정당 을 반환
     private function votePerson($index)
     {
+        return$index;
 ////        return $index;
 //        $politician_row = $this->db->query("select politician_idx,party_idx from PoliticianInfo where idx=$index ")->row();
 ////        return var_dump($politician_row);
@@ -254,14 +251,14 @@ class BillModel extends CI_Model
         $like_and_dislike_status = $this->db->query("select *, count(idx) as `count` from UserEvaluationBill where bill_idx =$index and user_idx = $user_idx")->row();
         // 좋아요 또는 싫어요 데이터가 있다면
         if ($like_and_dislike_status->idx != null){
-             // 사용자가 법안에 대해 좋아요함.
-             if($like_and_dislike_status->status == 1){
-                 $result['user_check'] = '좋아요';
-             }
-             // 사용자가 법안에 대해 싫어요함.
-             else if ($like_and_dislike_status->status == 0){
-                 $result['user_check'] = '싫어요';
-             }
+            // 사용자가 법안에 대해 좋아요함.
+            if($like_and_dislike_status->status == 1){
+                $result['user_check'] = '좋아요';
+            }
+            // 사용자가 법안에 대해 싫어요함.
+            else if ($like_and_dislike_status->status == 0){
+                $result['user_check'] = '싫어요';
+            }
         }
         else{
             $result['user_check'] = '좋아요, 싫어요 데이터 없음';
@@ -299,16 +296,16 @@ class BillModel extends CI_Model
 
             }else{
 
-            $like_status = $this->db->query("select status, count(idx) as count from CommentRating where user_idx = $token_data->idx and comment_idx=$row->idx")->row();
-            if ($like_status->count == 0){
-                $data['like_status'] = "좋아요, 싫어요 안함";
-            }
-            else{
-                if($like_status->status == 1)
-                    $data['like_status']= '좋아요';
-                else
-                    $data['like_status']= '싫어요';
-            }
+                $like_status = $this->db->query("select status, count(idx) as count from CommentRating where user_idx = $token_data->idx and comment_idx=$row->idx")->row();
+                if ($like_status->count == 0){
+                    $data['like_status'] = "좋아요, 싫어요 안함";
+                }
+                else{
+                    if($like_status->status == 1)
+                        $data['like_status']= '좋아요';
+                    else
+                        $data['like_status']= '싫어요';
+                }
             }
             //대댓글이 몇개있는지 카운트로 알려줌
             $data['child'] = (int)$this->db->query("select count(idx) as count from SubComment where comment_idx=$row->idx")->row()->count;
@@ -345,16 +342,16 @@ class BillModel extends CI_Model
                 $data['like_status'] = "좋아요, 싫어요 안함";
             }else{
 
-            $like_status = $this->db->query("select status, count(idx) as count from CommentRating where user_idx = $token_data->idx and sub_comment_idx=$row->idx")->row();
-            if ($like_status->count == 0){
-                $data['like_status'] = "좋아요, 싫어요 안함";
-            }
-            else{
-                if($like_status->status == 1)
-                    $data['like_status']= '좋아요';
-                else
-                    $data['like_status']= '싫어요';
-            }
+                $like_status = $this->db->query("select status, count(idx) as count from CommentRating where user_idx = $token_data->idx and sub_comment_idx=$row->idx")->row();
+                if ($like_status->count == 0){
+                    $data['like_status'] = "좋아요, 싫어요 안함";
+                }
+                else{
+                    if($like_status->status == 1)
+                        $data['like_status']= '좋아요';
+                    else
+                        $data['like_status']= '싫어요';
+                }
             }
 
             //답글에 대한 답글일경우 부모 유저를 링크해준다
@@ -470,9 +467,9 @@ class BillModel extends CI_Model
             }
         }
 
-            $result_array = array();
-            $result_array['response_code'] = (boolean)$result;
-            return json_encode($result_array);
+        $result_array = array();
+        $result_array['response_code'] = (boolean)$result;
+        return json_encode($result_array);
 
     }
 }

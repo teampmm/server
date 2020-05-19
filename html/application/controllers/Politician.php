@@ -50,13 +50,13 @@ class Politician extends CI_Controller
         // 정치인 카드 정보 요청 - 받았던 카드의 인덱스 정보를 가지고 온다.
         $request_data = $this->input->get(null, True);
 
-	    $error=jsonNullCheck($request_data,array('page','random_card_idx'));
-	    if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+        $error=jsonNullCheck($request_data,array('page','random_card_idx'));
+        if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
-	    // 클라이언트가 요청한 페이지
-	    $request_page = $request_data['page'];
+        // 클라이언트가 요청한 페이지
+        $request_page = $request_data['page'];
 
-	    // 클라이언트가 요청한 덱 번호
+        // 클라이언트가 요청한 덱 번호
         $random_card_idx = $request_data['random_card_idx'];
 
         $this->load->model('PoliticianModel');
@@ -69,12 +69,12 @@ class Politician extends CI_Controller
         // 정치인 기본정보 요청 - 정치인의 이름을 가지고 들어옴. ( kr_name )
         $politician_idx = $this->input->get(null, True);
 
-	    $error=jsonNullCheck($politician_idx,array('politician_idx'));
-	    if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+        $error=jsonNullCheck($politician_idx,array('politician_idx'));
+        if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
         $this->load->model('PoliticianModel');
         $result = $this->PoliticianModel->getInfo($politician_idx['politician_idx']);
-	    echo $result;
+        echo $result;
     }
 
     // 정치인 관련 뉴스 가져오기
@@ -82,25 +82,25 @@ class Politician extends CI_Controller
         // 정치인 관련 뉴스 정보 요청
         $politician_idx = $this->input->get(null, True);
 
-	    $error=jsonNullCheck($politician_idx,array('politician_idx'));
-	    if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+        $error=jsonNullCheck($politician_idx,array('politician_idx'));
+        if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
         $this->load->model('PoliticianModel');
         $result = $this->PoliticianModel->getNews($politician_idx['politician_idx']);
-	    echo $result;
+        echo $result;
     }
 
     // 정치인 공약정보 가져오기
     public function getPledgeInfo(){
         // 정치인 공약 정보 요청
-	    $politician_idx = $this->input->get(null, True);
+        $politician_idx = $this->input->get(null, True);
 
-	    $error=jsonNullCheck($politician_idx,array('politician_idx'));
-	    if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+        $error=jsonNullCheck($politician_idx,array('politician_idx'));
+        if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
         $this->load->model('PoliticianModel');
         $result = $this->PoliticianModel->getPledgeInfo($politician_idx['politician_idx']);
-	    echo $result;
+        echo $result;
     }
 
     // 정치인 북마크 수정하기
@@ -111,11 +111,17 @@ class Politician extends CI_Controller
 
         $politician_idx = $this->input->post('politician_idx');
 
-	    if ( $politician_idx == null or $politician_idx < 1) return "invaild_data_politician_idx";
+        // 클라가 정치인 인덱스값을 서버어 안보냈을때
+        if ( $politician_idx == null) return "invaild_data_politician_idx";
+
+        // 클라가 요청한 정처인 인덱스가 1이하인 경우엔 정치인 데이터가 없음
+        if($politician_idx < 1) return "invaild_data_politician_idx";
+
+
 
         $this->load->model('PoliticianModel');
         $result = $this->PoliticianModel->postBookmarkModify($politician_idx, $token_data);
-	    echo $result;
+        echo $result;
     }
     // 정치인 북마크 조회하기
     public function getBookmark(){
@@ -216,7 +222,7 @@ class Politician extends CI_Controller
         } else if ($this->http_method == "POST") {
             // 북마크 선택 / 해제
             if($client_data == "bookmark"){
-                    $this->postBookmarkModify();
+                $this->postBookmarkModify();
             }
             // 정치인 좋아요 / 싫어요
             else if($client_data == "politician_user_evaluation"){

@@ -63,8 +63,11 @@ class Politician extends CI_Controller
         $card_num = $request_data['card_num'];
         if($card_num<1){header("HTTP/1.1 400 "); echo "요청할 카드의 개수가 1이상이어야 합니다";return;}
 
+        // 클라이언트가 요청한 국회의원 대수
+        $generation = $request_data['generation'];
+
         $this->load->model('PoliticianModel');
-        $result = $this->PoliticianModel->getPoliticianCard($request_page, $random_card_idx, $token_data, $card_num);
+        $result = $this->PoliticianModel->getPoliticianCard($request_page, $random_card_idx, $token_data, $card_num, $generation);
         echo $result;
     }
 

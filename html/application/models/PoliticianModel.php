@@ -9,10 +9,17 @@ class PoliticianModel extends CI_Model
     }
 
     // 정치인 카드 모아보기 정보
-    public function getPoliticianCard($request_page, $random_card_idx, $token_data, $card_num){
+    public function getPoliticianCard($request_page, $random_card_idx, $token_data, $card_num, $generation){
 
-        /** 클라이언트가 요청한 대수 - 지금은 하드코딩 / 대수 : 20 으로 되었있다.*/
-        $elect_generation = 20;
+        $elect_generation = $generation;
+
+        /** 현재는 20대 국회의원 데이터 밖에없다.
+         * 19대, 21대 등등 데이터를 db에 저장하게 되면 그떄 풀어줌
+         */
+        if($elect_generation != 20){
+            header("HTTP/1.1 404 ");
+            return '현재는 20대 국회의원 데이터 밖에 없습니다';
+        }
 
         // 클라이언트가 첫 페이지 요청할때, 덱 번호가 정해져 있지 않아서 -1값으로 요청이 들어온다.
         $RANDOM_CARD_INIT_DATA = -1;
@@ -187,6 +194,7 @@ class PoliticianModel extends CI_Model
         // 정치인 조회 결과가 없음
         if($politician_select_result == null){
             $response_data['result'] = "정치인 정보가 없습니다.";
+            header("HTTP/1.1 404 ");
             return json_encode($response_data);
         }
 
@@ -196,89 +204,23 @@ class PoliticianModel extends CI_Model
             // 한글, 한자, 영어 이름 및 약력, 생년월일, 프로필 이미지 경로
             $response_data['politician_idx'] = $politician_select_result->idx;
             $response_data['kr_name'] = $politician_select_result->kr_name;
-            $response_data['ch_name'] = $politician_select_result->ch_name;
             $response_data['en_name'] = $politician_select_result->en_name;
-            $response_data['history'] = $politician_select_result->history;
+            $response_data['ch_name'] = $politician_select_result->ch_name;
+            $response_data['sex'] = $politician_select_result->sex;
+            $response_data['committee'] = $politician_select_result->committee;
+            $response_data['office_number'] = $politician_select_result->office_number;
+            $response_data['email'] = $politician_select_result->email;
             $response_data['birthday'] = $politician_select_result->birthday;
-            $response_data['profile_image_url'] = $politician_select_result->profile_image_url;
-
-            // 정치인 인덱스로 PoliticianInfo에서 조회한 데이터
-            // 정치인인덱스, 소속위원회인덱스, 정당인덱스,
-            // 선거대수, 선거구, 사무실번호, 이메일 아이디, 이메일 주소
-            // 보좌관, 비서, 카테고리, 표결점수, 홈페이지
-
-            /** 여기 아래 부터 작업해야함. */
-
-            $politician_info_select_result = $this->db->query("SELECT
-                * FROM PoliticianInfo where politician_idx = '$politician_idx' ")->result();
-
-            $politician_detail_info = array();
-            foreach ($politician_info_select_result as $info_row){
-                // 정치인 정보를 담을 배열
-                $temp = array();
-                $temp['elect_generation'] = (int)$info_row->elect_generation;
-                $temp['elect_area'] = $info_row->elect_area;
-                $temp['committee_name'] = $info_row->committee_idx;
-
-                if($info_row->party_idx != null){
-                    $party_name_select_result = $this->db->query("SELECT * FROM PartyName where idx = $info_row->party_idx")->row();
-                    $party_name = $party_name_select_result->name;
-                    $temp['party_name'] = $party_name;
-                }
-                $temp['office_number'] = $info_row->office_number;
-                $temp['email_id'] = $info_row->email_id;
-                $temp['email_address'] = $info_row->email_address;
-                $temp['aide'] = $info_row->aide;
-                $temp['secretary'] = $info_row->secretary;
-                $temp['category'] = $info_row->category;
-                $temp['vote_score'] = $info_row->vote_score;
-                array_push($politician_detail_info,$temp);
-            }
-            $response_data['politician_detail_info'] = $politician_detail_info;
-
-//			// 정치인 테이블에서 정치인 인덱스로 정치인 공약 모음 테이블에 있는 공약을 조회
-//			// 공약 이행률 계산
-//			// 공약 전체 갯수 : 공약 데이터중 정치인 테이블에서 정치인 인덱스가 포함된 데이터 찾기
-//			// 공약 이행 갯수 : 공약 이행 과정 - 완전이행 된것만 찾음
-//			// 공약 이행률 = (공약 이행 갯수 / 공약 전체 갯수) * 100
-//			$politician_pledge_select_result = $this->db->query("SELECT pledge_implement_status FROM PoliticianPledge where politician_idx = '$politician_idx'")->result();
-//
-//			// 공약 전체 갯수
-//			$pledge_total = count($politician_pledge_select_result);
-//
-//			$success_pledge = 0;    // 완전이행
-//			$part_success_pledge = 0; // 부분이행
-//			$retreat_pledge = 0; // 퇴각이행
-//			$not_execute_pledge = 0; // 미이행
-//			$impossible_judge = 0; // 판단불가
-//
-//			foreach ($politician_pledge_select_result as $row) {
-//				$pledge_status = $row->pledge_implement_status;
-//
-//				if ($pledge_status == "완전이행") {
-//					$success_pledge++;
-//				} else if ($pledge_status == "부분이행") {
-//					$part_success_pledge++;
-//				} else if ($pledge_status == "퇴각이행") {
-//					$retreat_pledge++;
-//				} else if ($pledge_status == "미이행") {
-//					$not_execute_pledge++;
-//				} else if ($pledge_status == "판단불가") {
-//					$impossible_judge++;
-//				}
-//			}
-//
-//			// 공약 이행 데이터
-//			$pledge_data = array();
-//
-//			$pledge_data['total_pledge_num'] = $pledge_total;
-//			$pledge_data['success_pledge_num'] = $success_pledge;
-//			$pledge_data['part_success_pledge_num'] = $part_success_pledge;
-//			$pledge_data['retreat_pledge_num'] = $retreat_pledge;
-//			$pledge_data['not_execute_pledge_num'] = $not_execute_pledge;
-//			$pledge_data['impossible_judge_num'] = $impossible_judge;
-//
-//			$response_data['politician_pledge_data'] = $pledge_data;
+            $response_data['history'] = $politician_select_result->history;
+            $response_data['education'] = $politician_select_result->education;
+            $response_data['soldier'] = $politician_select_result->soldier;
+            $response_data['birth_area'] = $politician_select_result->birth_area;
+            $response_data['twitter'] = $politician_select_result->twitter;
+            $response_data['instagram'] = $politician_select_result->instagram;
+            $response_data['blog'] = $politician_select_result->blog;
+            $response_data['facebook'] = $politician_select_result->facebook;
+            $response_data['youtube'] = $politician_select_result->youtube;
+            $response_data['profile_image_url'] = 'http://52.78.106.225/files/images/politician_thumbnail/'.$politician_select_result->idx.'.jpg';
 
             return json_encode($response_data);
         }

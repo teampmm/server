@@ -202,7 +202,7 @@ class PoliticianModel extends CI_Model
         else{
             // Politician 테이블에서 조회한 데이터
             // 한글, 한자, 영어 이름 및 약력, 생년월일, 프로필 이미지 경로
-            $response_data['politician_idx'] = $politician_select_result->idx;
+            $response_data['politician_idx'] = (int)$politician_select_result->idx;
             $response_data['kr_name'] = $politician_select_result->kr_name;
             $response_data['en_name'] = $politician_select_result->en_name;
             $response_data['ch_name'] = $politician_select_result->ch_name;
@@ -210,7 +210,7 @@ class PoliticianModel extends CI_Model
             $response_data['committee'] = $politician_select_result->committee;
             $response_data['office_number'] = $politician_select_result->office_number;
             $response_data['email'] = $politician_select_result->email;
-            $response_data['birthday'] = $politician_select_result->birthday;
+            $response_data['birthday'] = (int)$politician_select_result->birthday;
             $response_data['history'] = $politician_select_result->history;
             $response_data['education'] = $politician_select_result->education;
             $response_data['soldier'] = $politician_select_result->soldier;
@@ -221,6 +221,47 @@ class PoliticianModel extends CI_Model
             $response_data['facebook'] = $politician_select_result->facebook;
             $response_data['youtube'] = $politician_select_result->youtube;
             $response_data['profile_image_url'] = 'http://52.78.106.225/files/images/politician_thumbnail/'.$politician_select_result->idx.'.jpg';
+
+            $politician_generation_s_result = $this->db->query("SELECT elect_do, elect_gun, elect_gu, start_day, end_day, progress_status, vote_score 
+                FROM PoliticianGeneration where idx = $politician_idx")->row();
+
+            $politician_generation_array = array();
+            $start_day = $politician_generation_s_result->start_day;
+            $end_day = $politician_generation_s_result->end_day;
+            $elect_do = $politician_generation_s_result->elect_do;
+            $elect_gun = $politician_generation_s_result->elect_gun;
+            $elect_gu = $politician_generation_s_result->elect_gu;
+            $vote_score = $politician_generation_s_result->vote_score;
+            $progress_status = $politician_generation_s_result->progress_status;
+
+            $politician_generation_array['start_day'] = (int)$start_day;
+            $politician_generation_array['end_day'] = (int)$end_day;
+            $politician_generation_array['elect_do'] = $elect_do;
+            $politician_generation_array['elect_gun'] = $elect_gun;
+            $politician_generation_array['elect_gu'] = $elect_gu;
+            $politician_generation_array['vote_score'] = (double)$vote_score;
+            $politician_generation_array['progress_status'] = $progress_status;
+
+            $response_data['generation_info'] = $politician_generation_array;
+
+            $politician_party_history_s_result = $this->db->query("SELECT party_idx, start_day, end_day
+                FROM PoliticianPartyHistory where politician_idx = $politician_idx and end_day is NULL")->row();
+
+            $party_array = array();
+            $party_start_day = $politician_party_history_s_result->start_day;
+            $party_end_day = $politician_party_history_s_result->end_day;
+            $party_idx = $politician_party_history_s_result->party_idx;
+
+            $party_s_result = $this->db->query("SELECT `name`
+                FROM Party where idx = $party_idx")->row();
+
+            $party_name = $party_s_result->name;
+
+            $party_array['start_day'] = (int)$party_start_day;
+            $party_array['end_day'] = (int)$party_end_day;
+            $party_array['party_name'] = $party_name;
+
+            $response_data['party_info'] = $party_array;
 
             return json_encode($response_data);
         }

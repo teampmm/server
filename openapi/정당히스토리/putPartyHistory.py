@@ -55,6 +55,8 @@ index_array = []
 
 당이름배열 = 당이름.split('@')
 
+추가당배열 = []
+
 for i in range(start_idx, end_idx+1):
     정치인인덱스 = int(ws['A'+str(i)].value)
 
@@ -66,6 +68,8 @@ for i in range(start_idx, end_idx+1):
         시작일 = (data.split('/')[0])
         종료일 = (data.split('/')[1])
         당이름 = (data.split('/')[2])
+
+        추가당배열.append(당이름)
 
         if 종료일 == '-':
             try:
@@ -87,7 +91,18 @@ for i in range(start_idx, end_idx+1):
                 curs.execute(sql,((정치인인덱스),(당인덱스),(시작일),(종료일)))
 
     # print(정치인인덱스, 시작일, 종료일, 당이름, 당인덱스)
-    # name = input("Name: ")
+
+print(len(추가당배열), list(set(추가당배열)))
+print(len(당이름배열), list(set(당이름배열)))
+
+re = []
+for i in 추가당배열:
+    if i in 당이름배열:
+        pass
+    else:
+        re.append(i)
+
+print(len(re), list(set(re)))
 
 conn.commit()
 conn.close()

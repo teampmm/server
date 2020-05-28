@@ -223,7 +223,7 @@ class PoliticianModel extends CI_Model
             $response_data['profile_image_url'] = 'http://52.78.106.225/files/images/politician_thumbnail/'.$politician_select_result->idx.'.jpg';
 
             $politician_generation_s_result = $this->db->query("SELECT elect_do, elect_gun, elect_gu, start_day, end_day, progress_status, vote_score 
-                FROM PoliticianGeneration where idx = $politician_idx")->row();
+                FROM PoliticianGeneration where politician_idx = $politician_idx")->row();
 
             $politician_generation_array = array();
             $start_day = $politician_generation_s_result->start_day;

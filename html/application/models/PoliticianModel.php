@@ -525,14 +525,18 @@ class PoliticianModel extends CI_Model
 
     // pdf 조회
     public function getPDF($politician_idx){
+
+        $response_data = array();
+
         $result = $this->db->query("SELECT count(idx) as cnt FROM Politician")->row();
 
         if ((int)$result->cnt < (int)$politician_idx ){
-            return json_encode("정치인 데이터가 없습니다");
+            return "정치인 데이터가 없습니다";
         }
 
         $pdf_url = 'http://52.78.106.225/files/pdf/'.$politician_idx.'.pdf';
-        return json_encode($pdf_url);
+        $response_data['pdf_url'] = $pdf_url;
+        return json_encode($response_data);
     }
 }
 

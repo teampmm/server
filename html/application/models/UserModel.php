@@ -233,7 +233,7 @@ class UserModel extends CI_Model
         return json_encode($result_json,true);
     }
 
-    // 사용자 정보를 반환하는 메서드
+    // 사용자 정보를 반환하는 메서드 NO API
     public function getUserInfo($user_id){
 
         $user_info = $this->db->query("select * from User where id = '$user_id'")->row();
@@ -241,15 +241,20 @@ class UserModel extends CI_Model
         return $user_info;
     }
 
+    // 로그아웃 요청 메서드
     public function logOutRequest($token_data, $token_str){
+
+        $response_data = array();
 
         if($token_data->idx != "토큰실패"){
             $this->db->query("insert into BlackList VALUE (null ,'$token_str',null ,null,  NOW(),null ,null )");
-            return json_encode("로그아웃 완료 토큰삭제바람");
+            $response_data['result'] = "로그아웃 완료 토큰삭제바람";
+            return json_encode($response_data);
         }
         else{
             header("HTTP/1.1 401 ");
-            return json_encode("토큰값이 없습니다");
+            $response_data['result'] = "토큰값이 없습니다";
+            return json_encode($response_data);
         }
 
     }

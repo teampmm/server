@@ -45,13 +45,13 @@ class User extends CI_Controller
         // 클라이언트가 header에 토큰정보를 담아 보낸걸 확인한다.
         $header_data = apache_request_headers();
 
-        $this->token_str = $header_data['Authorization'];
-
         // 클라이언트의 토큰으로 인코딩도니 문자열을 해독한다.
         // == jwt_data에는 클라이언트가보낸 토큰의 정보들이 담겨있다.
         if(empty($header_data['Authorization'])){
             return (object)$result=array("idx"=>"토큰실패");
         }else{
+            $this->token_str = $header_data['Authorization'];
+
             $token_data = $pmm_jwt->tokenParsing($this->token_str);
             return $token_data;
         }

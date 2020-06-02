@@ -143,6 +143,7 @@ class PoliticianModel extends CI_Model
             $card_data['politician_kr_name'] = $politician_kr_name;
             $card_data['party_name'] = $party_name;
             $card_data['politician_committee'] = $politician_committee;
+            $card_data['politician_generation'] = $elect_generation;
 
             // 정치인 카드 리스트에 추가
             array_push($card_list,$card_data);
@@ -291,44 +292,52 @@ class PoliticianModel extends CI_Model
     // 정치인 공약 정보 요청
     // input : 정치인 인덱스
     // output : 공약내용, 공약대수, 공약 이행 상태
-    public function getPledgeInfo($politician_idx){
-
-        return "정치인 공약 데이터 없음 - 데이터 수집 못했음 ( 데이터 없어서 수작업 해야 할 수도 있음 )";
+    public function getPledgeInfo($politician_idx, $generation){
 
         // 클라에게 보내줄 응답 데이터
         $response_data = array();
 
-        // 정치인 인덱스로 정치인 공약 모음 - 당선대수, 당선지역
         $politician_select_result = $this->db->query("SELECT
-                * FROM Politician where idx = '$politician_idx'")->row();
+                idx FROM PoliticianGeneration where politician_idx = $politician_idx and generation = $generation")->row();
 
-        // 당선 대수
-        $elect_generation = explode(',',$politician_select_result->elect_generation);
+        $politician_generation_idx = (int)($politician_select_result->idx);
 
-        // 당선 지역
-        $elect_area = explode(',',$politician_select_result->elect_area);
+        $politician_pledge_s_result = $this->db->query("SELECT
+                * FROM PoliticianPledge where politician_generation_idx = $politician_generation_idx")->result();
 
-        // 공약 정보를 담을 배열
-        $pledge_data_array = array();
+        $pledge_area = array();
 
-        for ($i = 0 ; $i < count($elect_generation); $i++){
+        foreach ($politician_pledge_s_result as $row){
+            array_push($pledge_area, $row->pledge_area);
+        }
+
+        $pledge_area = array_unique($pledge_area);
+
+        $pledge_area = $this->arraySort($pledge_area);
+
+
+
+        for ($i = 0; $i < count($pledge_area); $i++){
 
             $pledge_data = array();
+            $content = array();
 
-            // 정치인 공약 모음에서 대수, 공약이행상태, 내용을 가져온다.
-            $politician_pledge_select_result = $this->db->query("SELECT
-                pledge_implement_status, content
-                FROM PoliticianPledge where 
-                politician_idx = '$politician_idx' and 
-                generation = '$elect_generation[$i]'")->result();
+            $content_result = $this->db->query("SELECT
+                content FROM PoliticianPledge where pledge_area = '$pledge_area[$i]'")->result();
 
-            $pledge_data['elect_generation'] = $elect_generation[$i];
-            $pledge_data['elect_area'] = $elect_area[$i];
-            $pledge_data['pledge_data'] = $politician_pledge_select_result;
-            $response_data['kr_name'] = $politician_select_result->kr_name;
-            array_push($pledge_data_array,$pledge_data);
+            foreach ($content_result as $row){
+                array_push($content, $row->content);
+            }
+            $pledge_data['pledge_area'] = $pledge_area[$i];
+            $pledge_data['content'] = $content;
+            array_push($response_data, $pledge_data);
+
         }
-        $response_data['pledge_data'] = $pledge_data_array;
+
+
+
+        return json_encode($response_data);
+
 
         return json_encode($response_data);
     }
@@ -514,6 +523,17 @@ class PoliticianModel extends CI_Model
         }
     }
 
+    // pdf 조회
+    public function getPDF($politician_idx){
+        $result = $this->db->query("SELECT count(idx) as cnt FROM Politician")->row();
+
+        if ((int)$result->cnt < (int)$politician_idx ){
+            return json_encode("정치인 데이터가 없습니다");
+        }
+
+        $pdf_url = 'http://52.78.106.225/files/pdf/'.$politician_idx.'.pdf';
+        return json_encode($pdf_url);
+    }
 }
 
 

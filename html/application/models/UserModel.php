@@ -5,176 +5,183 @@ use PHPMailer\PHPMailer\Exception;
 
 class UserModel extends CI_Model
 {
-	function __construct()//생성자, 제일 먼저 실행되는 일종의 초기화
-	{
-		parent::__construct();
-	}
+    function __construct()//생성자, 제일 먼저 실행되는 일종의 초기화
+    {
+        parent::__construct();
+    }
 
-	// 사용자 회원가입
-	public function putUser($data)
-	{
-		$id = $data['id'];
-		$nick_name = $data['nick_name'];
-		$phone = $data['phone'];
+    // 사용자 회원가입
+    public function putUser($data)
+    {
+//	    $year = date("Y");
+//	    $month = date("m");
+//	    $day = date("d");
+//	    $hour = date("H");
+//	    $minute = date("i");
+//	    $second = date("s");
+//        echo $year.$month.$day.$hour.$minute.$second;
+//	    return;
+        $id = $data['id'];
+        $nick_name = $data['nick_name'];
+        $phone = $data['phone'];
 
-		// 클라이언트에서 hash 암호화 된 상태로 서버에게 전달해줌
-		$pw = $data['pw'];
+        // 클라이언트에서 hash 암호화 된 상태로 서버에게 전달해줌
+        $pw = $data['pw'];
 
-		$query = $this->db->query("select count(idx) as idx from User where 
+        $query = $this->db->query("select count(idx) as idx from User where 
 				id ='$id' or nick_name ='$nick_name' or phone='$phone'")->row();
 
-		if ($query->idx >= 1) {
-			$response_data['result'] = "이미 가입된 계정입니다";
-			return json_encode($response_data);
-		} else {
-			$input_data = array(
-				'idx'               => null,
-				'name'              => $data['name'],
-				'age'               => $data['age'],
-				'nick_name'         => $nick_name,
-				'sex'               => $data['sex'],
-				'id'                => $id,
-				'pw'                => $pw,
-				'phone'             => $phone,
-				'residence'         => $data['residence'],
-				'social_login'      => $data['social_login'],
-				'create_at'         => date("Y-m-d H:i:s"),
-				'update_at'         => null,
-				'delete_at'         => null,
-				'category'          => null,
-				'recently_login_at' => null,
-				'user_agent'        => $data['user_agent']
-			);
+        if ($query->idx >= 1) {
+            $response_data['result'] = "이미 가입된 계정입니다";
+            return json_encode($response_data);
+        } else {
+            $input_data = array(
+                'idx'               => null,
+                'name'              => $data['name'],
+                'age'               => $data['age'],
+                'nick_name'         => $nick_name,
+                'sex'               => $data['sex'],
+                'id'                => $id,
+                'pw'                => $pw,
+                'phone'             => $phone,
+                'residence'         => $data['residence'],
+                'social_login'      => $data['social_login'],
+                'create_at'         => date("Y-m-d H:i:s"),
+                'update_at'         => null,
+                'delete_at'         => null,
+                'category'          => null,
+                'recently_login_at' => null,
+                'user_agent'        => $data['user_agent']
+            );
 
-			// insert ( '테이블명', 배열 데이터 )
-			$result = $this->db->insert('User', $input_data);
+            // insert ( '테이블명', 배열 데이터 )
+            $result = $this->db->insert('User', $input_data);
 
-			$response_data = array();
+            $response_data = array();
 
-			// 회원 정보 추가 성공
-			if ($result == 1) {
-				$response_data['result'] = "회원가입 성공";
-				return json_encode($response_data);
-			} // 회원 정보 추가 실패
-			else {
-				$response_data['result'] = "잠시후 다시 시도해주세요 ";
-				return json_encode($response_data);
-			}
-		}
-	}
+            // 회원 정보 추가 성공
+            if ($result == 1) {
+                $response_data['result'] = "회원가입 성공";
+                return json_encode($response_data);
+            } // 회원 정보 추가 실패
+            else {
+                $response_data['result'] = "잠시후 다시 시도해주세요 ";
+                return json_encode($response_data);
+            }
+        }
+    }
 
+    // 사용자가 로그인 요청 - email정보와, 패스워드 정보를 입력으로 받는다.
+    public function getLoginStatus($json_data, $user_info)
+    {
 
-	// 사용자가 로그인 요청 - email정보와, 패스워드 정보를 입력으로 받는다.
-	public function getLoginStatus($json_data, $user_info)
-	{
+        // client가 보낸 사용자 id
+        $id = $json_data['id'];
 
-		// client가 보낸 사용자 id
-		$id = $json_data['id'];
+        // 사용자 패스워드는 암호화 된 채로 들어온다.
+        $pw = $json_data['pw'];
 
-		// 사용자 패스워드는 암호화 된 채로 들어온다.
-		$pw = $json_data['pw'];
-
-		// client로 부터 입력받은 id, pw에 대한 사용자 정보가 일치 하는지 조회
-		$query = $this->db->query("select count(idx) as 'count' from User where 
+        // client로 부터 입력받은 id, pw에 대한 사용자 정보가 일치 하는지 조회
+        $query = $this->db->query("select count(idx) as 'count' from User where 
                     id='$id' and pw = '$pw'"
-		)->row();
+        )->row();
 
-		// 사용자 정보가 일치
-		if ($query->count == 1) {
+        // 사용자 정보가 일치
+        if ($query->count == 1) {
 
-			// jwt 토큰 객체 생성
-			$pmm_jwt = new PolicticsJwt();
+            // jwt 토큰 객체 생성
+            $pmm_jwt = new PolicticsJwt();
 
-			// 사용자 id 값으로 토큰을 생성해서 client에게 전달해준다.
-			// 이제부터 클라이언트는 api 요청 시 서버로 부터 받은 토큰을 사용 하여 필요한 데이터를 주고 받는다.
-			$token = $pmm_jwt->createToken($user_info);
+            // 사용자 id 값으로 토큰을 생성해서 client에게 전달해준다.
+            // 이제부터 클라이언트는 api 요청 시 서버로 부터 받은 토큰을 사용 하여 필요한 데이터를 주고 받는다.
+            $token = $pmm_jwt->createToken($user_info);
 
-			$response_data['result'] = "로그인 성공";
-			$response_data['token'] = $token;
-			return json_encode($response_data);
-		} // 사용자 정보가 불일치
-		else {
-			$response_data['result'] = "가입된 계정이 없거나, 비밀번호가 틀렸습니다";
-			return json_encode($response_data);
-		}
-	}
+            $response_data['result'] = "로그인 성공";
+            $response_data['token'] = $token;
+            return json_encode($response_data);
+        } // 사용자 정보가 불일치
+        else {
+            $response_data['result'] = "가입된 계정이 없거나, 비밀번호가 틀렸습니다";
+            return json_encode($response_data);
+        }
+    }
 
-	// 닉네임 중복 체크
-	// 이메일 중복이 안될 시 return success
-	// 이메일 중복 시 return failed
-	public function getNickCheck($nick_name)
-	{
-		// client로 부터 입력 받은 닉네임이 있는지 조회 - 중복체크를 위함.
-		$query = $this->db->query("select count(idx) as 'count' from User where 
+    // 닉네임 중복 체크
+    // 이메일 중복이 안될 시 return success
+    // 이메일 중복 시 return failed
+    public function getNickCheck($nick_name)
+    {
+        // client로 부터 입력 받은 닉네임이 있는지 조회 - 중복체크를 위함.
+        $query = $this->db->query("select count(idx) as 'count' from User where 
                 nick_name='$nick_name'"
-		)->row();
+        )->row();
 
-		// 클라에게 보낼 응답 데이터
-		$response_data = array();
+        // 클라에게 보낼 응답 데이터
+        $response_data = array();
 
-		// 닉네임 중복
-		if ($query->count == 1) {
-			$response_data['result'] = "닉네임중복-가입불가능";
-			return json_encode($response_data);
-		} // 닉네임 중복이 아님
-		else {
-			$response_data['result'] = "닉네임중복아님-가입가능";
-			return json_encode($response_data);
-		}
-	}
-	// 아이디 중복체크
-	public function getIdCheck($id)
-	{
-		// client로 부터 입력 받은 아이디가 있는지 조회 - 중복체크를 위함.
-		$query = $this->db->query("select count(idx) as 'count' from User where 
+        // 닉네임 중복
+        if ($query->count == 1) {
+            $response_data['result'] = "닉네임중복-가입불가능";
+            return json_encode($response_data);
+        } // 닉네임 중복이 아님
+        else {
+            $response_data['result'] = "닉네임중복아님-가입가능";
+            return json_encode($response_data);
+        }
+    }
+    // 아이디 중복체크
+    public function getIdCheck($id)
+    {
+        // client로 부터 입력 받은 아이디가 있는지 조회 - 중복체크를 위함.
+        $query = $this->db->query("select count(idx) as 'count' from User where 
                 id='$id'"
-		)->row();
+        )->row();
 
-		// 클라에게 보낼 응답 데이터
-		$response_data = array();
+        // 클라에게 보낼 응답 데이터
+        $response_data = array();
 
-		// 닉네임 중복
-		if ($query->count == 1) {
-			$response_data['result'] = "아이디중복-가입불가능";
-			return json_encode($response_data);
-		} // 닉네임 중복이 아님
-		else {
-			$response_data['result'] = "아이디중복아님-가입가능";
-			return json_encode($response_data);
-		}
-	}
+        // 닉네임 중복
+        if ($query->count == 1) {
+            $response_data['result'] = "아이디중복-가입불가능";
+            return json_encode($response_data);
+        } // 닉네임 중복이 아님
+        else {
+            $response_data['result'] = "아이디중복아님-가입가능";
+            return json_encode($response_data);
+        }
+    }
 
-	//핸드폰 인증을 하기전에 우선 가입이 되어있는지 확인
-	public function phoneCheck($phone)
-	{
-		$count = $this->db->query("select count(idx) as 'count' from User where phone='$phone'")->row();
+    //핸드폰 인증을 하기전에 우선 가입이 되어있는지 확인
+    public function phoneCheck($phone)
+    {
+        $count = $this->db->query("select count(idx) as 'count' from User where phone='$phone'")->row();
 
-		// 가입 가능
-		if ($count->count == 0) {
-			return 0;
-		} // 가입 불가능
-		else {
-			return 1;
-		}
-	}
-	//카카오 로그인일때 db와 uid를 비교한다
+        // 가입 가능
+        if ($count->count == 0) {
+            return 0;
+        } // 가입 불가능
+        else {
+            return 1;
+        }
+    }
+    //카카오 로그인일때 db와 uid를 비교한다
     //경우 1 . 처음 회원가입
     //경우 2 . 카카오 동의만 받고 회원가입을 진행 하지 않음
     //경우 3 . 카카오 로그인으로 회원가입 진행
     public function kakaoCheck($uid, $user_info){
 
-	    $result=$this->db->query("select *,count(idx)as `count` from User where id='$uid' and social_login='K'")->row();
-	    //이미 테이블에 카카오 uid가 저장되어있는경우
+        $result=$this->db->query("select *,count(idx)as `count` from User where id='$uid' and social_login='K'")->row();
+        //이미 테이블에 카카오 uid가 저장되어있는경우
         $result_json=array();
-	    if ($result->count ==1){
-	        //카카오 동의만 받고 가입을 진행하지 않은 상태
-	        //pmm자체 회원가입 페이지로 넘어가야함
+        if ($result->count ==1){
+            //카카오 동의만 받고 가입을 진행하지 않은 상태
+            //pmm자체 회원가입 페이지로 넘어가야함
             //pmm자체 회원가입으로 넘어가야함 = 1
             if($result->nick_name ==null){
-	            $result_json['response_code']=1;
+                $result_json['response_code']=1;
                 return json_encode($result_json);
             }
-	        //카카오 동의후 pmm회원가입까지 완료한 상태
+            //카카오 동의후 pmm회원가입까지 완료한 상태
             //카카오 로그인 완료 = 0
             else{
 
@@ -190,10 +197,10 @@ class UserModel extends CI_Model
 
             }
         }
-	    //첫가입
+        //첫가입
         //카카오 정보 저장 완료 회원가입으로 넘어가야함 = 2
-	    else{
-	        $this->db->query("INSERT INTO User (social_login,id) VALUES ('K','$uid')");
+        else{
+            $this->db->query("INSERT INTO User (social_login,id) VALUES ('K','$uid')");
             $result_json['response_code']=2;
             return json_encode($result_json);
 
@@ -204,19 +211,19 @@ class UserModel extends CI_Model
     public function putKakaoUser($userinfo){
         $name=$userinfo['name'];
 
-	    $age=(int)$userinfo['age'];
+        $age=(int)$userinfo['age'];
 
-	    $nick_name=$userinfo['nick_name'];
+        $nick_name=$userinfo['nick_name'];
 
-	    $sex=$userinfo['sex'];
+        $sex=$userinfo['sex'];
 
-	    $phone=$userinfo['phone'];
+        $phone=$userinfo['phone'];
 
-	    $residence=$userinfo['residence'];
+        $residence=$userinfo['residence'];
 
-	    $category=$userinfo['category'];
+        $category=$userinfo['category'];
 
-	    $user_agent=$userinfo['user_agent'];
+        $user_agent=$userinfo['user_agent'];
 
         $uid=$userinfo['kakao_uid'];
 
@@ -232,6 +239,19 @@ class UserModel extends CI_Model
         $user_info = $this->db->query("select * from User where id = '$user_id'")->row();
 
         return $user_info;
+    }
+
+    public function logOutRequest($token_data, $token_str){
+
+        if($token_data->idx != "토큰실패"){
+            $this->db->query("insert into BlackList VALUE (null ,'$token_str',null ,null,  NOW(),null ,null )");
+            return json_encode("로그아웃 완료 토큰삭제바람");
+        }
+        else{
+            header("HTTP/1.1 401 ");
+            return json_encode("토큰값이 없습니다");
+        }
+
     }
 
 }

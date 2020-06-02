@@ -292,31 +292,39 @@ class PoliticianModel extends CI_Model
     // 정치인 공약 정보 요청
     // input : 정치인 인덱스
     // output : 공약내용, 공약대수, 공약 이행 상태
-    public function getPledgeInfo($politician_idx, $generation){
+    public function getPledgeInfo($politician_idx, $generation)
+    {
 
         // 클라에게 보내줄 응답 데이터
         $response_data = array();
 
+        // 정치인 대수 인덱스 가져오기
         $politician_select_result = $this->db->query("SELECT
                 idx FROM PoliticianGeneration where politician_idx = $politician_idx and generation = $generation")->row();
-
         $politician_generation_idx = (int)($politician_select_result->idx);
 
+        // 정치인 대수로 정치인 공약 정보를 가져온다.
         $politician_pledge_s_result = $this->db->query("SELECT
                 * FROM PoliticianPledge where politician_generation_idx = $politician_generation_idx")->result();
 
+        // 정치인 공약 지역 정보를 배열에 넣음 ex ) 가양1동,가양2동 등
         $pledge_area = array();
-
-        foreach ($politician_pledge_s_result as $row){
+        foreach ($politician_pledge_s_result as $row) {
             array_push($pledge_area, $row->pledge_area);
         }
 
+        // 공약 지역이 겹치는 데이터가 많아 중복을 제거한다.
         $pledge_area = array_unique($pledge_area);
-
         $pledge_area = $this->arraySort($pledge_area);
 
+        // 공약 정보를 담을 배열
+        $pledge_temp_data = array();
 
-
+        // 공약 지역에 해당하는 공약 내용을 추가한다.
+        // 공약지역:{
+        //  공약1,
+        //  공약2 와 같은 형태로 넣을거임
+        // }
         for ($i = 0; $i < count($pledge_area); $i++){
 
             $pledge_data = array();
@@ -330,16 +338,12 @@ class PoliticianModel extends CI_Model
             }
             $pledge_data['pledge_area'] = $pledge_area[$i];
             $pledge_data['content'] = $content;
-            array_push($response_data, $pledge_data);
-
+            array_push($pledge_temp_data, $pledge_data);
         }
-
-
-
-        return json_encode($response_data);
-
+        $response_data['result'] = $pledge_temp_data;
 
         return json_encode($response_data);
+
     }
 
     // 정치인 북마크 클릭/해제

@@ -1,12 +1,13 @@
 <?php
 
 defined('BASEPATH') or exit('No direct script access allowed');
-include 'DTO/Option.php';
-include 'DTO/PolicticsJwt.php';
+include_once 'DTO/Option.php';
+include_once 'DTO/PolicticsJwt.php';
 
 class User extends CI_Controller
 {
-	public $http_method;
+    public $token_str;
+    public $option;
 
 	public function __construct()
 	{
@@ -14,7 +15,9 @@ class User extends CI_Controller
 
 		// 클라에서 요청한 (GET, POST, PATCH, DELETE) HTTP 메서드 확인
 		$this->http_method = $_SERVER["REQUEST_METHOD"];
-	}
+        $this->option = new Option();
+
+    }
 
 	// request url : {서버 ip}/user
 	public function index()
@@ -25,7 +28,7 @@ class User extends CI_Controller
 			$json_data = $this->input->post('user_info', true);
 			$json_data = json_decode($json_data, true);
 
-			$error=jsonNullCheck($json_data,array('nick_name','id','pw','phone','social_login'));
+			$error=$this->option->jsonNullCheck($json_data,array('nick_name','id','pw','phone','social_login'));
 			if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
 			$this->load->model("UserModel");
@@ -35,6 +38,24 @@ class User extends CI_Controller
 			echo $result;
 		}
 	}
+    public function headerData()
+    {
+        $pmm_jwt = new PolicticsJwt();
+
+        // 클라이언트가 header에 토큰정보를 담아 보낸걸 확인한다.
+        $header_data = apache_request_headers();
+
+        $this->token_str = $header_data['Authorization'];
+
+        // 클라이언트의 토큰으로 인코딩도니 문자열을 해독한다.
+        // == jwt_data에는 클라이언트가보낸 토큰의 정보들이 담겨있다.
+        if(empty($header_data['Authorization'])){
+            return (object)$result=array("idx"=>"토큰실패");
+        }else{
+            $token_data = $pmm_jwt->tokenParsing($this->token_str);
+            return $token_data;
+        }
+    }
 
 	// 닉네임 중복 체크 메서드
 	public function getNickNameCheck()
@@ -42,7 +63,7 @@ class User extends CI_Controller
 		// 사용자가 닉네임 중복 체크 요청 - nick_name 가지고있다.
 		$nick_name = $this->input->get(null, true);
 
-		$error=jsonNullCheck($nick_name,array('nick_name'));
+		$error=$this->option->jsonNullCheck($nick_name,array('nick_name'));
 		if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
 		$this->load->model('UserModel');
@@ -55,7 +76,7 @@ class User extends CI_Controller
 		// 사용자가 아이디 중복 체크 요청 - nick_name 가지고있다.
 		$id = $this->input->get(null, true);
 
-		$error=jsonNullCheck($id,array('id'));
+		$error=$this->option->jsonNullCheck($id,array('id'));
 		if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
 		$this->load->model('UserModel');
@@ -70,7 +91,7 @@ class User extends CI_Controller
 		$json_data = $this->input->post('login_request', true);
 		$json_data = json_decode($json_data, true);
 
-		$error=jsonNullCheck($json_data,array('id','pw'));
+		$error=$this->option->jsonNullCheck($json_data,array('id','pw'));
 		if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
 		// 사용자가 보낸 id, pw 정보를 db에 있는 id, pw와 비교한다.
@@ -81,6 +102,32 @@ class User extends CI_Controller
 
         // 로그인 결과를 반환
         $result = $this->UserModel->getLoginStatus($json_data, $user_info);
+		echo $result;
+	}
+
+	// 로그인 요청 메서드
+	public function logOutRequest()
+	{
+        // 클라이언트가 header에 토큰정보를 담아 보낸걸 확인한다.
+        $header_data = apache_request_headers();
+
+        // 클라이언트가 보낸 토큰 정보가 담겨있다.
+        $token_data = $this->headerData();
+
+        // 클라이언트의 토큰으로 인코딩도니 문자열을 해독한다.
+        // == jwt_data에는 클라이언트가보낸 토큰의 정보들이 담겨있다.
+        if(empty($header_data['Authorization'])){
+            return (object)$result=array("idx"=>"토큰실패");
+        }else{
+
+            // 사용자가 보낸 id, pw 정보를 db에 있는 id, pw와 비교한다.
+            $this->load->model('UserModel');
+
+            // 로그인 결과를 반환
+            $result = $this->UserModel->logOutRequest($token_data, $this->token_str);
+        }
+
+
 		echo $result;
 	}
 
@@ -109,6 +156,10 @@ class User extends CI_Controller
 			else if ($client_data == 'kakao_login'){
 				$this->kakaoLogin();
 			}
+
+			else if ($client_data == 'logout'){
+				$this->logOutRequest();
+			}
 		}
 		else if ($this->http_method == "PATCH" or $this->http_method=='patch'){
 			if ($client_data=='kakao_sign'){
@@ -129,11 +180,12 @@ class User extends CI_Controller
 			if ($client_data == 'phone') {
 				require_once "/home/ubuntu/db/sms/lib/lib.php";
 				require_once "/home/ubuntu/db/sms/class/Clientapi.class.php";
-				$smsobj = new Clientapi();
+                error_reporting(E_ALL ^ E_DEPRECATED);
+                $smsobj = new Clientapi();
 				$smsobj->init();
 				$user_phone = $this->input->post(null, true);
 
-				$error=jsonNullCheck($user_phone,array('user_phone'));
+				$error=$this->option->jsonNullCheck($user_phone,array('user_phone'));
 				if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
 				$user_phone = $user_phone['user_phone'];
@@ -173,7 +225,7 @@ class User extends CI_Controller
 	public function kakaoLogin(){
 		$uid=$this->input->post(null,true);
 
-		$error=jsonNullCheck($uid,array('kakao_uid'));
+		$error=$this->option->jsonNullCheck($uid,array('kakao_uid'));
 		if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
 		$this->load->model('UserModel');
@@ -191,7 +243,7 @@ class User extends CI_Controller
 
 		$info=json_decode($info,true);
 		
-		$error=jsonNullCheck($info,array('kakao_uid','nick_name','sex','phone'));
+		$error=$this->option->jsonNullCheck($info,array('kakao_uid','nick_name','sex','phone'));
 		if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
 

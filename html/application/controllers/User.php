@@ -117,7 +117,9 @@ class User extends CI_Controller
         // 클라이언트의 토큰으로 인코딩도니 문자열을 해독한다.
         // == jwt_data에는 클라이언트가보낸 토큰의 정보들이 담겨있다.
         if(empty($header_data['Authorization'])){
-            return (object)$result=array("idx"=>"토큰실패");
+            $request_data['result'] = "토큰값이 없습니다";
+            echo json_encode($request_data);
+            return;
         }else{
 
             // 사용자가 보낸 id, pw 정보를 db에 있는 id, pw와 비교한다.
@@ -126,8 +128,6 @@ class User extends CI_Controller
             // 로그인 결과를 반환
             $result = $this->UserModel->logOutRequest($token_data, $this->token_str);
         }
-
-
 		echo $result;
 	}
 

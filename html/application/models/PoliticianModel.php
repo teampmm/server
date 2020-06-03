@@ -329,15 +329,18 @@ class PoliticianModel extends CI_Model
 
             $pledge_data = array();
             $content = array();
+            $pledge_status = array();
 
             $content_result = $this->db->query("SELECT
-                content FROM PoliticianPledge where pledge_area = '$pledge_area[$i]'")->result();
+                * FROM PoliticianPledge where pledge_area = '$pledge_area[$i]' and politician_generation_idx = $politician_generation_idx")->result();
 
             foreach ($content_result as $row){
                 array_push($content, $row->content);
+                array_push($pledge_status, $row->pledge_implement_status);
             }
             $pledge_data['pledge_area'] = $pledge_area[$i];
             $pledge_data['content'] = $content;
+            $pledge_data['pledge_status'] = $pledge_status;
             array_push($pledge_temp_data, $pledge_data);
         }
         $response_data['result'] = $pledge_temp_data;

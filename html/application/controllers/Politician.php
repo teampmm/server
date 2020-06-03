@@ -52,7 +52,11 @@ class Politician extends CI_Controller
         // 토큰이 유효한지 검사
         $this->load->model('OptionModel');
         $token_result = $this->OptionModel->blackListTokenCheck($this->token_str);
-        if($token_result != "유효한 토큰") {echo json_encode($token_result); return;}
+        if($token_result != "유효한 토큰") {
+            $request_data['result'] = $token_result;
+            echo json_encode($request_data);
+            return;
+        }
 
         // 정치인 카드 정보 요청 - 받았던 카드의 인덱스 정보를 가지고 온다.
         $request_data = $this->input->get(null, True);
@@ -126,8 +130,11 @@ class Politician extends CI_Controller
         // 토큰이 유효한지 검사
         $this->load->model('OptionModel');
         $token_result = $this->OptionModel->blackListTokenCheck($this->token_str);
-        if($token_result != "유효한 토큰") {echo json_encode($token_result); return;}
-
+        if($token_result != "유효한 토큰") {
+            $request_data['result'] = $token_result;
+            echo json_encode($request_data);
+            return;
+        }
         $politician_idx = $this->input->post('politician_idx');
 
         // 클라가 정치인 인덱스값을 서버어 안보냈을때
@@ -149,8 +156,11 @@ class Politician extends CI_Controller
         // 토큰이 유효한지 검사
         $this->load->model('OptionModel');
         $token_result = $this->OptionModel->blackListTokenCheck($this->token_str);
-        if($token_result != "유효한 토큰") {echo json_encode($token_result); return;}
-
+        if($token_result != "유효한 토큰") {
+            $request_data['result'] = $token_result;
+            echo json_encode($request_data);
+            return;
+        }
         $politician_idx = $this->input->get(null, True);
 
         $error=$this->option->jsonNullCheck($politician_idx,array('politician_idx'));
@@ -170,8 +180,11 @@ class Politician extends CI_Controller
         // 토큰이 유효한지 검사
         $this->load->model('OptionModel');
         $token_result = $this->OptionModel->blackListTokenCheck($this->token_str);
-        if($token_result != "유효한 토큰") {echo json_encode($token_result); return;}
-
+        if($token_result != "유효한 토큰") {
+            $request_data['result'] = $token_result;
+            echo json_encode($request_data);
+            return;
+        }
         $input=$this->input->post("evaluation_write",true);
         $input_json=json_decode($input,true);
 
@@ -192,8 +205,12 @@ class Politician extends CI_Controller
         // 토큰이 유효한지 검사
         $this->load->model('OptionModel');
         $token_result = $this->OptionModel->blackListTokenCheck($this->token_str);
-        if($token_result != "유효한 토큰") {echo json_encode($token_result); return;}
-
+        if($token_result != "유효한 토큰") {
+            $request_data['result'] = $token_result;
+            header("HTTP/1.1 401");
+            echo json_encode($request_data);
+            return;
+        }
         $politician_idx = $this->input->get(null, True);
 
         $error=$this->option->jsonNullCheck($politician_idx,array('politician_idx'));

@@ -19,8 +19,11 @@ $route['sms/(:any)'] = 'user/sms/$1';
 // 정치인 정보
 $route['politician/(:any)'] = 'politician/requestData/$1';
 
-//법안 정보
+// 법안 정보
 $route['bill/(:any)']='bill/requestData/$1';
+
+// 정당 정보
+$route['party/(:any)']='party/requestData/$1';
 
 
 

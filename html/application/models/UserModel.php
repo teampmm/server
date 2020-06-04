@@ -5,22 +5,9 @@ use PHPMailer\PHPMailer\Exception;
 
 class UserModel extends CI_Model
 {
-    function __construct()//생성자, 제일 먼저 실행되는 일종의 초기화
-    {
-        parent::__construct();
-    }
-
     // 사용자 회원가입
     public function putUser($data)
     {
-//	    $year = date("Y");
-//	    $month = date("m");
-//	    $day = date("d");
-//	    $hour = date("H");
-//	    $minute = date("i");
-//	    $second = date("s");
-//        echo $year.$month.$day.$hour.$minute.$second;
-//	    return;
         $id = $data['id'];
         $nick_name = $data['nick_name'];
         $phone = $data['phone'];
@@ -28,34 +15,21 @@ class UserModel extends CI_Model
         // 클라이언트에서 hash 암호화 된 상태로 서버에게 전달해줌
         $pw = $data['pw'];
 
-        $query = $this->db->query("select count(idx) as idx from User where 
-				id ='$id' or nick_name ='$nick_name' or phone='$phone'")->row();
+        $sql = "select count(idx) as idx from User where id = ? or nick_name = ? or phone= ?";
+
+        $query = $this->db->query($sql, array($id, $nick_name, $phone))->row();
 
         if ($query->idx >= 1) {
             $response_data['result'] = "이미 가입된 계정입니다";
             return json_encode($response_data);
         } else {
-            $input_data = array(
-                'idx'               => null,
-                'name'              => $data['name'],
-                'age'               => $data['age'],
-                'nick_name'         => $nick_name,
-                'sex'               => $data['sex'],
-                'id'                => $id,
-                'pw'                => $pw,
-                'phone'             => $phone,
-                'residence'         => $data['residence'],
-                'social_login'      => $data['social_login'],
-                'create_at'         => date("Y-m-d H:i:s"),
-                'update_at'         => null,
-                'delete_at'         => null,
-                'category'          => null,
-                'recently_login_at' => null,
-                'user_agent'        => $data['user_agent']
-            );
 
-            // insert ( '테이블명', 배열 데이터 )
-            $result = $this->db->insert('User', $input_data);
+            $sql = "insert into User (name,age,nick_name,sex,id,pw,phone,residence,social_login,create_at,category,user_agent) 
+                value (?,?,?,?,?,?,?,?,?,?,?,?)";
+
+            $result = $this->db->query($sql, array($data['name'], $data['age'], $nick_name, $data['sex'],
+                                        $id, $pw, $phone, $data['residence'],
+                                        $data['social_login'], date("Y-m-d H:i:s"), null, $data['user_agent']));
 
             $response_data = array();
 
@@ -81,13 +55,17 @@ class UserModel extends CI_Model
         // 사용자 패스워드는 암호화 된 채로 들어온다.
         $pw = $json_data['pw'];
 
-        // client로 부터 입력받은 id, pw에 대한 사용자 정보가 일치 하는지 조회
-        $query = $this->db->query("select count(idx) as 'count' from User where 
-                    id='$id' and pw = '$pw'"
-        )->row();
+        $sql = "select idx, count(idx) as 'count' from User where 
+                    id = ? and pw = ?";
+
+        $query = $this->db->query($sql, array($id,$pw))->row();
 
         // 사용자 정보가 일치
         if ($query->count == 1) {
+
+            // 최근 로그인 시간 업데이트
+            $sql = "update User set recently_login_at = ? where idx = ?";
+            $this->db->query($sql, array(date("Y-m-d H:i:s"),$query->idx));
 
             // jwt 토큰 객체 생성
             $pmm_jwt = new PolicticsJwt();
@@ -111,10 +89,9 @@ class UserModel extends CI_Model
     // 이메일 중복 시 return failed
     public function getNickCheck($nick_name)
     {
-        // client로 부터 입력 받은 닉네임이 있는지 조회 - 중복체크를 위함.
-        $query = $this->db->query("select count(idx) as 'count' from User where 
-                nick_name='$nick_name'"
-        )->row();
+        $sql = "select count(idx) as 'count' from User where nick_name = ? ";
+
+        $query = $this->db->query($sql, array($nick_name))->row();
 
         // 클라에게 보낼 응답 데이터
         $response_data = array();
@@ -132,10 +109,9 @@ class UserModel extends CI_Model
     // 아이디 중복체크
     public function getIdCheck($id)
     {
-        // client로 부터 입력 받은 아이디가 있는지 조회 - 중복체크를 위함.
-        $query = $this->db->query("select count(idx) as 'count' from User where 
-                id='$id'"
-        )->row();
+        $sql = "select count(idx) as 'count' from User where id = ? ";
+
+        $query = $this->db->query($sql, array($id))->row();
 
         // 클라에게 보낼 응답 데이터
         $response_data = array();
@@ -154,7 +130,9 @@ class UserModel extends CI_Model
     //핸드폰 인증을 하기전에 우선 가입이 되어있는지 확인
     public function phoneCheck($phone)
     {
-        $count = $this->db->query("select count(idx) as 'count' from User where phone='$phone'")->row();
+        $sql = "select count(idx) as 'count' from User where phone = ? ";
+
+        $count = $this->db->query($sql, array($phone))->row();
 
         // 가입 가능
         if ($count->count == 0) {
@@ -170,7 +148,10 @@ class UserModel extends CI_Model
     //경우 3 . 카카오 로그인으로 회원가입 진행
     public function kakaoCheck($uid, $user_info){
 
-        $result=$this->db->query("select *,count(idx)as `count` from User where id='$uid' and social_login='K'")->row();
+        $sql = "select *,count(idx)as `count` from User where id = ? and social_login='K'";
+
+        $result = $this->db->query($sql, array($uid))->row();
+
         //이미 테이블에 카카오 uid가 저장되어있는경우
         $result_json=array();
         if ($result->count ==1){
@@ -184,6 +165,10 @@ class UserModel extends CI_Model
             //카카오 동의후 pmm회원가입까지 완료한 상태
             //카카오 로그인 완료 = 0
             else{
+
+                // 최근 로그인 시간 업데이트
+                $sql = "update User set recently_login_at = ? where idx = ?";
+                $this->db->query($sql, array(date("Y-m-d H:i:s"),$result->idx));
 
                 // jwt 토큰 객체 생성
                 $pmm_jwt = new PolicticsJwt();
@@ -200,7 +185,11 @@ class UserModel extends CI_Model
         //첫가입
         //카카오 정보 저장 완료 회원가입으로 넘어가야함 = 2
         else{
-            $this->db->query("INSERT INTO User (social_login,id) VALUES ('K','$uid')");
+
+            $sql = "INSERT INTO User (social_login,id) VALUES ('K', ?)";
+
+            $this->db->query($sql, array($uid));
+
             $result_json['response_code']=2;
             return json_encode($result_json);
 
@@ -227,16 +216,30 @@ class UserModel extends CI_Model
 
         $uid=$userinfo['kakao_uid'];
 
-        $result_code=$this->db->query("update User set name='$name' , age=$age , nick_name='$nick_name' , sex='$sex' , phone='$phone' , residence='$residence' ,category ='$category' , create_at=NOW(),update_at=NOW(),delete_at=NOW(),recently_login_at=NOW(),
-        user_agent='$user_agent' where id='$uid'");
-        $result_json['response_code']=(boolean)$result_code;
+
+        $sql = "update User set `name` = ?, 
+                                age = ?, 
+                                nick_name = ?, 
+                                sex = ?, 
+                                phone = ?, 
+                                residence = ?, 
+                                category = ?, 
+                                create_at = ?, 
+                                user_agent = ? 
+                where id = ?";
+
+        $result = $this->db->query($sql, array($name,$age,$nick_name,$sex,$phone,$residence,$category,date("Y-m-d H:i:s"),$user_agent,$uid))->row();
+
+        $result_json['response_code']=(boolean)$result;
         return json_encode($result_json,true);
     }
 
     // 사용자 정보를 반환하는 메서드 NO API
     public function getUserInfo($user_id){
 
-        $user_info = $this->db->query("select * from User where id = '$user_id'")->row();
+        $sql = "select * from User where id = ?";
+
+        $user_info = $this->db->query($sql, array($user_id))->row();
 
         return $user_info;
     }
@@ -247,7 +250,11 @@ class UserModel extends CI_Model
         $response_data = array();
 
         if($token_data->idx != "토큰실패"){
-            $this->db->query("insert into BlackList VALUE (null ,'$token_str',null ,null,  NOW(),null ,null )");
+
+            $sql = "insert into BlackList VALUE (null , ? ,null ,null, ?,null ,null )";
+
+            $this->db->query($sql, array($token_str,date("Y-m-d H:i:s")));
+
             $response_data['result'] = "로그아웃 완료 토큰삭제바람";
             return json_encode($response_data);
         }

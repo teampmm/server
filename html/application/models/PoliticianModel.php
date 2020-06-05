@@ -30,7 +30,8 @@ class PoliticianModel extends CI_Model
         // 한 페이지에 보여줄 카드의 갯수
         $per_page_data = $card_num;
 
-        $politician_num = $this->db->query("select count(idx) as cnt from PoliticianGeneration where generation = $elect_generation")->row();
+        $sql = "select count(idx) as cnt from PoliticianGeneration where generation = ?";
+        $politician_num = $this->db->query($sql,array($elect_generation))->row();
 
         // 요청한 카드의 개수가 정치인 정보의 수보다 많은 경우 데이터가 그 만큼 없다고 처리해줘야함
         if ($card_num > $politician_num->cnt){
@@ -188,9 +189,8 @@ class PoliticianModel extends CI_Model
         // 클라이언트에게 응답 해줄 데이터
         $response_data = array();
 
-        // 정치인 기본 정보 조회 - 인덱스, 정당인덱스, 약력, 카테고리, 정치인 사진 경로
-        $politician_select_result = $this->db->query("SELECT
-                * FROM Politician where idx = '$politician_idx'")->row();
+        $sql = "SELECT * FROM Politician where idx = ?";
+        $politician_select_result = $this->db->query($sql,array($politician_idx))->row();
 
         // 정치인 조회 결과가 없음
         if($politician_select_result == null){
@@ -219,12 +219,15 @@ class PoliticianModel extends CI_Model
             $response_data['twitter'] = $politician_select_result->twitter;
             $response_data['instagram'] = $politician_select_result->instagram;
             $response_data['blog'] = $politician_select_result->blog;
+            $response_data['homepage'] = $politician_select_result->homepage;
             $response_data['facebook'] = $politician_select_result->facebook;
             $response_data['youtube'] = $politician_select_result->youtube;
             $response_data['profile_image_url'] = 'http://52.78.106.225/files/images/politician_thumbnail/'.$politician_select_result->idx.'.jpg';
 
-            $politician_generation_s_result = $this->db->query("SELECT elect_do, elect_gun, elect_gu, start_day, end_day, progress_status, vote_score 
-                FROM PoliticianGeneration where politician_idx = $politician_idx")->row();
+            $sql = "SELECT elect_do, elect_gun, elect_gu, start_day, end_day, progress_status, vote_score 
+                FROM PoliticianGeneration where politician_idx = ?";
+
+            $politician_generation_s_result = $this->db->query($sql,array($politician_idx))->row();
 
             $politician_generation_array = array();
             $start_day = $politician_generation_s_result->start_day;
@@ -245,16 +248,18 @@ class PoliticianModel extends CI_Model
 
             $response_data['generation_info'] = $politician_generation_array;
 
-            $politician_party_history_s_result = $this->db->query("SELECT party_idx, start_day, end_day
-                FROM PoliticianPartyHistory where politician_idx = $politician_idx and end_day is NULL")->row();
+            $sql = "SELECT party_idx, start_day, end_day
+                FROM PoliticianPartyHistory where politician_idx = ? and end_day is NULL";
+
+            $politician_party_history_s_result = $this->db->query($sql,array($politician_idx))->row();
 
             $party_array = array();
             $party_start_day = $politician_party_history_s_result->start_day;
             $party_end_day = $politician_party_history_s_result->end_day;
             $party_idx = $politician_party_history_s_result->party_idx;
 
-            $party_s_result = $this->db->query("SELECT `name`
-                FROM Party where idx = $party_idx")->row();
+            $sql = "SELECT `name` FROM Party where idx = ?";
+            $party_s_result = $this->db->query($sql,array($party_idx))->row();
 
             $party_name = $party_s_result->name;
 
@@ -276,10 +281,10 @@ class PoliticianModel extends CI_Model
         // 클라에게 보내줄 응답 데이터
         $response_data = array();
 
+        $sql = "SELECT title, `date`, url FROM News where politician_idx = ?";
+
         // 정치인 관련 뉴스 조회
-        $politician_select_result = $this->db->query("SELECT
-                title, `date`, url
-                FROM News where politician_idx = '$politician_idx'")->result();
+        $politician_select_result = $this->db->query($sql,array($politician_idx))->result();
 
         $result_num = count($politician_select_result);
         $response_data['result_num'] = (int)$result_num;
@@ -298,14 +303,16 @@ class PoliticianModel extends CI_Model
         // 클라에게 보내줄 응답 데이터
         $response_data = array();
 
+        $sql = "SELECT idx FROM PoliticianGeneration where politician_idx = ? and generation = ?";
+
         // 정치인 대수 인덱스 가져오기
-        $politician_select_result = $this->db->query("SELECT
-                idx FROM PoliticianGeneration where politician_idx = $politician_idx and generation = $generation")->row();
+        $politician_select_result = $this->db->query($sql,array($politician_idx,$generation))->row();
         $politician_generation_idx = (int)($politician_select_result->idx);
 
+        $sql = "SELECT * FROM PoliticianPledge where politician_generation_idx = ?";
+
         // 정치인 대수로 정치인 공약 정보를 가져온다.
-        $politician_pledge_s_result = $this->db->query("SELECT
-                * FROM PoliticianPledge where politician_generation_idx = $politician_generation_idx")->result();
+        $politician_pledge_s_result = $this->db->query($sql, array($politician_generation_idx))->result();
 
         // 정치인 공약 지역 정보를 배열에 넣음 ex ) 가양1동,가양2동 등
         $pledge_area = array();
@@ -331,8 +338,9 @@ class PoliticianModel extends CI_Model
             $content = array();
             $pledge_status = array();
 
-            $content_result = $this->db->query("SELECT
-                * FROM PoliticianPledge where pledge_area = '$pledge_area[$i]' and politician_generation_idx = $politician_generation_idx")->result();
+            $sql = "SELECT * FROM PoliticianPledge where pledge_area = ? and politician_generation_idx = ?";
+
+            $content_result = $this->db->query($sql, array($pledge_area[$i], $politician_generation_idx))->result();
 
             foreach ($content_result as $row){
                 array_push($content, $row->content);
@@ -359,23 +367,24 @@ class PoliticianModel extends CI_Model
         $user_idx = $token_data->idx;
         if($token_data->idx=="토큰실패"){$result_json=array();$result_json['result']='로그인 필요';header("HTTP/1.1 401 ");return json_encode($result_json);}
 
+        $sql = "SELECT count(idx) as `count`  FROM BookMark where user_idx = ? and politician_idx = ?";
 
         // 사용자가 해당 정치인을 북마크 했는지 여부 보기
-        $bookmark_select_result = $this->db->query("SELECT
-                count(idx) as `count`  FROM BookMark where 
-                user_idx = '$user_idx' and politician_idx = '$politician_idx'")->row();
+        $bookmark_select_result = $this->db->query($sql, array($user_idx, $politician_idx))->row();
 
         // 해당 정치인을 북마크를 하고있었는데, 북마크 삭제 요청이 들어옴
         if ($bookmark_select_result->count == 1){
-            $this->db->query("DELETE FROM BookMark WHERE user_idx = '$user_idx' and politician_idx = '$politician_idx'" );
+            $sql = "DELETE FROM BookMark WHERE user_idx = ? and politician_idx = ?";
+            $this->db->query($sql, array($user_idx, $politician_idx));
             $response_data['result'] = '북마크 삭제';
             return json_encode($response_data);
         }
 
         // 해당 정치인을 북마크를 안하고 있었는데, 북마크 추가 요청이 들어옴
         else{
-            $this->db->query("INSERT INTO BookMark VALUES 
-                (null, $user_idx, null, $politician_idx, NOW(),NOW(),NOW())" );
+            $sql = "INSERT INTO BookMark VALUES (null, ?, null, ?, NOW(),NOW(),NOW())";
+
+            $this->db->query($sql, array($user_idx, $politician_idx));
             $response_data['result'] = '북마크 추가';
             return json_encode($response_data);
         }
@@ -389,9 +398,11 @@ class PoliticianModel extends CI_Model
         // 사용자 인덱스
         $user_idx = $token_data->idx;
 
+        $sql = "SELECT * , count(*) as `count` FROM BookMark where 
+                user_idx = ? and politician_idx = ?";
+
         // 좋아요 싫어요 정보조회
-        $result = $this->db->query("SELECT * , count(*) as `count` FROM BookMark where 
-                user_idx = $user_idx and politician_idx = $politician_idx")->row();
+        $result = $this->db->query($sql, array($user_idx, $politician_idx))->row();
 
         if($result->count == 0){
             $response_data['status'] = '조회된 데이터가 없습니다';
@@ -422,17 +433,20 @@ class PoliticianModel extends CI_Model
         // 사용자 인덱스
         $user_idx = $token_data->idx;
 
+        $sql = "SELECT count(idx) as `count`  FROM UserEvaluationBill where 
+                user_idx = '$user_idx' and politician_idx = '$politician_idx'";
+
         // 사용자의 정치인에 대한 좋아요 데이터가 있는지 확인
-        $bookmark_select_result = $this->db->query("SELECT
-                count(idx) as `count`  FROM UserEvaluationBill where 
-                user_idx = '$user_idx' and politician_idx = '$politician_idx'")->row();
+        $bookmark_select_result = $this->db->query($sql, array($user_idx,$politician_idx))->row();
 
         // 좋아요 싫어요 데이터가 있는 경우
         if ($bookmark_select_result->count == 1){
 
+            $sql = "select *, count(*) as `count` from UserEvaluationBill where 
+                user_idx = ? and politician_idx = ?";
+
             // 사용자의 정치인 좋아요에 대한 데이터가 있는가?
-            $result = $this->db->query("select *, count(*) as `count` from UserEvaluationBill where 
-                user_idx = '$user_idx' and politician_idx = '$politician_idx'")->row();
+            $result = $this->db->query($sql, array($user_idx,$politician_idx))->row();
 
             // 데이터가 같은 경우 - 데이터 삭제
             if($result->count == 1){
@@ -441,7 +455,8 @@ class PoliticianModel extends CI_Model
 
                 if($current_status == $status){
                     // 좋아요 해제
-                    $this->db->query("delete from UserEvaluationBill where user_idx= $user_idx and politician_idx= $politician_idx");
+                    $sql = "delete from UserEvaluationBill where user_idx= $user_idx and politician_idx= $politician_idx";
+                    $this->db->query($sql, array($user_idx, $politician_idx));
                     if($current_status == 1){
                         $response_data['result'] = "좋아요 해제";
                     }
@@ -453,10 +468,12 @@ class PoliticianModel extends CI_Model
                 else{
                     // 클라이언트가 좋아요 요청
                     if ($status==1){
-                        $result=$this->db->query("update UserEvaluationBill set status=1 where user_idx='$user_idx' and politician_idx='$politician_idx'");
+                        $sql = "update UserEvaluationBill set status=1 where user_idx= ? and politician_idx= ?";
+                        $this->db->query($sql,array($user_idx,$politician_idx));
                         $response_data['result'] = "좋아요 활성화 싫어요 해제";
                     }else if ($status==0){
-                        $result=$this->db->query("update UserEvaluationBill set status=0 where user_idx='$user_idx' and politician_idx='$politician_idx'");
+                        $sql = "update UserEvaluationBill set status=0 where user_idx= ? and politician_idx= ?";
+                        $this->db->query($sql,array($user_idx,$politician_idx));
                         $response_data['result'] = "좋아요 해제 싫어요 활성화";
                     }
                 }
@@ -465,8 +482,9 @@ class PoliticianModel extends CI_Model
 
         // 좋아요 싫어요 데이터가 없는 경우
         else{
-            $result = $this->db->query("INSERT INTO UserEvaluationBill VALUES 
-                (null, null ,$politician_idx,$user_idx,$status)" );
+            $sql = "INSERT INTO UserEvaluationBill VALUES (null, null ,?,?,?)";
+
+            $this->db->query($sql, array($politician_idx,$user_idx,$status));
             if($status == 1){
                 $response_data['result'] = "좋아요 활성화";
             }
@@ -486,9 +504,11 @@ class PoliticianModel extends CI_Model
         $user_idx = $token_data->idx;
         if($token_data->idx=="토큰실패"){$result_json=array();$result_json['result']='로그인 필요';header("HTTP/1.1 401 ");return json_encode($result_json);}
 
+        $sql = "SELECT * , count(*) as `count` FROM UserEvaluationBill where 
+                user_idx = ? and politician_idx = ?";
+
         // 좋아요 싫어요 정보조회
-        $result = $this->db->query("SELECT * , count(*) as `count` FROM UserEvaluationBill where 
-                user_idx = $user_idx and politician_idx = $politician_idx")->row();
+        $result = $this->db->query($sql, array($user_idx, $politician_idx))->row();
 
         if($result->count == 0){
             $response_data['status'] = '조회된 데이터가 없습니다';
@@ -505,7 +525,9 @@ class PoliticianModel extends CI_Model
         // 대수
         $generation = 20;
 
-        $result = $this->db->query("SELECT politician_idx FROM PoliticianGeneration where generation = $generation")->result();
+        $sql = "SELECT politician_idx FROM PoliticianGeneration where generation = ?";
+
+        $result = $this->db->query($sql, array($generation))->result();
 
         $temp = array();
 
@@ -525,8 +547,8 @@ class PoliticianModel extends CI_Model
                 $card_number_str = $card_number_str.$temp[$i][$j].",";
             }
 
-
-            $this->db->query("INSERT INTO RandomCard VALUES (null, $generation,'$card_number_str')" );
+            $sql = "INSERT INTO RandomCard VALUES (null, $generation,'$card_number_str')";
+            $this->db->query($sql, array($generation,$card_number_str));
         }
     }
 
@@ -535,7 +557,9 @@ class PoliticianModel extends CI_Model
 
         $response_data = array();
 
-        $result = $this->db->query("SELECT count(idx) as cnt FROM Politician")->row();
+        $sql = "SELECT count(idx) as cnt FROM Politician";
+
+        $result = $this->db->query($sql)->row();
 
         if ((int)$result->cnt < (int)$politician_idx ){
             return "정치인 데이터가 없습니다";

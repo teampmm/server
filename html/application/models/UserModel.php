@@ -228,7 +228,7 @@ class UserModel extends CI_Model
                                 user_agent = ? 
                 where id = ?";
 
-        $result = $this->db->query($sql, array($name,$age,$nick_name,$sex,$phone,$residence,$category,date("Y-m-d H:i:s"),$user_agent,$uid))->row();
+        $result = $this->db->query($sql, array($name,$age,$nick_name,$sex,$phone,$residence,$category,date("Y-m-d H:i:s"),$user_agent,$uid));
 
         $result_json['response_code']=(boolean)$result;
         return json_encode($result_json,true);

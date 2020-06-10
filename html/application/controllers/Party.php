@@ -48,6 +48,60 @@ class Party extends CI_Controller
         echo $result;
     }
 
+    // 정당 카드 정보 반환
+    public function getPartCard(){
+        $key = $this->input->get(null, True);
+
+        $error=$this->option->jsonNullCheck($key,array('date'));
+        if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+
+        // 클라이언트가 보낸 날짜의 형식을
+        $date_check_result = $this->date_check($key['date']);
+        if($date_check_result == false){
+            header("HTTP/1.1 400 ");
+            echo "날짜형식이 올바르지 않습니다";
+            return;
+        }
+
+        $this->load->model('PartyModel');
+        $result = $this->PartyModel->getPartCard($key['date']);
+
+        echo $result;
+    }
+
+    // 날짜 형식 검사하는 메서드
+    function date_check($date) {
+
+        $date = (string)$date;
+
+        // 날짜 형식은 20160405 와 같이 8자리이다.
+        // 8자리가 아니면 날짜 형식에 맞지 않는걸로 함.
+        if (strlen($date) != 8){
+            return false;
+        }
+
+        // ex ) 20160413
+        // $YY -> 2016
+        // $MM -> 04
+        // $DD -> 13
+        $YY = substr($date,0,4);
+        $MM = substr($date,4,2);
+        $DD = substr($date,6,2);
+
+        // 2016-04-13
+        $date = $YY.'-'.$MM.'-'.$DD;
+
+        // 날짜 형식에 맞는경우
+        if (preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/",$date)) {
+            return true;
+        }
+
+        // 날짜 형식에 맞지 않는 경우
+        else {
+            return false;
+        }
+    }
+
     // 클라이언트가 사용자에 대한 데이터를 요청할때
     // request url : {서버 ip}/politician/{data}
     public function requestData($client_data)
@@ -57,6 +111,9 @@ class Party extends CI_Controller
 
             if($client_data == "info"){
                 $this->getPartyInfo();
+            }
+            else if ($client_data == "card"){
+                $this->getPartCard();
             }
 
         } else if ($this->http_method == "POST") {

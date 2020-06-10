@@ -82,7 +82,7 @@ class Politician extends CI_Controller
         echo $result;
     }
 
-    // 정치인 기본 정보 가져오기
+    // 정치인 정보 가져오기
     public function getInfo(){
         // 정치인 기본정보 요청 - 정치인의 이름을 가지고 들어옴. ( kr_name )
         $politician_idx = $this->input->get(null, True);
@@ -147,6 +147,7 @@ class Politician extends CI_Controller
         $result = $this->PoliticianModel->postBookmarkModify($politician_idx, $token_data);
         echo $result;
     }
+
     // 정치인 북마크 조회하기
     public function getBookmark(){
 
@@ -221,6 +222,7 @@ class Politician extends CI_Controller
         echo $result;
     }
 
+    // 랜덤 카드 만들기 no api
     public function postMakeRandomCard(){
         // db에 사용자가 보낸 이메일이 있는지 확인한다. ( 중복체크 과정 ).
         $this->load->model('PoliticianModel');
@@ -228,6 +230,7 @@ class Politician extends CI_Controller
         echo $result;
     }
 
+    // pdf 조회
     public function getPDF(){
         $politician_idx = $this->input->get(null, True);
 

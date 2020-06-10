@@ -102,7 +102,8 @@ class User extends CI_Controller
 
         // 로그인 결과를 반환
         $result = $this->UserModel->getLoginStatus($json_data, $user_info);
-		echo $result;
+
+        echo $result;
 	}
 
 	// 로그인 요청 메서드

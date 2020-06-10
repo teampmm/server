@@ -1,11 +1,15 @@
 <?php
 
+include_once 'OptionModel.php';
+
 class PoliticianModel extends CI_Model
 {
+    public $option_model;
 
     function __construct()//생성자, 제일 먼저 실행되는 일종의 초기화
     {
         parent::__construct();
+        $this->option_model = new OptionModel();
     }
 
     // 정치인 카드 모아보기 정보
@@ -32,6 +36,14 @@ class PoliticianModel extends CI_Model
 
         $sql = "select count(idx) as cnt from PoliticianGeneration where generation = ?";
         $politician_num = $this->db->query($sql,array($elect_generation))->row();
+
+        // 사용자의 sql 및 id 등 로그 기록하기
+        $log_sql = "select count(idx) as cnt from PoliticianGeneration where generation = $elect_generation";
+        $this->option_model->logRecode(
+            array(
+                'sql'=>$log_sql,
+                'id'=>$token_data->id)
+            );
 
         // 요청한 카드의 개수가 정치인 정보의 수보다 많은 경우 데이터가 그 만큼 없다고 처리해줘야함
         if ($card_num > $politician_num->cnt){
@@ -192,6 +204,13 @@ class PoliticianModel extends CI_Model
         $sql = "SELECT * FROM Politician where idx = ?";
         $politician_select_result = $this->db->query($sql,array($politician_idx))->row();
 
+        // 사용자의 sql 및 id 등 로그 기록하기
+        $log_sql = "SELECT * FROM Politician where idx = $politician_idx";
+        $this->option_model->logRecode(
+            array(
+                'sql'=>$log_sql)
+        );
+
         // 정치인 조회 결과가 없음
         if($politician_select_result == null){
             $response_data['result'] = "정치인 정보가 없습니다.";
@@ -281,17 +300,40 @@ class PoliticianModel extends CI_Model
         // 클라에게 보내줄 응답 데이터
         $response_data = array();
 
+        $sql = "SELECT count(idx) as cnt FROM Politician";
+
+        $result = $this->db->query($sql)->row();
+
+        if ((int)$result->cnt < (int)$politician_idx or (int)$politician_idx < 0 ){
+            header("HTTP/1.1 404 ");
+            $response_data['result'] = "정치인 데이터가 없습니다";
+            return json_encode($response_data);
+        }
+
         $sql = "SELECT title, `date`, url FROM News where politician_idx = ?";
 
         // 정치인 관련 뉴스 조회
         $politician_select_result = $this->db->query($sql,array($politician_idx))->result();
 
+        // 사용자의 sql 및 id 등 로그 기록하기
+        $log_sql = "SELECT title, `date`, url FROM News where politician_idx = $politician_idx";
+        $this->option_model->logRecode(
+            array(
+                'sql'=>$log_sql)
+        );
+
         $result_num = count($politician_select_result);
-        $response_data['result_num'] = (int)$result_num;
-        $response_data['data'] = $politician_select_result;
 
+        if($result_num == 0){
+            header("HTTP/1.1 404 ");
+            // 응답 상태가 204이면 반환값이 출력이 되지 않는다.
+            $response_data['data'] = "no contents";
+        }
+        else{
+            $response_data['result_num'] = (int)$result_num;
+            $response_data['data'] = $politician_select_result;
+        }
         return json_encode($response_data);
-
     }
 
     // 정치인 공약 정보 요청
@@ -302,6 +344,25 @@ class PoliticianModel extends CI_Model
 
         // 클라에게 보내줄 응답 데이터
         $response_data = array();
+
+        $sql = "SELECT count(idx) as cnt FROM Politician";
+
+        $result = $this->db->query($sql)->row();
+
+        // 사용자의 sql 및 id 등 로그 기록하기
+        $log_sql = "SELECT count(idx) as cnt FROM Politician";
+        $this->option_model->logRecode(
+            array(
+                'sql'=>$log_sql
+            )
+        );
+
+        if ((int)$result->cnt < (int)$politician_idx or (int)$politician_idx < 0 ){
+            header("HTTP/1.1 404 ");
+            $response_data['result'] = "정치인 데이터가 없습니다";
+            return json_encode($response_data);
+        }
+
 
         $sql = "SELECT idx FROM PoliticianGeneration where politician_idx = ? and generation = ?";
 
@@ -372,12 +433,20 @@ class PoliticianModel extends CI_Model
         // 사용자가 해당 정치인을 북마크 했는지 여부 보기
         $bookmark_select_result = $this->db->query($sql, array($user_idx, $politician_idx))->row();
 
+        // 사용자의 sql 및 id 등 로그 기록하기
+        $log_sql = "SELECT count(idx) as `count`  FROM BookMark where user_idx = $user_idx and politician_idx = $politician_idx";
+        $this->option_model->logRecode(
+            array(
+                'sql'=>$log_sql,
+                'id'=>$token_data->id
+            )
+        );
+
         // 해당 정치인을 북마크를 하고있었는데, 북마크 삭제 요청이 들어옴
         if ($bookmark_select_result->count == 1){
             $sql = "DELETE FROM BookMark WHERE user_idx = ? and politician_idx = ?";
             $this->db->query($sql, array($user_idx, $politician_idx));
             $response_data['result'] = '북마크 삭제';
-            return json_encode($response_data);
         }
 
         // 해당 정치인을 북마크를 안하고 있었는데, 북마크 추가 요청이 들어옴
@@ -386,10 +455,12 @@ class PoliticianModel extends CI_Model
 
             $this->db->query($sql, array($user_idx, $politician_idx));
             $response_data['result'] = '북마크 추가';
-            return json_encode($response_data);
         }
+        header("HTTP/1.1 201 ");
+        return json_encode($response_data);
     }
 
+    // 정치인 북마크 여부 조회
     public function getBookmark($politician_idx, $token_data){
         // 클라에게 보내줄 응답 데이터
         $response_data = array();
@@ -404,7 +475,18 @@ class PoliticianModel extends CI_Model
         // 좋아요 싫어요 정보조회
         $result = $this->db->query($sql, array($user_idx, $politician_idx))->row();
 
+        // 사용자의 sql 및 id 등 로그 기록하기
+        $log_sql = "SELECT * , count(*) as `count` FROM BookMark where 
+                user_idx = $user_idx and politician_idx = $politician_idx";
+        $this->option_model->logRecode(
+            array(
+                'sql'=>$log_sql,
+                'id'=>$token_data->id
+            )
+        );
+
         if($result->count == 0){
+            header("HTTP/1.1 404 ");
             $response_data['status'] = '조회된 데이터가 없습니다';
         }
         else{
@@ -434,10 +516,20 @@ class PoliticianModel extends CI_Model
         $user_idx = $token_data->idx;
 
         $sql = "SELECT count(idx) as `count`  FROM UserEvaluationBill where 
-                user_idx = '$user_idx' and politician_idx = '$politician_idx'";
+                user_idx = ? and politician_idx = ?";
 
         // 사용자의 정치인에 대한 좋아요 데이터가 있는지 확인
         $bookmark_select_result = $this->db->query($sql, array($user_idx,$politician_idx))->row();
+
+        // 사용자의 sql 및 id 등 로그 기록하기
+        $log_sql = "SELECT count(idx) as `count`  FROM UserEvaluationBill where 
+                user_idx = $user_idx and politician_idx = $politician_idx";
+        $this->option_model->logRecode(
+            array(
+                'sql'=>$log_sql,
+                'id'=>$token_data->id
+            )
+        );
 
         // 좋아요 싫어요 데이터가 있는 경우
         if ($bookmark_select_result->count == 1){
@@ -492,6 +584,8 @@ class PoliticianModel extends CI_Model
                 $response_data['result'] = "싫어요 활성화";
             }
         }
+
+        header("HTTP/1.1 201 ");
         return json_encode($response_data);
     }
 
@@ -510,7 +604,18 @@ class PoliticianModel extends CI_Model
         // 좋아요 싫어요 정보조회
         $result = $this->db->query($sql, array($user_idx, $politician_idx))->row();
 
+        // 사용자의 sql 및 id 등 로그 기록하기
+        $log_sql = "SELECT * , count(*) as `count` FROM UserEvaluationBill where 
+                user_idx = $user_idx and politician_idx = $politician_idx";
+        $this->option_model->logRecode(
+            array(
+                'sql'=>$log_sql,
+                'id'=>$token_data->id
+            )
+        );
+
         if($result->count == 0){
+            header("HTTP/1.1 404 ");
             $response_data['status'] = '조회된 데이터가 없습니다';
         }
         else{
@@ -555,14 +660,25 @@ class PoliticianModel extends CI_Model
     // pdf 조회
     public function getPDF($politician_idx){
 
+        // 클라에게 보내줄 응답 데이터
         $response_data = array();
 
         $sql = "SELECT count(idx) as cnt FROM Politician";
 
         $result = $this->db->query($sql)->row();
 
-        if ((int)$result->cnt < (int)$politician_idx ){
-            return "정치인 데이터가 없습니다";
+        // 사용자의 sql 및 id 등 로그 기록하기
+        $log_sql = "SELECT count(idx) as cnt FROM Politician";
+        $this->option_model->logRecode(
+            array(
+                'sql'=>$log_sql,
+            )
+        );
+
+        if ((int)$result->cnt < (int)$politician_idx or (int)$politician_idx < 0 ){
+            header("HTTP/1.1 404 ");
+            $response_data['result'] = "정치인 데이터가 없습니다";
+            return json_encode($response_data);
         }
 
         $pdf_url = 'http://52.78.106.225/files/pdf/'.$politician_idx.'.pdf';

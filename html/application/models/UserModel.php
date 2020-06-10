@@ -2,9 +2,16 @@
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
+include_once 'OptionModel.php';
 
 class UserModel extends CI_Model
 {
+    public function __construct()
+    {
+        parent::__construct();
+        $this->option_model = new OptionModel();
+    }
+
     // 사용자 회원가입
     public function putUser($data)
     {
@@ -19,27 +26,56 @@ class UserModel extends CI_Model
 
         $query = $this->db->query($sql, array($id, $nick_name, $phone))->row();
 
+        // 사용자의 sql 및 id 등 로그 기록하기
+        $log_sql = "select count(idx) as idx from User where id = $id or nick_name = $nick_name or phone= $phone";
+        $this->option_model->logRecode(
+            array(
+                'sql'=>$log_sql,
+                'id'=>$id,
+                'nick_name'=>$nick_name,
+                'phone'=>$phone
+            )
+        );
+
         if ($query->idx >= 1) {
             $response_data['result'] = "이미 가입된 계정입니다";
             return json_encode($response_data);
         } else {
 
-            $sql = "insert into User (name,age,nick_name,sex,id,pw,phone,residence,social_login,create_at,category,user_agent) 
-                value (?,?,?,?,?,?,?,?,?,?,?,?)";
+            $sql = "insert into User (name,age,nick_name,sex,id,pw,phone,residence,social_login,create_at,user_agent) 
+                value (?,?,?,?,?,?,?,?,?,?,?)";
+
+            $name = $data['name'];
+            $age = $data['age'];
+            $sex = $data['sex'];
+            $residence = $data['residence'];
+            $social_login = $data['social_login'];
+            $now_time = date("Y-m-d H:i:s");
+            $user_agent = $data['user_agent'];
 
             $result = $this->db->query($sql, array($data['name'], $data['age'], $nick_name, $data['sex'],
                                         $id, $pw, $phone, $data['residence'],
-                                        $data['social_login'], date("Y-m-d H:i:s"), null, $data['user_agent']));
+                                        $data['social_login'], $now_time, $data['user_agent']));
+
+            // 사용자의 sql 및 id 등 로그 기록하기
+            $log_sql = "insert into User (name,age,nick_name,sex,id,pw,phone,residence,social_login,create_at,user_agent) 
+                value ($name,$age,$nick_name,$sex,$id,$pw,$phone,$residence,$social_login,$now_time,$user_agent)";
+            $this->option_model->logRecode(
+                array(
+                    'sql'=>$log_sql,
+                )
+            );
 
             $response_data = array();
 
             // 회원 정보 추가 성공
             if ($result == 1) {
+                header("HTTP/1.1 201");
                 $response_data['result'] = "회원가입 성공";
                 return json_encode($response_data);
             } // 회원 정보 추가 실패
             else {
-                $response_data['result'] = "잠시후 다시 시도해주세요 ";
+                $response_data['result'] = "잠시후 다시 시도해주세요";
                 return json_encode($response_data);
             }
         }
@@ -59,6 +95,15 @@ class UserModel extends CI_Model
                     id = ? and pw = ?";
 
         $query = $this->db->query($sql, array($id,$pw))->row();
+
+        // 사용자의 sql 및 id 등 로그 기록하기
+        $log_sql = "select idx, count(idx) as 'count' from User where 
+                    id = $id and pw =$pw)";
+        $this->option_model->logRecode(
+            array(
+                'sql'=>$log_sql,
+            )
+        );
 
         // 사용자 정보가 일치
         if ($query->count == 1) {
@@ -93,6 +138,14 @@ class UserModel extends CI_Model
 
         $query = $this->db->query($sql, array($nick_name))->row();
 
+        // 사용자의 sql 및 id 등 로그 기록하기
+        $log_sql = "select count(idx) as 'count' from User where nick_name = $nick_name";
+        $this->option_model->logRecode(
+            array(
+                'sql'=>$log_sql,
+            )
+        );
+
         // 클라에게 보낼 응답 데이터
         $response_data = array();
 
@@ -106,12 +159,21 @@ class UserModel extends CI_Model
             return json_encode($response_data);
         }
     }
+
     // 아이디 중복체크
     public function getIdCheck($id)
     {
         $sql = "select count(idx) as 'count' from User where id = ? ";
 
         $query = $this->db->query($sql, array($id))->row();
+
+        // 사용자의 sql 및 id 등 로그 기록하기
+        $log_sql = "select count(idx) as 'count' from User where id = $id ";
+        $this->option_model->logRecode(
+            array(
+                'sql'=>$log_sql,
+            )
+        );
 
         // 클라에게 보낼 응답 데이터
         $response_data = array();
@@ -134,6 +196,14 @@ class UserModel extends CI_Model
 
         $count = $this->db->query($sql, array($phone))->row();
 
+        // 사용자의 sql 및 id 등 로그 기록하기
+        $log_sql = "select count(idx) as 'count' from User where phone = $phone";
+        $this->option_model->logRecode(
+            array(
+                'sql'=>$log_sql,
+            )
+        );
+
         // 가입 가능
         if ($count->count == 0) {
             return 0;
@@ -151,6 +221,14 @@ class UserModel extends CI_Model
         $sql = "select *,count(idx)as `count` from User where id = ? and social_login='K'";
 
         $result = $this->db->query($sql, array($uid))->row();
+
+        // 사용자의 sql 및 id 등 로그 기록하기
+        $log_sql = "select *,count(idx)as `count` from User where id = $uid and social_login='K'";
+        $this->option_model->logRecode(
+            array(
+                'sql'=>$log_sql,
+            )
+        );
 
         //이미 테이블에 카카오 uid가 저장되어있는경우
         $result_json=array();
@@ -228,8 +306,29 @@ class UserModel extends CI_Model
                                 user_agent = ? 
                 where id = ?";
 
-        $result = $this->db->query($sql, array($name,$age,$nick_name,$sex,$phone,$residence,$category,date("Y-m-d H:i:s"),$user_agent,$uid));
+        // 현재시간
+        $now_time = date("Y-m-d H:i:s");
 
+        $result = $this->db->query($sql, array($name,$age,$nick_name,$sex,$phone,$residence,$category,$now_time,$user_agent,$uid));
+
+        // 사용자의 sql 및 id 등 로그 기록하기
+        $log_sql = "update User set `name` = $name, 
+                                age = $age, 
+                                nick_name = $nick_name, 
+                                sex = $sex, 
+                                phone = $phone, 
+                                residence = $residence, 
+                                category = $category, 
+                                create_at = $now_time, 
+                                user_agent = $user_agent 
+                where id = $uid";
+        $this->option_model->logRecode(
+            array(
+                'sql'=>$log_sql,
+            )
+        );
+
+        header("HTTP/1.1 201");
         $result_json['response_code']=(boolean)$result;
         return json_encode($result_json,true);
     }
@@ -253,13 +352,24 @@ class UserModel extends CI_Model
 
             $sql = "insert into BlackList VALUE (null , ? ,null ,null, ?,null ,null )";
 
-            $this->db->query($sql, array($token_str,date("Y-m-d H:i:s")));
+            $now_time = date("Y-m-d H:i:s");
+
+            $this->db->query($sql, array($token_str, $now_time));
+
+            // 사용자의 sql 및 id 등 로그 기록하기
+            $log_sql = "insert into BlackList VALUE (null , $token_str ,null ,null, $now_time,null ,null )";
+            $this->option_model->logRecode(
+                array(
+                    'sql'=>$log_sql,
+                    'id'=>$token_data->id
+                )
+            );
 
             $response_data['result'] = "로그아웃 완료 토큰삭제바람";
             return json_encode($response_data);
         }
         else{
-            header("HTTP/1.1 401 ");
+            header("HTTP/1.1 401");
             $response_data['result'] = "토큰값이 없습니다";
             return json_encode($response_data);
         }

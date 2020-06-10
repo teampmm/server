@@ -15,7 +15,8 @@ class Bill extends CI_Controller
 
 		// 클라에서 요청한 (GET, POST, PATCH, DELETE) HTTP 메서드 확인
 		$this->http_method = $_SERVER["REQUEST_METHOD"];
-	}
+        $this->option = new Option();
+    }
 
 	public function index()
 	{
@@ -43,24 +44,16 @@ class Bill extends CI_Controller
             //법안 모아보기
             if ($data == 'card') {
                 $input=$this->input->get(null,true);
-
-                $error=jsonNullCheck($input,array('page'));
+                $error=$this->option->jsonNullCheck($input,array('page'));
                 if($error!=null){header("HTTP/1.1 400"); echo $error;return;}
+                $this->getBillCard($input);
 
-
-                $page_idx = $input['page'];
-                $result = $this->page($page_idx);
-                echo $result;
             } //법안 상세정보
             else if ($data == 'bill_info') {
                 $input = $this->input->get(null,true);
-
-                $error=jsonNullCheck($input,array('bill_idx'));
+                $error=$this->option->jsonNullCheck($input,array('bill_idx'));
                 if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
-
-
-                $result = $this->billInfo($input['bill_idx']);
-                echo $result;
+                 $this->billInfo($input);
             } //법안 자체의 좋아요 싫어요 수
             else if ($data == 'bill_user_evaluation') {
 
@@ -212,19 +205,20 @@ class Bill extends CI_Controller
     }
 
 	//법안 모아보기
-	public function page($index)
+	public function getBillCard($index)
 	{
+
 		$this->load->model('BillModel');
-		$result = $this->BillModel->billPageList($index);
-		return $result;
+		$result = $this->BillModel->getBillCard($index['page']);
+		echo $result;
 	}
 
 	//법안 상세보기
 	public function billInfo($index)
 	{
 		$this->load->model('BillModel');
-		$result = $this->BillModel->billInfoData($index);
-		return $result;
+		$result = $this->BillModel->billInfo($index['bill_idx']);
+		echo  $result;
 	}
 
 	//법안에 대한 좋아요 싫어요

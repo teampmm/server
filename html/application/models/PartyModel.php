@@ -64,6 +64,14 @@ class PartyModel extends CI_Model
         // 정당 정보 조회
         $party_s_result = $this->db->query($sql)->result();
 
+        // 사용자의 sql 및 id 등 로그 기록하기
+        $log_sql = "SELECT * FROM Party";
+        $this->option_model->logRecode(
+            array(
+                'sql'=>$log_sql)
+        );
+
+
         $total_card = array();
 
         foreach ($party_s_result as $row){

@@ -132,6 +132,19 @@ class User extends CI_Controller
 		echo $result;
 	}
 
+	// 카카오 로그인, 유튜브 등 키를 반환하는 메서드
+	public function key($key){
+	    
+        include_once "/home/ubuntu/db/Key.php";
+        $key_instance = new Key();
+
+        if ($this->http_method == "GET") {
+            if($key == "kakao"){
+                echo $key_instance->getKakaoKey();
+            }
+        }
+	}
+
 	// 클라이언트가 사용자에 대한 데이터를 요청할때
 	// request url : {서버 ip}/user/{data}
 	public function requestData($client_data)
@@ -147,7 +160,6 @@ class User extends CI_Controller
 				// 사용자 닉네임 중복체크
 				$this->getIdCheck();
 			}
-
 		}
 		else if($this->http_method == "POST"){
 			// 클라이언트가 로그인 요청
@@ -243,7 +255,7 @@ class User extends CI_Controller
 		$info=$this->input->input_stream('kakao_user_info');
 
 		$info=json_decode($info,true);
-		
+
 		$error=$this->option->jsonNullCheck($info,array('kakao_uid','nick_name','sex','phone'));
 		if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 

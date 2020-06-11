@@ -10,17 +10,20 @@ class PolicticsJwt
 
     public function __construct()
     {
-        include_once "/home/ubuntu/db/TokenKey.php";
-        $this->key = getTokenKey();
+        include_once "/home/ubuntu/db/Key.php";
+
+        $key_instance = new Key();
+
+        $this->key = $key_instance->getTokenKey();
     }
 
     // 사용자가 로그인 요청 시 - 토큰 생성
     function createToken($user_info){
 
         // 현재 시간 : 년도 월 일 : 20201029
-        $currentTime = str_replace('-','',date("Y-m-d H:i:s"));
-        // 토큰 만료 시간 - 발급 시간 기준 +1일 // 토큰 얼마나 보관해야 하는지 잘 몰라서 우선 1일으로 해놓음
-        $deadlineTime = date($currentTime, strtotime('+1 day', $currentTime));
+        $time = time();
+        $currentTime = date('Y-m-d H:i:s', strtotime('+0 day', $time));
+        $deadlineTime = date('Y-m-d H:i:s', strtotime('+1 day', $time));
 
         /** 클라이언트에 보내는 토큰 정보
         사용자 id

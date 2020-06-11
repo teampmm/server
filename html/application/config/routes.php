@@ -25,6 +25,7 @@ $route['bill/(:any)']='bill/requestData/$1';
 // 정당 정보
 $route['party/(:any)']='party/requestData/$1';
 
+$route['key/(:any)'] = 'user/key/$1';
 
 
 
@@ -44,6 +45,9 @@ $route['party/(:any)']='party/requestData/$1';
 
 // 홈페이지 기본경로
 // ex : url에 52.78.106.225를 입력했을때 controllers - DefaultController.php파일이 실행된다.
+//$route['default_controller'] = 'DefaultController';
 $route['default_controller'] = 'DefaultController';
+
+$route['(:any)'] = 'PageController/pageRequest/$1';
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = false;

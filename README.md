@@ -24,17 +24,17 @@
     
     - #### User.php
       - 회원 관련 API Controller
-        - #### getNickNmaeCheck  - 닉네임 중복 체크
+        - #### getNickNameCheck  - 닉네임 중복 체크
         - #### getIdCheck - 아이디 중복 체크
         - #### loginRequest - 로그인 요청
         - #### logOutRequest - 로그아웃 요청
         - #### sms - 문자 인증
-        - #### kakaoLoigin - 카카오 로그인 체크
+        - #### kakaoLogin - 카카오 로그인 체크
         - #### kakaoSign - 카카오 회원가입 체크
     
     - #### Politician.php
       - 정치인 관련 API Controller
-        - #### getPolticianCard - 정치인 모아보기 페이지 정보
+        - #### getPoliticianCard - 정치인 모아보기 페이지 정보
         - #### getInfo - 정치인 상세보기 페이지 -> 정치인 기본 정보
         - #### getNews - 정치인 상세보기 페이지 -> 정치인 관련 뉴스 (미구현)
         - #### getPledgeInfo - 정치인 상세정보 페이지 -> 정치인 공약 정보

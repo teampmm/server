@@ -49,7 +49,7 @@ class Party extends CI_Controller
     }
 
     // 정당 카드 정보 반환
-    public function getPartCard(){
+    public function getPartyCard(){
         $key = $this->input->get(null, True);
 
         $error=$this->option->jsonNullCheck($key,array('date'));
@@ -64,7 +64,7 @@ class Party extends CI_Controller
         }
 
         $this->load->model('PartyModel');
-        $result = $this->PartyModel->getPartCard($key['date']);
+        $result = $this->PartyModel->getPartyCard($key['date']);
 
         echo $result;
     }
@@ -113,7 +113,7 @@ class Party extends CI_Controller
                 $this->getPartyInfo();
             }
             else if ($client_data == "card"){
-                $this->getPartCard();
+                $this->getPartyCard();
             }
 
         } else if ($this->http_method == "POST") {

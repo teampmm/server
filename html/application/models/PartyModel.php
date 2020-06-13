@@ -11,7 +11,7 @@ class PartyModel extends CI_Model
     public function __construct()
     {
         parent::__construct();
-        $this->option = new Option();
+        $this->option_model = new OptionModel();
     }
 
     // 정당 기본정보 반환
@@ -34,8 +34,9 @@ class PartyModel extends CI_Model
 
 
         if ($party_s_result == null){
-            header("HTTP/1.1 404 ");
-            return '요청한 정당의 정보가 없습니다';
+            header("HTTP/1.1 204 ");
+            return;
+//            return '요청한 정당의 정보가 없습니다';
         }
 
         $response_data['idx'] = $party_s_result->idx;
@@ -54,7 +55,7 @@ class PartyModel extends CI_Model
     // 클라이언트가 받고싶은 카드의 날짜를 보낸다.
     // 요청한 날짜에 맞는 카드 데이터를 반환
     // 반환 데이터는 정당명, logo 이미지 이다. // 2020-06-10 : 세훈이형이 현재는 두개 데이터만 필요하다고함.
-    public function getPartCard($date){
+    public function getPartyCard($date){
 
         // 클라이언트에게 응답 해줄 데이터
         $response_data = array();
@@ -71,7 +72,6 @@ class PartyModel extends CI_Model
                 'sql'=>$log_sql)
         );
 
-
         $total_card = array();
 
         foreach ($party_s_result as $row){
@@ -82,8 +82,9 @@ class PartyModel extends CI_Model
                 $card_data = array(
                     'idx'=>$row->idx,
                     'name'=>$row->name,
-                    'logo'=>$row->logo,
-                );
+                    'logo'=>'http://52.78.106.225/files/images/party_logo/'.$row->idx.'.jpg'
+
+            );
                 array_push($total_card,$card_data);
             }
 
@@ -91,8 +92,9 @@ class PartyModel extends CI_Model
 
         // 날짜 요청에 따라 반환할 카드가 없는 경우
         if(count($total_card) == 0){
-            header("HTTP/1.1 404 ");
-            $response_data['result'] = "요청한 날짜에 반환될 카드 데이터가 없습니다";
+            header("HTTP/1.1 204 ");
+            return;
+//            $response_data['result'] = "요청한 날짜에 반환될 카드 데이터가 없습니다";
         }
         else{
             $response_data['total_card_num'] = count($total_card);

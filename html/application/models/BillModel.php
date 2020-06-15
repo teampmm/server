@@ -455,4 +455,20 @@ class BillModel extends CI_Model
         }
 
     }
+    public function putBookmark($bill_idx,$user_idx){
+	    $sql="select count(idx) as count from BookMark where user_idx =? and bill_idx=?";
+	    $row=(int)$this->db->query($sql,array((int)$user_idx,(int)$bill_idx))->row()->count;
+	    $result=array();
+	    if($row==0){
+	        $sql="insert into BookMark(user_idx,bill_idx,create_at) values (?,?,NOW())";
+	        $this->db->query($sql,array($user_idx,$bill_idx));
+	        $result['result']='북마크 추가';
+        }else{
+	        $sql="delete from BookMark where  user_idx=? and bill_idx=?";
+            $this->db->query($sql,array($user_idx,$bill_idx));
+            $result['result']='북마크 삭제';
+	    }
+	    return json_encode($result);
+
+    }
 }

@@ -15,7 +15,7 @@ class BillModel extends CI_Model
 
 
 
-	function getBillCard($index)
+	function getBillCard($index,$token_data)
 	{
 
 			$index = ($index - 1) * 10;
@@ -43,7 +43,11 @@ class BillModel extends CI_Model
 			$bill_data['proposer'] = $row->proposer;
 			$bill_data['progress_status'] = $row->progress_status;
 			$bill_data['proposal_date'] = (int)$row->proposal_date;
-
+            if($token_data->idx =="토큰실패"){
+                $bill_data['bookmark']=false;
+            }else{
+                $bill_data['bookmark']=$this->getBookmark($row->idx,$token_data->idx);
+            }
 
 			//법안인덱스로 -> 법안을 발의한 정치인들의 정보를 반한다  //정치인 idx , 정치인 이름 , 대표발의여부 , 정당인덱스, 정당이름
 			$bill_data['proposer_list'] = $this->billIndexToPoliticians($row->idx);
@@ -57,7 +61,7 @@ class BillModel extends CI_Model
 	}
 
 	//법안 상세보기에 들어갈 데이터
-	function billInfo($index)
+	function billInfo($index,$token_data)
 	{
 		$result = array();
 		$data=array();
@@ -74,10 +78,19 @@ class BillModel extends CI_Model
         $data['proposal_date']=(int)$bill_rows->proposal_date;
         $data['proposal_session']=$bill_rows->proposal_session;
         $data['vote_date']=(int)$bill_rows->vote_date;
+        if($token_data->idx =='토큰실패'){
+            $data['bookmark']=false;
+
+        }else{
+            $data['bookmark']=$this->getBookmark($bill_rows->rows,$token_data);
+
+        }
         //법안 idx 로 법안을 발의한 사람들의 정보가 들어감
         $data['proposer_list']=$this->billIndexToPoliticians($index);
         //법안 idx로 법안 투표에 참여한 사람들의 표결 결과 , 정치인 정보 반환
         $data['vote_list']=$this->billIndexToBillVote($index);
+
+
         $result['bill_info'] = $data;
 
 
@@ -431,4 +444,15 @@ class BillModel extends CI_Model
 		return json_encode($result_array);
 
 	}
+	public function getBookmark($user_idx,$bill_idx){
+	    $sql="select count(idx) as count from BookMark where user_idx=? and bill_idx=?";
+        $bill_bookmark = $this->db->query($sql, array((int)$user_idx, (int)$bill_idx))->row();
+        $check=(int)$bill_bookmark->count;
+        if($check==1){
+            return true;
+        }else{
+            return false;
+        }
+
+    }
 }

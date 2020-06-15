@@ -217,10 +217,24 @@ class Bill extends CI_Controller
 //                echo $result;
 //            }
         }else if ($this->http_method=="POST"){
-
+	        //북마크 추가,삭제 (북마크 쓰기)
+            if ($data =='put_bookmark'){
+                $token_data=$this->headerData();
+                if($token_data->idx=="토큰실패"){$result_json=array();$result_json['result']='로그인 필요';header("HTTP/1.1 401 ");echo json_encode($result_json); return;}
+                else{
+                    $input=$this->input->post(null,null);
+                    $this->putBookmark($input,$token_data->idx);
+                    return;
+                }
+            }
         }
     }
-
+    //북마크 추가,삭제 (북마크 쓰기)
+public function  putBookmark($input,$user_idx){
+	    $this->load->model("BillModel");
+	    $result=$this->BillModel->putBookmark($input['bill_idx'],$user_idx);
+	    echo$result;
+}
 	//법안 모아보기
 	public function getBillCard($index,$token_data)
 	{

@@ -6,6 +6,8 @@ include_once 'OptionModel.php';
 
 class UserModel extends CI_Model
 {
+    public $option_model;
+
     public function __construct()
     {
         parent::__construct();
@@ -41,6 +43,7 @@ class UserModel extends CI_Model
             $response_data['result'] = "이미 가입된 계정입니다";
             return json_encode($response_data);
         } else {
+
 
             $sql = "insert into User (name,age,nick_name,sex,id,pw,phone,residence,social_login,create_at,user_agent) 
                 value (?,?,?,?,?,?,?,?,?,?,?)";
@@ -99,9 +102,10 @@ class UserModel extends CI_Model
         // 사용자의 sql 및 id 등 로그 기록하기
         $log_sql = "select idx, count(idx) as 'count' from User where 
                     id = $id and pw =$pw)";
+
         $this->option_model->logRecode(
             array(
-                'sql'=>$log_sql,
+                'sql'=>$log_sql
             )
         );
 

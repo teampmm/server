@@ -3,41 +3,68 @@ defined('BASEPATH') or exit('No direct script access allowed');
 include 'DTO/Option.php';
 include 'DTO/PolicticsJwt.php';
 
+
+/**
+ controller - Politician
+
+ * 컨트롤러는 2가지 역할을 한다.
+
+ 1. 클라이언트가 서버에게 보낸 데이터가 있다면, 해당 데이터를 가공하여 모델(데이터를 가져오는 역할)에게 전달해 주는 역할을 한다.
+ 
+ 2. 모델이 데이터를 가져오는 작업이 끝나게 되면 컨트롤러에게 반환 해 주는데, 
+    이때 반환받은 데이터를 클라이언트에게 전달해주는 역할을 한다.
+
+ */
+
 class Politician extends CI_Controller
 {
-    public $token_str;
     public $option;
 
     public function __construct()
     {
         parent::__construct();
-
-        // 클라에서 요청한 (GET, POST, PATCH, DELETE) HTTP 메서드 확인
+        
+        // 클라이언트에서 요청한 (GET, POST, PATCH, DELETE)등 HTTP 메서드 확인하는 코드이다.
+        // Http 메서드에 따라 API를 분기 처리하기 위함.
         $this->http_method = $_SERVER["REQUEST_METHOD"];
+        
+        // Option 객체에는 클라이언트가 보낸 데이터가 Null인지 아닌지 확인하는 메서드인 dataNullCheck가 있다.
+        // 모든 요청마다 dataNullCheck를 하기 위해서 클래스로 따로 빼놓았음.
         $this->option = new Option();
-
-//        $this->load->model('PoliticianModel');
     }
 
-    // request url : {서버 ip}/politician
-    public function index()
-    {
-
-    }
-
+    /**
+     * 클라이언트에서 보낸 헤더 정보를 확인하는 메서드이다.
+     * 클라이언트가 Api 요청시 헤더정보를 확인 후 인증된 사용자인지 아닌지 확인하기 위해 Jwt 값을 확인하는 기능을 한다.
+     */
     public function headerData()
     {
+        // Jwt 객체 생성 - PoliticsJwt 클래스는 3가지 기능을 한다.
+        // 1. 토큰을 생성(발급)하는 기능 - createToken() - 로그인 시에 토큰이 발급된다.
+        // 2. 토큰을 파싱하는 기능 - tokenParsing()
+        // controller - Politician 클래스 에서는 토큰을 파싱하는 기능만 사용한다.
         $pmm_jwt = new PolicticsJwt();
 
-        // 클라이언트가 header에 토큰정보를 담아 보낸걸 확인한다.
+        // 클라이언트의 Header 정보를 확인한다.
         $header_data = apache_request_headers();
 
-        // 클라이언트의 토큰으로 인코딩도니 문자열을 해독한다.
-        // == jwt_data에는 클라이언트가보낸 토큰의 정보들이 담겨있다.
+        // 클라이언트에서 보낸 토큰이 있는지 없는지 확인한다.
+        // 클라이언트는 key - value 형태로 인증키를 보낸다. key 값은 Authorization 이다.
+        // 클라이언트에서 보낸 토큰이 없는 경우 -> 로그인 안한 경우이다.
         if(empty($header_data['Authorization'])){
             return (object)$result=array("idx"=>"토큰실패");
-        }else{
+        }
+        // 클라이언트에서 보낸 토큰이 있는 경우 -> 로그인 한 경우이다.
+        else{
+            // 토큰 문자열을 token_str에 저장한다.
+            // 토큰 문자열을 저장하는 이유는 모든 API요청시에 클라이언트가 보낸 토큰이 만료되었는지 확인하기 때문이다.
             $this->token_str = $header_data['Authorization'];
+
+            // 클라이언트가 보낸 토큰을 해독한다.
+            // token_data에는 jwt의 payload정보가 들어가는데,
+            // payload 정보에는
+            // 사용자의 idx, id, nick_name, token issue time(토큰발급시간), token expiration time(토큰만료시간) 정보가 포함된다.
+            // 해당 데이터를 사용 할때는 $token_data->idx , $token_data->id 와 같이 사용하면된다.
             $token_data = $pmm_jwt->tokenParsing($this->token_str);
             return $token_data;
         }
@@ -49,23 +76,15 @@ class Politician extends CI_Controller
         // 클라이언트가 보낸 토큰 정보가 담겨있다.
         $token_data = $this->headerData();
 
-        // 토큰이 유효한지 검사
-        $this->load->model('OptionModel');
-        $token_result = $this->OptionModel->blackListTokenCheck($this->token_str);
-        if($token_result != "유효한 토큰") {
-            $request_data['result'] = $token_result;
-            echo json_encode($request_data);
-            return;
-        }
-
         // 정치인 카드 정보 요청 - 받았던 카드의 인덱스 정보를 가지고 온다.
         $request_data = $this->input->get(null, True);
 
-        $error=$this->option->jsonNullCheck($request_data,array('page','random_card_idx'));
+        $error=$this->option->dataNullCheck($request_data,array('page','random_card_idx'));
         if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
         // 클라이언트가 요청한 페이지
         $request_page = $request_data['page'];
+
 
         // 클라이언트가 요청한 덱 번호
         $random_card_idx = $request_data['random_card_idx'];
@@ -87,7 +106,7 @@ class Politician extends CI_Controller
         // 정치인 기본정보 요청 - 정치인의 이름을 가지고 들어옴. ( kr_name )
         $politician_idx = $this->input->get(null, True);
 
-        $error=$this->option->jsonNullCheck($politician_idx,array('politician_idx'));
+        $error=$this->option->dataNullCheck($politician_idx,array('politician_idx'));
         if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
         $this->load->model('PoliticianModel');
@@ -100,7 +119,7 @@ class Politician extends CI_Controller
         // 정치인 관련 뉴스 정보 요청
         $politician_idx = $this->input->get(null, True);
 
-        $error=$this->option->jsonNullCheck($politician_idx,array('politician_idx'));
+        $error=$this->option->dataNullCheck($politician_idx,array('politician_idx'));
         if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
         $this->load->model('PoliticianModel');
@@ -113,7 +132,7 @@ class Politician extends CI_Controller
         // 정치인 공약 정보 요청
         $politician_data = $this->input->get(null, True);
 
-        $error=$this->option->jsonNullCheck($politician_data,array('politician_idx'));
+        $error=$this->option->dataNullCheck($politician_data,array('politician_idx'));
         if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
         $this->load->model('PoliticianModel');
@@ -150,7 +169,6 @@ class Politician extends CI_Controller
 
     // 정치인 북마크 조회하기
     public function getBookmark(){
-
         // 클라이언트가 보낸 토큰 정보가 담겨있다.
         $token_data = $this->headerData();
 
@@ -162,9 +180,11 @@ class Politician extends CI_Controller
             echo json_encode($request_data);
             return;
         }
+        echo"QWE";
+        return;
         $politician_idx = $this->input->get(null, True);
 
-        $error=$this->option->jsonNullCheck($politician_idx,array('politician_idx'));
+        $error=$this->option->dataNullCheck($politician_idx,array('politician_idx'));
         if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
         $this->load->model('PoliticianModel');
@@ -189,7 +209,7 @@ class Politician extends CI_Controller
         $input=$this->input->post("evaluation_write",true);
         $input_json=json_decode($input,true);
 
-        $error=$this->option->jsonNullCheck($input_json,array('politician_idx','status'));
+        $error=$this->option->dataNullCheck($input_json,array('politician_idx','status'));
         if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
         $this->load->model('PoliticianModel');
@@ -214,7 +234,7 @@ class Politician extends CI_Controller
         }
         $politician_idx = $this->input->get(null, True);
 
-        $error=$this->option->jsonNullCheck($politician_idx,array('politician_idx'));
+        $error=$this->option->dataNullCheck($politician_idx,array('politician_idx'));
         if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
         $this->load->model('PoliticianModel');
@@ -234,7 +254,7 @@ class Politician extends CI_Controller
     public function getPDF(){
         $politician_idx = $this->input->get(null, True);
 
-        $error=$this->option->jsonNullCheck($politician_idx,array('politician_idx'));
+        $error=$this->option->dataNullCheck($politician_idx,array('politician_idx'));
         if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
         $this->load->model('PoliticianModel');

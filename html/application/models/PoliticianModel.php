@@ -20,9 +20,10 @@ class PoliticianModel extends CI_Model
         /** 현재는 20대 국회의원 데이터 밖에없다.
          * 19대, 21대 등등 데이터를 db에 저장하게 되면 그떄 풀어줌
          */
-        if($elect_generation != 20){
-            header("HTTP/1.1 404 ");
-            return '현재는 20대 국회의원 데이터 밖에 없습니다';
+        if($elect_generation <= 17){
+            header("HTTP/1.1 204 ");
+            return;
+//            return '현재는 17대  이하 국회의원 데이터가 없습니다';
         }
 
         // 클라이언트가 첫 페이지 요청할때, 덱 번호가 정해져 있지 않아서 -1값으로 요청이 들어온다.
@@ -41,8 +42,7 @@ class PoliticianModel extends CI_Model
         $log_sql = "select count(idx) as cnt from PoliticianGeneration where generation = $elect_generation";
         $this->option_model->logRecode(
             array(
-                'sql'=>$log_sql,
-                'id'=>$token_data->id)
+                'sql'=>$log_sql)
             );
 
         // 요청한 카드의 개수가 정치인 정보의 수보다 많은 경우 데이터가 그 만큼 없다고 처리해줘야함
@@ -82,7 +82,8 @@ class PoliticianModel extends CI_Model
         $book_mark_array = array();
 
         // 사용자가 로그인 했을때만 북마크 정보 저장
-        if($token_data != null){
+
+        if($token_data->idx != '토큰실패'){
             // jwt 토큰에서 받은 아이디
             $user_idx = $token_data->idx;
 
@@ -173,7 +174,7 @@ class PoliticianModel extends CI_Model
         // 카드 정보
         $response_data['card_list'] = $card_list;
 
-        return json_encode($response_data);
+        return json_encode($response_data,JSON_UNESCAPED_UNICODE);
     }
 
     // 배열 재 정렬
@@ -201,25 +202,28 @@ class PoliticianModel extends CI_Model
         // 클라이언트에게 응답 해줄 데이터
         $response_data = array();
 
-        $sql = "SELECT * FROM Politician where idx = ?";
-        $politician_select_result = $this->db->query($sql,array($politician_idx))->row();
+        $sql = "SELECT count(idx) as cnt FROM Politician";
 
-        // 사용자의 sql 및 id 등 로그 기록하기
-        $log_sql = "SELECT * FROM Politician where idx = $politician_idx";
-        $this->option_model->logRecode(
-            array(
-                'sql'=>$log_sql)
-        );
+        $result = $this->db->query($sql)->row();
 
-        // 정치인 조회 결과가 없음
-        if($politician_select_result == null){
-            $response_data['result'] = "정치인 정보가 없습니다.";
-            header("HTTP/1.1 404 ");
-            return json_encode($response_data);
+        if ((int)$result->cnt < (int)$politician_idx or (int)$politician_idx < 0 ){
+            header("HTTP/1.1 400");
+            return;
         }
 
         // 정치인 조회 결과가 있음
         else{
+            $sql = "SELECT * FROM Politician where idx = ?";
+            $politician_select_result = $this->db->query($sql,array($politician_idx))->row();
+
+            // 사용자의 sql 및 id 등 로그 기록하기
+            $log_sql = "SELECT * FROM Politician where idx = $politician_idx";
+            $this->option_model->logRecode(
+                array(
+                    'sql'=>$log_sql
+                )
+            );
+
             // Politician 테이블에서 조회한 데이터
             // 한글, 한자, 영어 이름 및 약력, 생년월일, 프로필 이미지 경로
             $response_data['politician_idx'] = (int)$politician_select_result->idx;
@@ -288,7 +292,7 @@ class PoliticianModel extends CI_Model
 
             $response_data['party_info'] = $party_array;
 
-            return json_encode($response_data);
+            return json_encode($response_data,JSON_UNESCAPED_UNICODE);
         }
     }
 
@@ -305,18 +309,17 @@ class PoliticianModel extends CI_Model
         $result = $this->db->query($sql)->row();
 
         if ((int)$result->cnt < (int)$politician_idx or (int)$politician_idx < 0 ){
-            header("HTTP/1.1 404 ");
-            $response_data['result'] = "정치인 데이터가 없습니다";
-            return json_encode($response_data);
+            header("HTTP/1.1 400");
+            return;
         }
 
-        $sql = "SELECT title, `date`, url FROM News where politician_idx = ?";
+        $sql = "SELECT * FROM News where politician_idx = ?";
 
         // 정치인 관련 뉴스 조회
         $politician_select_result = $this->db->query($sql,array($politician_idx))->result();
 
         // 사용자의 sql 및 id 등 로그 기록하기
-        $log_sql = "SELECT title, `date`, url FROM News where politician_idx = $politician_idx";
+        $log_sql = "SELECT * FROM News where politician_idx = $politician_idx";
         $this->option_model->logRecode(
             array(
                 'sql'=>$log_sql)
@@ -325,13 +328,25 @@ class PoliticianModel extends CI_Model
         $result_num = count($politician_select_result);
 
         if($result_num == 0){
-            header("HTTP/1.1 404 ");
-            // 응답 상태가 204이면 반환값이 출력이 되지 않는다.
-            $response_data['data'] = "no contents";
+            header("HTTP/1.1 204 ");
+            return;
         }
         else{
             $response_data['result_num'] = (int)$result_num;
-            $response_data['data'] = $politician_select_result;
+            $news_data_array = array();
+
+            foreach ($politician_select_result as $row){
+                $data_array = array();
+                $data_array['politician_idx'] = $row->politician_idx;
+                $data_array['title'] = $row->title;
+                $data_array['date'] = $row->date;
+                $data_array['news_link'] = $row->url;
+                $data_array['category'] = $row->category;
+                $data_array['thumbnail_image'] = $row->thumbnail;
+                $data_array['content'] = $row->content;
+                array_push($news_data_array, $data_array);
+            }
+            $response_data['data'] = $news_data_array;
         }
         return json_encode($response_data);
     }
@@ -358,9 +373,8 @@ class PoliticianModel extends CI_Model
         );
 
         if ((int)$result->cnt < (int)$politician_idx or (int)$politician_idx < 0 ){
-            header("HTTP/1.1 404 ");
-            $response_data['result'] = "정치인 데이터가 없습니다";
-            return json_encode($response_data);
+            header("HTTP/1.1 400 ");
+            return;
         }
 
 
@@ -486,8 +500,8 @@ class PoliticianModel extends CI_Model
         );
 
         if($result->count == 0){
-            header("HTTP/1.1 404 ");
-            $response_data['status'] = '조회된 데이터가 없습니다';
+            header("HTTP/1.1 204 ");
+            return;
         }
         else{
             $response_data['status'] = '현재 북마크중';
@@ -615,8 +629,7 @@ class PoliticianModel extends CI_Model
         );
 
         if($result->count == 0){
-            header("HTTP/1.1 404 ");
-            $response_data['status'] = '조회된 데이터가 없습니다';
+            header("HTTP/1.1 204 ");
         }
         else{
             $response_data['status'] = $result->status;
@@ -676,9 +689,8 @@ class PoliticianModel extends CI_Model
         );
 
         if ((int)$result->cnt < (int)$politician_idx or (int)$politician_idx < 0 ){
-            header("HTTP/1.1 404 ");
-            $response_data['result'] = "정치인 데이터가 없습니다";
-            return json_encode($response_data);
+            header("HTTP/1.1 400 ");
+            return;
         }
 
         $pdf_url = 'http://52.78.106.225/files/pdf/'.$politician_idx.'.pdf';

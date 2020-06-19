@@ -39,11 +39,11 @@ class Party extends CI_Controller
     public function getPartyInfo(){
         $key = $this->input->get(null, True);
 
-        $error=$this->option->jsonNullCheck($key,array('name'));
+        $error=$this->option->dataNullCheck($key,array('idx'));
         if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
         $this->load->model('PartyModel');
-        $result = $this->PartyModel->getInfo($key['name']);
+        $result = $this->PartyModel->getInfo($key['idx']);
 
         echo $result;
     }
@@ -52,7 +52,7 @@ class Party extends CI_Controller
     public function getPartyCard(){
         $key = $this->input->get(null, True);
 
-        $error=$this->option->jsonNullCheck($key,array('date'));
+        $error=$this->option->dataNullCheck($key,array('date'));
         if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
         // 클라이언트가 보낸 날짜의 형식을

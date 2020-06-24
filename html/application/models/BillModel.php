@@ -15,25 +15,67 @@ class BillModel extends CI_Model
 
 
 
-	function getBillCard($index,$token_data)
+	function getBillCard($index,$token_data,$generation,$status)
 	{
+        $time_start = microtime(true);
 
-			$index = ($index - 1) * 10;
+        $sql_add='';
+        $status_sql='';
+        $generation_sql='';
+        $injection_param=array();
+	    if ($generation!=null){$generation=explode(",",$generation); }
+        if ($status!=null){$status=explode(",",$status);}
 
+        if ($generation!= null or $status!=null){$sql_add='where ';}
+        if ($generation != null){
+            foreach ($generation as $key => $value){
+                array_push($injection_param,(int)$value);
+                if ($key+1==count($generation)){
+                    $generation_sql=$generation_sql." generation=?";
+                }else{
+                    $generation_sql=$generation_sql." generation=? or";
+                }
+            }
+            $generation_sql="(".$generation_sql.")";
+        }
+        if ($status != null){
+            foreach ($status as $key => $value){
+                array_push($injection_param,$value);
+                if ($key+1==count($status)){
+                    $status_sql=$status_sql." progress_status=?";
+                }else{
+                    $status_sql=$status_sql." progress_status=? or";
+                }
+            }
+            $status_sql="(".$status_sql.")";
+        }
+//        echo "1".microtime(true)-$time_start."\n";
+        $sql_add=$sql_add.$generation_sql.$status_sql;
+        $sql_add=str_replace(")(",") and (",$sql_add);
+        $index = ($index - 1) * 10;
+//        echo $sql_add;
+//        return;
+        array_push($injection_param,$index);
+        array_push($injection_param,10);
 		$result = array();
+//        echo "2".microtime(true)-$time_start."\n";
 
-		$sql = "select  idx,bill_number,bill_type,title,proposer,progress_status,proposal_date from Bill order by bill_number desc limit ?, ?";
-
+		$sql = "select  idx,bill_number,bill_type,title,proposer,progress_status,proposal_date from Bill ".$sql_add." order by bill_number desc limit ?, ?";
+//        echo $sql;
+//        var_dump( $injection_param);
+//        return;
 		//법안 모아보기 정보
-		$bill_info = $this->db->query($sql, array($index, 10))->result();
-
-		// 예전꺼
-//		$bill_info = $this->db->query("select  idx,name,committee_idx,progress_status,proposal_date,proclamation_number from Bill order by idx desc limit $index, 10")->result();
+		$bill_info = $this->db->query($sql, $injection_param)->result();
+        unset($injection_param[count($injection_param)-1]);
+        unset($injection_param[count($injection_param)-1]);
 		//페이징을 위한 총 페이지수
-		$bill_total_rows = $this->db->query("select count(idx) as total from Bill ")->row();
+        $sql="select count(idx) as total from Bill ".$sql_add;
+		$bill_total_rows = $this->db->query($sql,$injection_param)->row();
 		$result['total_page'] = ceil($bill_total_rows->total / 10);
 		$bill_array = array();
-		foreach ($bill_info as $row) {
+//        echo "3".microtime(true)-$time_start."\n";
+
+        foreach ($bill_info as $row) {
 
 			$bill_data = array();
 			$bill_data['bill_idx'] = (int)$row->idx;
@@ -43,20 +85,22 @@ class BillModel extends CI_Model
 			$bill_data['proposer'] = $row->proposer;
 			$bill_data['progress_status'] = $row->progress_status;
 			$bill_data['proposal_date'] = (int)$row->proposal_date;
+//            echo "3-1".microtime(true)-$time_start."\n";
             if($token_data->idx =="토큰실패"){
                 $bill_data['bookmark']=false;
             }else{
                 $bill_data['bookmark']=$this->getBookmark($row->idx,$token_data->idx);
             }
-
 			//법안인덱스로 -> 법안을 발의한 정치인들의 정보를 반한다  //정치인 idx , 정치인 이름 , 대표발의여부 , 정당인덱스, 정당이름
 			$bill_data['proposer_list'] = $this->billIndexToPoliticians($row->idx);
+//            echo "3-2".microtime(true)-$time_start."\n";
 
 
 			array_push($bill_array, $bill_data);
 
 		}
-		$result['info'] = $bill_array;
+//        echo "4".microtime(true)-$time_start;
+        $result['info'] = $bill_array;
 		return json_encode($result);
 	}
 
@@ -85,9 +129,9 @@ class BillModel extends CI_Model
             $data['bookmark']=$this->getBookmark($bill_rows->rows,$token_data);
 
         }
-        //법안 idx 로 법안을 발의한 사람들의 정보가 들어감
+//        법안 idx 로 법안을 발의한 사람들의 정보가 들어감
         $data['proposer_list']=$this->billIndexToPoliticians($index);
-        //법안 idx로 법안 투표에 참여한 사람들의 표결 결과 , 정치인 정보 반환
+//        법안 idx로 법안 투표에 참여한 사람들의 표결 결과 , 정치인 정보 반환
         $data['vote_list']=$this->billIndexToBillVote($index);
 
 
@@ -113,7 +157,7 @@ class BillModel extends CI_Model
             }else if ($row->together_idx !=null){
                 $politician_idx=$row->together_idx;
             }else{
-                $politician_idx=$row->greement_idx;
+                $politician_idx=$row->agreement_idx;
             }
 		    $sql="select * from Politician where idx=?";
 		    $politician=$this->db->query($sql,array($politician_idx))->row();
@@ -157,8 +201,8 @@ class BillModel extends CI_Model
 				$party_idx=(int)$row->party_idx;
 				$sql="select * from Party where idx =?";
 				$party_name=$this->db->query($sql,array($party_idx))->row() ->name;
-				$array['politician_idx']=$party_idx;
-				$array['politician_kr_name']=$politician_kr_name;
+				$array['idx']=$party_idx;
+				$array['kr_name']=$politician_kr_name;
 				$array['party_idx']=$party_idx;
 				$array['party_name']=$party_name;
                 if ($row->vote_status == 1) {

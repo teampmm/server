@@ -40,7 +40,7 @@ class Bill extends CI_Controller
 
 
 	public function requestData($data){
-	    if ($this->http_method=="GET") {
+    if ($this->http_method=="GET") {
 	        $token_data=$this->headerData();
             //법안 모아보기
             if ($data == 'card') {
@@ -51,6 +51,7 @@ class Bill extends CI_Controller
                     echo $error;
                     return;
                 }
+
                 $this->getBillCard($input,$token_data);
 
             } //법안 상세정보
@@ -240,7 +241,9 @@ public function  putBookmark($input,$user_idx){
 	{
 
 		$this->load->model('BillModel');
-		$result = $this->BillModel->getBillCard($index['page'],$token_data);
+		if(empty($index['generation'])){$index['generation']=null;}
+        if(empty($index['status'])){$index['status']=null;}
+		$result = $this->BillModel->getBillCard($index['page'],$token_data,$index['generation'],$index['status']);
 		echo $result;
 	}
 

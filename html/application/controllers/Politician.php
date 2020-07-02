@@ -19,6 +19,7 @@ include 'DTO/PolicticsJwt.php';
 class Politician extends CI_Controller
 {
     public $option;
+    public $token_str;
 
     public function __construct()
     {
@@ -283,8 +284,8 @@ class Politician extends CI_Controller
 
         $generation = explode(',',$request_data['generation']);
         $party = explode(',',$request_data['party']);
-        $card_num = $request_data['card_num'];
-        $page = $request_data['page'];
+        $card_num = (int)$request_data['card_num'];
+        $page = (int)$request_data['page'];
 
         $error=$this->option->dataNullCheck($request_data,array('card_num','page'));
         if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}

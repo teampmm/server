@@ -12,6 +12,186 @@ class PoliticianModel extends CI_Model
         $this->option_model = new OptionModel();
     }
 
+    // 정치인 카드 모아보기 정보
+    public function getPoliticianCard($request_page, $random_card_idx, $token_data, $card_num, $generation)
+    {
+
+        $elect_generation = $generation;
+
+        /** 현재는 20대 국회의원 데이터 밖에없다.
+         * 19대, 21대 등등 데이터를 db에 저장하게 되면 그떄 풀어줌
+         */
+        if ($elect_generation <= 17) {
+            header("HTTP/1.1 204 ");
+            return;
+        }
+
+        // 클라이언트가 첫 페이지 요청할때, 덱 번호가 정해져 있지 않아서 -1값으로 요청이 들어온다.
+        $RANDOM_CARD_INIT_DATA = -1;
+
+        // 응답 데이터
+        $response_data = array();
+
+        // 한 페이지에 보여줄 카드의 갯수
+        $per_page_data = $card_num;
+
+        $sql = "select count(idx) as cnt from PoliticianGeneration where generation = ?";
+        $politician_num = $this->db->query($sql, array($elect_generation))->row();
+
+        // 사용자의 sql 및 id 등 로그 기록하기
+        $log_sql = "select count(idx) as cnt from PoliticianGeneration where generation = ?";
+        $this->option_model->logRecode(
+            array(
+                'sql' => $log_sql)
+        );
+
+        // 요청한 카드의 개수가 정치인 정보의 수보다 많은 경우 데이터가 그 만큼 없다고 처리해줘야함
+        if ($card_num > $politician_num->cnt) {
+            header("HTTP/1.1 400 ");
+            return '요청 카드의 개수를 줄여주세요. [최대 : ' . $politician_num->cnt . ']';
+        }
+
+        // 사용자가 가지고 있는 랜덤 카드 인덱스 - RandomCard 인덱스
+        $current_rand_idx = $random_card_idx;
+
+        // 첫페이지 요청
+        if ($current_rand_idx == $RANDOM_CARD_INIT_DATA) {
+            // 카드 인덱스, 카드 정보 가져오기 ( 정치인 인덱스가 들어있음 )
+            $sql = "select idx, card_number from RandomCard where generation = ? ORDER BY rand() limit 1 ";
+            $random_card_select_result = $this->db->query($sql, array($elect_generation))->row();
+            $current_rand_idx = $random_card_select_result->idx;
+        } // 첫페이지 이상 요청
+        else {
+            $sql = "select idx, card_number from RandomCard where idx = ? and generation = ?";
+            $random_card_select_result = $this->db->query($sql, array($current_rand_idx, $elect_generation))->row();
+        }
+
+        // 카드 정보 ( 정치인 인덱스가 들어있음 )
+        $card_number = $random_card_select_result->card_number;
+
+        // 문자열 제일 앞, 뒤에 있는 큰따옴표 제거
+        $card_number = str_replace("\"", "", $card_number); // 쌍따옴표 제거
+
+        // 카드 데이터 -> 카드 배열로 변환
+        $card_number = explode(",", $card_number);
+
+        // 카드 모음 리스트
+        $card_list = array();
+
+        // 북마크한 정치인의 인덱스를 담을 배열
+        $book_mark_array = array();
+
+        // 사용자가 로그인 했을때만 북마크 정보 저장
+        if ($token_data->idx != '토큰실패') {
+            // jwt 토큰에서 받은 아이디
+            $user_idx = $token_data->idx;
+
+            //사용자의 인덱스로 찾은 정치인 북마크 인덱스
+            $sql = "select politician_idx from BookMark where user_idx = ?";
+            $book_mark_select_result = $this->db->query($sql, array($user_idx))->result();
+
+            // 배열에 정치인 북마크 인덱스 담기
+            for ($i = 0; $i < count($book_mark_select_result); $i++) {
+                $book_mark_array[$i] = $book_mark_select_result[$i]->politician_idx;
+            }
+        }
+
+        // 정치인 대수 테이블에서 generation == 20일떄 정치인 인덱스를 가져온다.
+        // 정치인 인덱스를 가지고 Politician 테이블에서 카드 정보를 가져온다.
+        $sql = "select politician_idx from PoliticianGeneration where generation = ?";
+        $politician_generation_s_result = $this->db->query($sql, array($elect_generation))->result();
+
+        // 20대 정치인 인덱스를 배열에 저장한다.
+        $politician_idx_array = array();
+        foreach ($politician_generation_s_result as $value) {
+            array_push($politician_idx_array, (int)$value->politician_idx);
+        }
+
+        // 20대 정치인에 대한 정보를 검색
+        $sql = "select * from Politician where `idx` IN (" . implode(",", $politician_idx_array) . ")";
+        $politician_info_result = $this->db->query($sql)->result();
+
+        for ($i = $per_page_data * ($request_page - 1); $i < $per_page_data * ($request_page - 1) + $per_page_data; $i++) {
+
+            // 정치인 카드 갯수가 모자란다면 반복을 종료
+            if ($i >= count($card_number)) {
+                break;
+            }
+
+            // 카드 하나에 들어있는 데이터
+            $card_data = array();
+
+            // 카드번호에 해당하는 정치인 정보를 가져왔다.
+            // 정치인 사진 경로
+            // 정치인 이름
+            // 정치인 정당 인덱스
+            // 당선 지역
+            // 카테고리
+            $politician_idx = $politician_info_result[$card_number[$i] - 1]->idx;
+            $sql = "SELECT party_idx FROM PoliticianPartyHistory where politician_idx = $politician_idx and end_day is NULL ";
+            $politician_party_s_result = $this->db->query($sql, array($politician_idx, null))->row();
+            $politician_image_url = 'http://politicsking.com/files/images/politician_thumbnail/' . $politician_info_result[$card_number[$i] - 1]->idx . '.jpg';
+            $politician_kr_name = $politician_info_result[$card_number[$i] - 1]->kr_name;
+            $politician_party_idx = $politician_party_s_result->party_idx;
+            $politician_committee = $politician_info_result[$card_number[$i] - 1]->committee;
+
+            // 정당인덱스가 없다면 - DB에 값이 null인 경우임
+            if ($politician_party_idx == null) {
+                $party_name = null;
+            } // 정당인덱스가 있다면
+            else {
+                $sql = "SELECT * FROM Party where idx = ?";
+                $party_s_result = $this->db->query($sql, array($politician_party_idx))->row();
+                $party_name = $party_s_result->name;
+            }
+
+            // 사용자가 로그인했을때만 북마크 여부를 보여준다.
+            if ($token_data->idx != "토큰실패") {
+                if (in_array($politician_idx, $book_mark_array)) {
+                    $card_data['bookmark'] = true;
+                } else {
+                    $card_data['bookmark'] = false;
+                }
+            }
+
+            // 대수 조건과 일치하는 정치인 인덱스로 해당 정치인의 총 대수를 구하기
+            // 20, 19, 18 등 정치인이 몇대부터 몇대까지 진행했는지 반환해주기 위함
+            $sql = "SELECT generation FROM PoliticianGeneration WHERE politician_idx = ?  order by generation desc";
+            $generation_array = $this->db->query($sql, array($politician_idx_array[$i]))->result();
+
+            // 정치인 대수는 반환될때 "20,19,18" 문자열과 같이 반환됨
+            $generation = "";
+            foreach ($generation_array as $row) {
+                $generation = $generation . $row->generation . ',';
+            }
+            // 마지막 문자열 , 제거
+            $generation = substr($generation, 0, -1);
+
+            $card_data['politician_idx'] = (int)$politician_idx;
+            $card_data['politician_image_url'] = $politician_image_url;
+            $card_data['politician_kr_name'] = $politician_kr_name;
+            $card_data['party_name'] = $party_name;
+            $card_data['politician_committee'] = $politician_committee;
+            $card_data['politician_generation'] = $generation;
+
+            // 정치인 카드 리스트에 추가
+            array_push($card_list, $card_data);
+        }
+
+        // 사용할 카드 덱의 번호
+        $response_data['rand_card_idx'] = (int)$current_rand_idx;
+        // 카드의 갯수
+        $response_data['card_num'] = (int)count($card_list);
+        // 현재 보고있는 페이지
+        $response_data['current_page'] = (int)$request_page;
+        // 총 페이지
+        $response_data['total_page'] = (int)floor(count($card_number) / $per_page_data);
+        // 카드 정보
+        $response_data['card_list'] = $card_list;
+
+        return json_encode($response_data, JSON_UNESCAPED_UNICODE);
+    }
+
     // 배열 재 정렬
     public function arraySort($array)
     {

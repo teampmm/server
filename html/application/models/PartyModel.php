@@ -48,20 +48,23 @@ class PartyModel extends CI_Model
         $sql = "SELECT kr_name FROM Politician where idx = ?";
         $politician_name_array = array();
         for($i = 0; $i < count($politician_idx_array); $i++){
-            $politician_kr_name = $this->db->query($sql, array($politician_idx_array[$i]))->row()->kr_name;
-            array_push($politician_name_array, $politician_kr_name);
+            $politician_data = array();
+            $politician_result = $this->db->query($sql, array($politician_idx_array[$i]))->row();
+            $politician_data['idx'] = (int)$politician_idx_array[$i];
+            $politician_data['kr_name'] = $politician_result->kr_name;
+            array_push($politician_name_array, $politician_data);
         }
 
-        $response_data['idx'] = $party_s_result->idx;
+        $response_data['idx'] = (int)$party_s_result->idx;
         $response_data['name'] = $party_s_result->name;
-        $response_data['start_day'] = $party_s_result->start_day;
-        $response_data['end_day'] = $party_s_result->end_day;
+        $response_data['start_day'] = (int)$party_s_result->start_day;
+        $response_data['end_day'] = (int)$party_s_result->end_day;
         $response_data['floor_leader'] = $party_s_result->floor_leader;
         $response_data['party_leader'] = $party_s_result->party_leader;
         $response_data['homepage'] = $party_s_result->homepage;
-        $response_data['logo'] = 'http://52.78.106.225/files/images/party_logo/'.$party_s_result->idx.'.jpg';
+        $response_data['logo'] = 'http://politicsking.com/files/images/party_logo/'.$party_s_result->idx.'.jpg';
         $response_data['slogan'] = $party_s_result->slogan;
-        $response_data['politician_num'] = count($party_politician_result);
+        $response_data['politician_num'] = (int)count($party_politician_result);
         $response_data['party_politician'] = $politician_name_array;
 
         return json_encode($response_data,JSON_UNESCAPED_UNICODE);
@@ -104,10 +107,10 @@ class PartyModel extends CI_Model
                 $party_politician_count = $this->db->query($sql, array($row->idx, $date, $date))->row()->cnt;
 
                 $card_data = array(
-                    'idx'=>$row->idx,
+                    'idx'=>(int)$row->idx,
                     'name'=>$row->name,
                     'politician_num'=>(int)$party_politician_count,
-                    'logo'=>'http://52.78.106.225/files/images/party_logo/'.$row->idx.'.jpg'
+                    'logo'=>'http://politicsking.com/files/images/party_logo/'.$row->idx.'.jpg'
 
             );
                 array_push($total_card,$card_data);
@@ -121,7 +124,7 @@ class PartyModel extends CI_Model
             return;
         }
         else{
-            $response_data['total_card_num'] = count($total_card);
+            $response_data['total_card_num'] = (int)count($total_card);
             $response_data['result'] = $total_card;
         }
 

@@ -370,7 +370,7 @@ class PoliticianModel extends CI_Model
             }
             $response_data['data'] = $news_data_array;
         }
-        return json_encode($response_data);
+        return json_encode($response_data, JSON_UNESCAPED_UNICODE);
     }
 
     // 정치인 공약 정보 요청
@@ -450,7 +450,7 @@ class PoliticianModel extends CI_Model
         }
         $response_data['result'] = $pledge_temp_data;
 
-        return json_encode($response_data);
+        return json_encode($response_data, JSON_UNESCAPED_UNICODE);
 
     }
 
@@ -491,7 +491,7 @@ class PoliticianModel extends CI_Model
         } else {
             $response_data['status'] = '현재 북마크중';
         }
-        return json_encode($response_data);
+        return json_encode($response_data, JSON_UNESCAPED_UNICODE);
     }
 
     // 정치인 좋아요 싫어요 정보 조회
@@ -530,7 +530,7 @@ class PoliticianModel extends CI_Model
         } else {
             $response_data['status'] = $result->status;
         }
-        return json_encode($response_data);
+        return json_encode($response_data, JSON_UNESCAPED_UNICODE);
     }
 
     // pdf 조회
@@ -559,7 +559,7 @@ class PoliticianModel extends CI_Model
 
         $pdf_url = 'http://politicsking.com/files/pdf/' . $politician_idx . '.pdf';
         $response_data['pdf_url'] = $pdf_url;
-        return json_encode($response_data);
+        return json_encode($response_data, JSON_UNESCAPED_UNICODE);
     }
 
     // 정치인 북마크 클릭/해제
@@ -605,7 +605,7 @@ class PoliticianModel extends CI_Model
             $response_data['result'] = '북마크 추가';
         }
         header("HTTP/1.1 201 ");
-        return json_encode($response_data);
+        return json_encode($response_data, JSON_UNESCAPED_UNICODE);
     }
 
     // 정치인 좋아요 싫어요 정보수정
@@ -698,7 +698,7 @@ class PoliticianModel extends CI_Model
         }
 
         header("HTTP/1.1 201 ");
-        return json_encode($response_data);
+        return json_encode($response_data, JSON_UNESCAPED_UNICODE);
     }
 
     // 정치인 랜덤 카드 덱 만들기
@@ -871,7 +871,7 @@ class PoliticianModel extends CI_Model
             $response_data['current_page'] = $page;
             $response_data['total_page'] = $total_page;
             $response_data['card_list'] = $card_list;
-            return json_encode($response_data);
+            return json_encode($response_data, JSON_UNESCAPED_UNICODE);
 
         } /**
          * 대수와 정당 값을 모두 받았을때
@@ -997,7 +997,7 @@ class PoliticianModel extends CI_Model
             $response_data['total_page'] = (int)$total_page;
             $response_data['card_list'] = $card_list;
 
-            return json_encode($response_data);
+            return json_encode($response_data, JSON_UNESCAPED_UNICODE);
         }
     }
 
@@ -1106,7 +1106,7 @@ class PoliticianModel extends CI_Model
             header("HTTP/1.1 204 ");
             return;
         }
-        return json_encode($response_data);
+        return json_encode($response_data, JSON_UNESCAPED_UNICODE);
     }
 
     // 대표 발의 법안 조회
@@ -1165,7 +1165,7 @@ class PoliticianModel extends CI_Model
 
         $response_data['bill_representative_data'] = $bill_list;
 
-        return json_encode($response_data);
+        return json_encode($response_data, JSON_UNESCAPED_UNICODE);
     }
 
     // 공동 발의 법안 조회
@@ -1224,7 +1224,7 @@ class PoliticianModel extends CI_Model
 
         $response_data['bill_together_data'] = $bill_list;
 
-        return json_encode($response_data);
+        return json_encode($response_data, JSON_UNESCAPED_UNICODE);
     }
     // 찬성 발의 법안 조회
     public function getBillAgreement($politician_idx,$bill_data_num,$page){
@@ -1282,7 +1282,7 @@ class PoliticianModel extends CI_Model
 
         $response_data['$bill_agreement_data'] = $bill_list;
 
-        return json_encode($response_data);
+        return json_encode($response_data, JSON_UNESCAPED_UNICODE);
     }
 }
 

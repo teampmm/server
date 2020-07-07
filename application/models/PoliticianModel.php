@@ -779,6 +779,14 @@ class PoliticianModel extends CI_Model
 
                 $sql = "SELECT politician_idx FROM PoliticianGeneration WHERE generation = ?";
                 $politician_idx_result = $this->db->query($sql, array($generation_array[$i]))->result();
+
+                // 사용자의 sql 및 id 등 로그 기록하기
+                $log_sql = "SELECT politician_idx FROM PoliticianGeneration WHERE generation = ?";
+                $this->option_model->logRecode(
+                    array(
+                        'sql' => $log_sql)
+                );
+
                 foreach ($politician_idx_result as $row)
                     array_push($politician_idx_array, (int)$row->politician_idx);
 
@@ -890,6 +898,13 @@ class PoliticianModel extends CI_Model
             // 대수 조건과 일치하는 정치인 인덱스를 찾기
             $sql = "SELECT politician_idx FROM PoliticianGeneration WHERE generation IN ?";
             $politician_result = $this->db->query($sql, array($generation_array))->result();
+
+            // 사용자의 sql 및 id 등 로그 기록하기
+            $log_sql = "SELECT politician_idx FROM PoliticianGeneration WHERE generation IN ?";
+            $this->option_model->logRecode(
+                array(
+                    'sql' => $log_sql)
+            );
 
             // 정당 이름 조건과 일치하는 정당인덱스 찾기
             $sql = "SELECT idx FROM Party WHERE name IN ?";
@@ -1023,6 +1038,13 @@ class PoliticianModel extends CI_Model
         $sql = "select * from Politician where kr_name LIKE ?";
         $politician_s_result = $this->db->query($sql, array('%' . $keyword . '%'))->result();
 
+        // 사용자의 sql 및 id 등 로그 기록하기
+        $log_sql = "select * from Politician where kr_name LIKE ?";
+        $this->option_model->logRecode(
+            array(
+                'sql' => $log_sql)
+        );
+
         $politician_idx_array = array();
 
         foreach ($politician_s_result as $row) {
@@ -1118,6 +1140,13 @@ class PoliticianModel extends CI_Model
         $sql="select bill_idx from BillProposer where representative_idx = ? ";
         $bill_representative_list_info = $this->db->query($sql,array((int)$politician_idx))->result();
 
+        // 사용자의 sql 및 id 등 로그 기록하기
+        $log_sql = "select bill_idx from BillProposer where representative_idx = ? ";
+        $this->option_model->logRecode(
+            array(
+                'sql' => $log_sql)
+        );
+
         $data_start_idx = $bill_data_num * ($page-1); // 0
         $data_end_idx = $bill_data_num * $page; // 8
         $for_idx = 0;
@@ -1177,6 +1206,13 @@ class PoliticianModel extends CI_Model
         $sql="select bill_idx from BillProposer where together_idx = ? ";
         $bill_together_list_info = $this->db->query($sql,array((int)$politician_idx))->result();
 
+        // 사용자의 sql 및 id 등 로그 기록하기
+        $log_sql = "select bill_idx from BillProposer where together_idx = ? ";
+        $this->option_model->logRecode(
+            array(
+                'sql' => $log_sql)
+        );
+
         $data_start_idx = $bill_data_num * ($page-1); // 0
         $data_end_idx = $bill_data_num * $page; // 8
         $for_idx = 0;
@@ -1234,6 +1270,13 @@ class PoliticianModel extends CI_Model
         // 정치인 인덱스로 찬성법안의 인덱스를 구하기
         $sql="select bill_idx from BillProposer where agreement_idx = ? ";
         $bill_agreement_list_info = $this->db->query($sql,array((int)$politician_idx))->result();
+
+        // 사용자의 sql 및 id 등 로그 기록하기
+        $log_sql = "select bill_idx from BillProposer where agreement_idx = ? ";
+        $this->option_model->logRecode(
+            array(
+                'sql' => $log_sql)
+        );
 
         $data_start_idx = $bill_data_num * ($page-1); // 0
         $data_end_idx = $bill_data_num * $page; // 8

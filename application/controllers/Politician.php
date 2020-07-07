@@ -372,7 +372,6 @@ class Politician extends CI_Controller
     // request url : {서버 ip}/politician/{data}
     public function requestData($client_data)
     {
-
         if ($this->http_method == "GET") {
 
             // 클라이언트가 정치인 카드 모아보기 정보를 요청함.

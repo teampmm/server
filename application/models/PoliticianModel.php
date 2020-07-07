@@ -15,7 +15,6 @@ class PoliticianModel extends CI_Model
     // 정치인 카드 모아보기 정보
     public function getPoliticianCard($request_page, $random_card_idx, $token_data, $card_num, $generation)
     {
-
         $elect_generation = $generation;
 
         /** 현재는 20대 국회의원 데이터 밖에없다.
@@ -486,10 +485,9 @@ class PoliticianModel extends CI_Model
         );
 
         if ($result->count == 0) {
-            header("HTTP/1.1 204 ");
-            return;
+            $response_data['result'] = '현재 북마크중이 아닙니다';
         } else {
-            $response_data['status'] = '현재 북마크중';
+            $response_data['result'] = '현재 북마크중';
         }
         return json_encode($response_data, JSON_UNESCAPED_UNICODE);
     }
@@ -565,7 +563,6 @@ class PoliticianModel extends CI_Model
     // 정치인 북마크 클릭/해제
     public function postBookmarkModify($politician_idx, $token_data)
     {
-
         // 클라에게 보내줄 응답 데이터
         $response_data = array();
 

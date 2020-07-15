@@ -8,6 +8,11 @@ header("Access-Control-Allow-Headers: *");
 header("Access-Control-Allow-Methods: GET, POST, DELETE, PATCH, OPTIONS");
 // CORS 요청처리 끝
 
+//setcookie('cross-site-cookie', 'name', ['samesite' => 'None', 'secure' => true]);
+
+
+//setcookie('samesite-test', '1', 0, '/; samesite=strict');
+
 // :any -> [^/]
 // :num -> [0-9]
 
@@ -25,6 +30,9 @@ $route['bill/(:any)']='bill/requestData/$1';
 
 // 정당 정보
 $route['party/(:any)']='party/requestData/$1';
+
+// 어워드(~~왕) 정보
+$route['award/(:any)']='award/requestData/$1';
 
 $route['key/(:any)'] = 'user/key/$1';
 
@@ -50,5 +58,6 @@ $route['key/(:any)'] = 'user/key/$1';
 $route['default_controller'] = 'DefaultController';
 
 $route['(:any)'] = 'PageController/pageRequest/$1';
+
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = false;

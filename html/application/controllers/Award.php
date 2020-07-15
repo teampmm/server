@@ -28,7 +28,6 @@ class Award extends CI_Controller
     // request url : {서버 ip}/politician/{data}
     public function requestData($client_data)
     {
-
         if ($this->http_method == "GET") {
 
             if ($client_data == "all") {

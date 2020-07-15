@@ -326,11 +326,52 @@ class Politician extends CI_Controller
         echo $result;
     }
 
+    // 대표 발의 법안 조회
+    public function getBillRepresentative(){
+        $request_data = $this->input->get(null, True);
+        $error=$this->option->dataNullCheck($request_data,array('politician_idx','bill_data_num','page'));
+        if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+
+        $politician_idx = $request_data['politician_idx'];
+        $bill_data_num = $request_data['bill_data_num'];
+        $page = $request_data['page'];
+        $this->load->model('PoliticianModel');
+        $result = $this->PoliticianModel->getBillRepresentative($politician_idx,$bill_data_num,$page);
+        echo $result;
+    }
+
+    // 공동 발의 법안 조회
+    public function getBillTogether(){
+        $request_data = $this->input->get(null, True);
+        $error=$this->option->dataNullCheck($request_data,array('politician_idx','bill_data_num','page'));
+        if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+
+        $politician_idx = $request_data['politician_idx'];
+        $bill_data_num = $request_data['bill_data_num'];
+        $page = $request_data['page'];
+        $this->load->model('PoliticianModel');
+        $result = $this->PoliticianModel->getBillTogether($politician_idx,$bill_data_num,$page);
+        echo $result;
+    }
+
+    // 찬성 법안 조회
+    public function getBillAgreement(){
+        $request_data = $this->input->get(null, True);
+        $error=$this->option->dataNullCheck($request_data,array('politician_idx','bill_data_num','page'));
+        if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+
+        $politician_idx = $request_data['politician_idx'];
+        $bill_data_num = $request_data['bill_data_num'];
+        $page = $request_data['page'];
+        $this->load->model('PoliticianModel');
+        $result = $this->PoliticianModel->getBillAgreement($politician_idx,$bill_data_num,$page);
+        echo $result;
+    }
+
     // 클라이언트가 사용자에 대한 데이터를 요청할때
     // request url : {서버 ip}/politician/{data}
     public function requestData($client_data)
     {
-
         if ($this->http_method == "GET") {
 
             // 클라이언트가 정치인 카드 모아보기 정보를 요청함.
@@ -373,13 +414,27 @@ class Politician extends CI_Controller
                 $this->getPDF();
             }
 
-            // 정치인 검색 필터
+            // 정치인 필터 조건 검색
             else if($client_data == "filter"){
                 $this->getFilterCard();
             }
 
+            // 정치인 이름 검색 필터
             else if($client_data == "search"){
                 $this->getKeywordSearch();
+            }
+
+            // 대표 발의 법안 조회
+            else if($client_data == "bill_representative"){
+                $this->getBillRepresentative();
+            }
+            // 공동 발의 법안 조회
+            else if($client_data == "bill_together"){
+                $this->getBillTogether();
+            }
+            // 찬성 법안 조회
+            else if($client_data == "bill_agreement"){
+                $this->getBillAgreement();
             }
 
         } else if ($this->http_method == "POST") {

@@ -28,7 +28,7 @@ class User extends CI_Controller
 			$json_data = $this->input->post('user_info', true);
 			$json_data = json_decode($json_data, true);
 
-			$error=$this->option->jsonNullCheck($json_data,array('nick_name','id','pw','phone','social_login'));
+			$error=$this->option->dataNullCheck($json_data,array('nick_name','id','pw','phone','social_login'));
 			if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
 			$this->load->model("UserModel");
@@ -63,7 +63,7 @@ class User extends CI_Controller
 		// 사용자가 닉네임 중복 체크 요청 - nick_name 가지고있다.
 		$nick_name = $this->input->get(null, true);
 
-		$error=$this->option->jsonNullCheck($nick_name,array('nick_name'));
+		$error=$this->option->dataNullCheck($nick_name,array('nick_name'));
 		if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
 		$this->load->model('UserModel');
@@ -76,7 +76,7 @@ class User extends CI_Controller
 		// 사용자가 아이디 중복 체크 요청 - nick_name 가지고있다.
 		$id = $this->input->get(null, true);
 
-		$error=$this->option->jsonNullCheck($id,array('id'));
+		$error=$this->option->dataNullCheck($id,array('id'));
 		if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
 		$this->load->model('UserModel');
@@ -91,7 +91,7 @@ class User extends CI_Controller
 		$json_data = $this->input->post('login_request', true);
 		$json_data = json_decode($json_data, true);
 
-		$error=$this->option->jsonNullCheck($json_data,array('id','pw'));
+		$error=$this->option->dataNullCheck($json_data,array('id','pw'));
 		if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
 		// 사용자가 보낸 id, pw 정보를 db에 있는 id, pw와 비교한다.
@@ -198,7 +198,7 @@ class User extends CI_Controller
 				$smsobj->init();
 				$user_phone = $this->input->post(null, true);
 
-				$error=$this->option->jsonNullCheck($user_phone,array('user_phone'));
+				$error=$this->option->dataNullCheck($user_phone,array('user_phone'));
 				if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
 				$user_phone = $user_phone['user_phone'];
@@ -238,7 +238,7 @@ class User extends CI_Controller
 	public function kakaoLogin(){
 		$uid=$this->input->post(null,true);
 
-		$error=$this->option->jsonNullCheck($uid,array('kakao_uid'));
+		$error=$this->option->dataNullCheck($uid,array('kakao_uid'));
 		if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
 		$this->load->model('UserModel');
@@ -256,7 +256,7 @@ class User extends CI_Controller
 
 		$info=json_decode($info,true);
 
-		$error=$this->option->jsonNullCheck($info,array('kakao_uid','nick_name','sex','phone'));
+		$error=$this->option->dataNullCheck($info,array('kakao_uid','nick_name','sex','phone'));
 		if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
 

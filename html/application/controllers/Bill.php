@@ -51,7 +51,8 @@ class Bill extends CI_Controller
                     echo $error;
                     return;
                 }
-
+//                var_dump($token_data);
+//                return;
                 $this->getBillCard($input,$token_data);
 
             } //법안 상세정보
@@ -65,8 +66,27 @@ class Bill extends CI_Controller
                     return;
                 }
                 $this->billInfo($input,$token_data);
+            }else if ($data=='get_bill_evaluation'){
+                $token_data=$this->headerData();
+                $input = $this->input->get(null, true);
+                $error = $this->option->dataNullCheck($input, array('bill_idx'));
+                if ($error != null) {
+                    header("HTTP/1.1 400 ");
+                    echo $error;
+                    return;
+                }
+                $this->getBillEvaluation($input,$token_data);
+            }else if ($data=='process'){
+//                $token_data=$this->headerData();
+                $input = $this->input->get(null, true);
+                $error = $this->option->dataNullCheck($input, array('bill_idx','status'));
+                if ($error != null) {
+                    header("HTTP/1.1 400 ");
+                    echo $error;
+                    return;
+                }
+                $this->getBillProcessDetail($input);
             }
-
 
             //커뮤니티 기능 일단 비활성화
 //            //법안 자체의 좋아요 싫어요 수
@@ -177,21 +197,6 @@ class Bill extends CI_Controller
 //
 //                }
 //            }
-//	        //법안에 대한 좋아요 싫어요
-//	        else if ($data=='bill_evaluation_write'){
-//
-//                // 클라이언트가 보낸 토큰 정보가 담겨있다.
-//                $token_data = $this->headerData();
-//
-//	            $input=$this->input->post("evaluation_write",true);
-//	            $input_json=json_decode($input,true);
-//
-//                $error=dataNullCheck($input_json,array('bill_idx','status'));
-//                if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
-//
-//	            $result=$this->billEvaluationClick($input_json['bill_idx'],$input_json['status'],$token_data);
-//	            echo $result;
-//            }
 //	        //사용자가 댓글 , 대댓글에 대한 좋아요 싫어요 클릭
 //	        else if ($data=='comment_evaluation_write'){
 //
@@ -224,18 +229,46 @@ class Bill extends CI_Controller
                 if($token_data->idx=="토큰실패"){$result_json=array();$result_json['result']='로그인 필요';header("HTTP/1.1 401 ");echo json_encode($result_json); return;}
                 else{
                     $input=$this->input->post(null,null);
+                    $error = $this->option->dataNullCheck($input, array('bill_idx'));
+                    if ($error != null) {
+                        header("HTTP/1.1 400 ");
+                        echo $error;
+                        return;
+                    }
                     $this->putBookmark($input,$token_data->idx);
+                    return;
+                }
+            }else if ($data=='put_bill_evaluation'){
+                $token_data=$this->headerData();
+                if($token_data->idx=="토큰실패"){$result_json=array();$result_json['result']='로그인 필요';header("HTTP/1.1 401 ");echo json_encode($result_json); return;}
+                else{
+                    $input=$this->input->post('evaluation_write',true);
+                    $input=json_decode($input,true);
+                    $error = $this->option->dataNullCheck($input, array('bill_idx','status'));
+                    if ($error != null) {
+                        header("HTTP/1.1 400 ");
+                        echo $error;
+                        return;
+                    }
+                    $this->putBillEvaluation($input,$token_data->idx);
                     return;
                 }
             }
         }
     }
     //북마크 추가,삭제 (북마크 쓰기)
-public function  putBookmark($input,$user_idx){
+    public function  putBookmark($input,$user_idx){
 	    $this->load->model("BillModel");
 	    $result=$this->BillModel->putBookmark($input['bill_idx'],$user_idx);
 	    echo$result;
 }
+
+    //사용자가 법안에 대해서 좋아요 혹은 싫어요 클릭
+    public function  putBillEvaluation($input,$user_idx){
+        $this->load->model("BillModel");
+        $result=$this->BillModel->putBillEvaluation($input['bill_idx'],$user_idx,$input['status']);
+        echo$result;
+    }
 	//법안 모아보기
 	public function getBillCard($index,$token_data)
 	{
@@ -255,51 +288,64 @@ public function  putBookmark($input,$user_idx){
 		echo  $result;
 	}
 
-	//법안에 대한 좋아요 싫어요
-	public function billUserEvaluation($index, $token_data)
-	{
-		$this->load->model('BillModel');
-		$result = $this->BillModel->billUserStatus($index, $token_data);
-		return $result;
-	}
-
-	//법안에 대한 댓글가져오기
-    public function billComment($index,$comment_page,$status,$token_data)
-    {
+	//법안 좋아요 싫어요 갯수 , 해당 사용자의 클릭 상태 ? (현재 사용자는 어떤것을 클릭 했는지)
+	public function getBillEvaluation($input,$token_data){
         $this->load->model('BillModel');
-        $result=$this->BillModel->billCommentList($index,$comment_page,$status,$token_data);
-        echo($result);
+		$result = $this->BillModel->getBillEvaluation($token_data,$input['bill_idx']);
+		echo  $result;
     }
 
-    //댓글에 대한 대댓글 가져오기
-    public function billSubComment($index,$sub_comment_page, $token_data){
-	    $this->load->model('BillModel');
-	    $result=$this->BillModel->billSubCommentList($index,$sub_comment_page, $token_data);
-	    return $result;
-    }
-    //법안 댓글 달기
-    //좋아요 댓글인지 싫어요 댓글인지 표기
-    public function billCommentWrite($bill_idx,$content,$status,$token_data){
-        $this->load->model("BillModel");
-        $result=$this->BillModel->billCommentWrite($bill_idx,$content,$status,$token_data);
-        return $result;
-    }
-    //법안에 대해 좋아요 싫어요 클릭
-    public function billEvaluationClick($bill_idx,$status,$token_data){
+    // 법안의 상세 과정에 대한 데이터를 가져오는 메서드 : 접수, 공포 등에 대한 데이터
+    public function getBillProcessDetail($input){
         $this->load->model('BillModel');
-        $result=$this->BillModel->billEvaluationWrite($bill_idx,$status,$token_data);
-        return$result;
+        $result = $this->BillModel->getBillProcessDetail($input['bill_idx'],$input['status']);
+        echo  $result;
     }
-    //댓글에 대해 답글달기
-    public function subCommentWrite($comment_idx,$content,$parent_idx,$token_data){
-	    $this->load->model('BillModel');
-        $result=$this->BillModel->billSubCommmentWrite($comment_idx,$content,$parent_idx,$token_data);
-	    return$result;
-    }
-    //댓글, 대댓글에 대해 좋아요 싫어요 클릭
-    public function commentEvaluationClick($comment_check,$comment_idx,$status,$token_data){
-        $this->load->model('BillModel');
-        $result=$this->BillModel->commentEvaluationWrite($comment_check,$comment_idx,$status,$token_data);
-        return$result;
-    }
+//	//법안에 대한 좋아요 싫어요
+//	public function billUserEvaluation($index, $token_data)
+//	{
+//		$this->load->model('BillModel');
+//		$result = $this->BillModel->billUserStatus($index, $token_data);
+//		return $result;
+//	}
+//
+//	//법안에 대한 댓글가져오기
+//    public function billComment($index,$comment_page,$status,$token_data)
+//    {
+//        $this->load->model('BillModel');
+//        $result=$this->BillModel->billCommentList($index,$comment_page,$status,$token_data);
+//        echo($result);
+//    }
+//
+//    //댓글에 대한 대댓글 가져오기
+//    public function billSubComment($index,$sub_comment_page, $token_data){
+//	    $this->load->model('BillModel');
+//	    $result=$this->BillModel->billSubCommentList($index,$sub_comment_page, $token_data);
+//	    return $result;
+//    }
+//    //법안 댓글 달기
+//    //좋아요 댓글인지 싫어요 댓글인지 표기
+//    public function billCommentWrite($bill_idx,$content,$status,$token_data){
+//        $this->load->model("BillModel");
+//        $result=$this->BillModel->billCommentWrite($bill_idx,$content,$status,$token_data);
+//        return $result;
+//    }
+//    //법안에 대해 좋아요 싫어요 클릭
+//    public function billEvaluationClick($bill_idx,$status,$token_data){
+//        $this->load->model('BillModel');
+//        $result=$this->BillModel->billEvaluationWrite($bill_idx,$status,$token_data);
+//        return$result;
+//    }
+//    //댓글에 대해 답글달기
+//    public function subCommentWrite($comment_idx,$content,$parent_idx,$token_data){
+//	    $this->load->model('BillModel');
+//        $result=$this->BillModel->billSubCommmentWrite($comment_idx,$content,$parent_idx,$token_data);
+//	    return$result;
+//    }
+//    //댓글, 대댓글에 대해 좋아요 싫어요 클릭
+//    public function commentEvaluationClick($comment_check,$comment_idx,$status,$token_data){
+//        $this->load->model('BillModel');
+//        $result=$this->BillModel->commentEvaluationWrite($comment_check,$comment_idx,$status,$token_data);
+//        return$result;
+//    }
 }

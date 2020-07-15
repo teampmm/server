@@ -358,13 +358,13 @@ class PoliticianModel extends CI_Model
 
             foreach ($politician_select_result as $row) {
                 $data_array = array();
-                $data_array['politician_idx'] = $row->politician_idx;
+//                $data_array['politician_idx'] = $row->politician_idx;
                 $data_array['title'] = $row->title;
                 $data_array['date'] = $row->date;
                 $data_array['news_link'] = $row->url;
-                $data_array['category'] = $row->category;
+//                $data_array['category'] = $row->category;
                 $data_array['thumbnail_image'] = $row->thumbnail;
-                $data_array['content'] = $row->content;
+//                $data_array['content'] = $row->content;
                 array_push($news_data_array, $data_array);
             }
             $response_data['data'] = $news_data_array;
@@ -459,10 +459,9 @@ class PoliticianModel extends CI_Model
         // 클라에게 보내줄 응답 데이터
         $response_data = array();
         if ($token_data->idx == "토큰실패") {
-            $result_json = array();
-            $result_json['result'] = '로그인 필요';
+            $response_data['result'] = '로그인 필요';
             header("HTTP/1.1 401 ");
-            return json_encode($result_json);
+            return json_encode($response_data, JSON_UNESCAPED_UNICODE);
         }
 
         // 사용자 인덱스
@@ -596,7 +595,7 @@ class PoliticianModel extends CI_Model
             $response_data['result'] = '북마크 삭제';
         } // 해당 정치인을 북마크를 안하고 있었는데, 북마크 추가 요청이 들어옴
         else {
-            $sql = "INSERT INTO BookMark VALUES (null, ?, null, ?, NOW(),NOW(),NOW())";
+            $sql = "INSERT INTO BookMark VALUES (null, ?, null, ?, NOW(),null,null )";
 
             $this->db->query($sql, array($user_idx, $politician_idx));
             $response_data['result'] = '북마크 추가';

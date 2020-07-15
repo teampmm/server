@@ -15,7 +15,6 @@ class PoliticianModel extends CI_Model
     // 정치인 카드 모아보기 정보
     public function getPoliticianCard($request_page, $random_card_idx, $token_data, $card_num, $generation)
     {
-
         $elect_generation = $generation;
 
         /** 현재는 20대 국회의원 데이터 밖에없다.
@@ -282,6 +281,16 @@ class PoliticianModel extends CI_Model
             $politician_generation_array['vote_score'] = (double)$vote_score;
             $politician_generation_array['progress_status'] = $progress_status;
 
+//            //대표 발의 건수
+//            $sql="select count(idx)as count from BillProposer where representative_idx =? ";
+//            $response_data['representative_count']=(int)$this->db->query($sql,array((int)$politician_select_result->idx))->row()->count;
+//            //공동 발의 건수
+//            $sql="select count(idx)as count from BillProposer where together_idx =? ";
+//            $response_data['together_count']=(int)$this->db->query($sql,array((int)$politician_select_result->idx))->row()->count;
+//            //발의 찬성 건수
+//            $sql="select count(idx)as count from BillProposer where agreement_idx =? ";
+//            $response_data['agreement_count']=(int)$this->db->query($sql,array((int)$politician_select_result->idx))->row()->count;
+
             $response_data['generation_info'] = $politician_generation_array;
 
             $sql = "SELECT party_idx, start_day, end_day
@@ -349,18 +358,18 @@ class PoliticianModel extends CI_Model
 
             foreach ($politician_select_result as $row) {
                 $data_array = array();
-                $data_array['politician_idx'] = $row->politician_idx;
+//                $data_array['politician_idx'] = $row->politician_idx;
                 $data_array['title'] = $row->title;
                 $data_array['date'] = $row->date;
                 $data_array['news_link'] = $row->url;
-                $data_array['category'] = $row->category;
+//                $data_array['category'] = $row->category;
                 $data_array['thumbnail_image'] = $row->thumbnail;
-                $data_array['content'] = $row->content;
+//                $data_array['content'] = $row->content;
                 array_push($news_data_array, $data_array);
             }
             $response_data['data'] = $news_data_array;
         }
-        return json_encode($response_data);
+        return json_encode($response_data, JSON_UNESCAPED_UNICODE);
     }
 
     // 정치인 공약 정보 요청
@@ -440,7 +449,7 @@ class PoliticianModel extends CI_Model
         }
         $response_data['result'] = $pledge_temp_data;
 
-        return json_encode($response_data);
+        return json_encode($response_data, JSON_UNESCAPED_UNICODE);
 
     }
 
@@ -450,10 +459,9 @@ class PoliticianModel extends CI_Model
         // 클라에게 보내줄 응답 데이터
         $response_data = array();
         if ($token_data->idx == "토큰실패") {
-            $result_json = array();
-            $result_json['result'] = '로그인 필요';
+            $response_data['result'] = '로그인 필요';
             header("HTTP/1.1 401 ");
-            return json_encode($result_json);
+            return json_encode($response_data, JSON_UNESCAPED_UNICODE);
         }
 
         // 사용자 인덱스
@@ -476,12 +484,11 @@ class PoliticianModel extends CI_Model
         );
 
         if ($result->count == 0) {
-            header("HTTP/1.1 204 ");
-            return;
+            $response_data['result'] = '현재 북마크중이 아닙니다';
         } else {
-            $response_data['status'] = '현재 북마크중';
+            $response_data['result'] = '현재 북마크중';
         }
-        return json_encode($response_data);
+        return json_encode($response_data, JSON_UNESCAPED_UNICODE);
     }
 
     // 정치인 좋아요 싫어요 정보 조회
@@ -520,7 +527,7 @@ class PoliticianModel extends CI_Model
         } else {
             $response_data['status'] = $result->status;
         }
-        return json_encode($response_data);
+        return json_encode($response_data, JSON_UNESCAPED_UNICODE);
     }
 
     // pdf 조회
@@ -549,13 +556,12 @@ class PoliticianModel extends CI_Model
 
         $pdf_url = 'http://politicsking.com/files/pdf/' . $politician_idx . '.pdf';
         $response_data['pdf_url'] = $pdf_url;
-        return json_encode($response_data);
+        return json_encode($response_data, JSON_UNESCAPED_UNICODE);
     }
 
     // 정치인 북마크 클릭/해제
     public function postBookmarkModify($politician_idx, $token_data)
     {
-
         // 클라에게 보내줄 응답 데이터
         $response_data = array();
 
@@ -589,13 +595,13 @@ class PoliticianModel extends CI_Model
             $response_data['result'] = '북마크 삭제';
         } // 해당 정치인을 북마크를 안하고 있었는데, 북마크 추가 요청이 들어옴
         else {
-            $sql = "INSERT INTO BookMark VALUES (null, ?, null, ?, NOW(),NOW(),NOW())";
+            $sql = "INSERT INTO BookMark VALUES (null, ?, null, ?, NOW(),null,null )";
 
             $this->db->query($sql, array($user_idx, $politician_idx));
             $response_data['result'] = '북마크 추가';
         }
         header("HTTP/1.1 201 ");
-        return json_encode($response_data);
+        return json_encode($response_data, JSON_UNESCAPED_UNICODE);
     }
 
     // 정치인 좋아요 싫어요 정보수정
@@ -688,7 +694,7 @@ class PoliticianModel extends CI_Model
         }
 
         header("HTTP/1.1 201 ");
-        return json_encode($response_data);
+        return json_encode($response_data, JSON_UNESCAPED_UNICODE);
     }
 
     // 정치인 랜덤 카드 덱 만들기
@@ -769,6 +775,14 @@ class PoliticianModel extends CI_Model
 
                 $sql = "SELECT politician_idx FROM PoliticianGeneration WHERE generation = ?";
                 $politician_idx_result = $this->db->query($sql, array($generation_array[$i]))->result();
+
+                // 사용자의 sql 및 id 등 로그 기록하기
+                $log_sql = "SELECT politician_idx FROM PoliticianGeneration WHERE generation = ?";
+                $this->option_model->logRecode(
+                    array(
+                        'sql' => $log_sql)
+                );
+
                 foreach ($politician_idx_result as $row)
                     array_push($politician_idx_array, (int)$row->politician_idx);
 
@@ -861,7 +875,7 @@ class PoliticianModel extends CI_Model
             $response_data['current_page'] = $page;
             $response_data['total_page'] = $total_page;
             $response_data['card_list'] = $card_list;
-            return json_encode($response_data);
+            return json_encode($response_data, JSON_UNESCAPED_UNICODE);
 
         } /**
          * 대수와 정당 값을 모두 받았을때
@@ -880,6 +894,13 @@ class PoliticianModel extends CI_Model
             // 대수 조건과 일치하는 정치인 인덱스를 찾기
             $sql = "SELECT politician_idx FROM PoliticianGeneration WHERE generation IN ?";
             $politician_result = $this->db->query($sql, array($generation_array))->result();
+
+            // 사용자의 sql 및 id 등 로그 기록하기
+            $log_sql = "SELECT politician_idx FROM PoliticianGeneration WHERE generation IN ?";
+            $this->option_model->logRecode(
+                array(
+                    'sql' => $log_sql)
+            );
 
             // 정당 이름 조건과 일치하는 정당인덱스 찾기
             $sql = "SELECT idx FROM Party WHERE name IN ?";
@@ -987,7 +1008,7 @@ class PoliticianModel extends CI_Model
             $response_data['total_page'] = (int)$total_page;
             $response_data['card_list'] = $card_list;
 
-            return json_encode($response_data);
+            return json_encode($response_data, JSON_UNESCAPED_UNICODE);
         }
     }
 
@@ -1012,6 +1033,13 @@ class PoliticianModel extends CI_Model
 
         $sql = "select * from Politician where kr_name LIKE ?";
         $politician_s_result = $this->db->query($sql, array('%' . $keyword . '%'))->result();
+
+        // 사용자의 sql 및 id 등 로그 기록하기
+        $log_sql = "select * from Politician where kr_name LIKE ?";
+        $this->option_model->logRecode(
+            array(
+                'sql' => $log_sql)
+        );
 
         $politician_idx_array = array();
 
@@ -1096,7 +1124,204 @@ class PoliticianModel extends CI_Model
             header("HTTP/1.1 204 ");
             return;
         }
-        return json_encode($response_data);
+        return json_encode($response_data, JSON_UNESCAPED_UNICODE);
+    }
+
+    // 대표 발의 법안 조회
+    public function getBillRepresentative($politician_idx,$bill_data_num,$page){
+        $response_data = array();
+        $bill_list = array();
+
+        // 정치인 인덱스로 대표법안의 인덱스를 구하기
+        $sql="select bill_idx from BillProposer where representative_idx = ? ";
+        $bill_representative_list_info = $this->db->query($sql,array((int)$politician_idx))->result();
+
+        // 사용자의 sql 및 id 등 로그 기록하기
+        $log_sql = "select bill_idx from BillProposer where representative_idx = ? ";
+        $this->option_model->logRecode(
+            array(
+                'sql' => $log_sql)
+        );
+
+        $data_start_idx = $bill_data_num * ($page-1); // 0
+        $data_end_idx = $bill_data_num * $page; // 8
+        $for_idx = 0;
+
+
+        $response_data['total_bill_count'] = (int)count($bill_representative_list_info);
+        $response_data['current_page'] = (int)$page;
+        $response_data['total_page'] = (int)ceil(count($bill_representative_list_info) / $bill_data_num);
+
+        if ($page > $response_data['total_page'] or $page < 0){
+            header("HTTP/1.1 204 ");
+            return;
+        }
+
+        // 대표법안의 정보를 bill_list에 저장한다.
+        foreach ($bill_representative_list_info as $bill_representative){
+
+            if (($data_start_idx > $for_idx) or ($for_idx >= $data_end_idx)){
+                $for_idx = $for_idx + 1;
+                continue;
+            }
+            else{
+                $bill_temp_array = array();
+
+                $bill_idx = $bill_representative->bill_idx;
+                $sql="select * from Bill where idx = ? ";
+                $bill_info = $this->db->query($sql,array((int)$bill_idx))->row();
+
+                $bill_title = $bill_info->title;
+                $bill_proposer = $bill_info->proposer;
+                $bill_progress_status = $bill_info->progress_status;
+                $bill_proposal_date = $bill_info->proposal_date;
+
+                $bill_temp_array['bill_idx'] = (int)$bill_idx;
+                $bill_temp_array['title'] = $bill_title;
+                $bill_temp_array['bill_proposer'] = $bill_proposer;
+                $bill_temp_array['bill_progress_status'] = $bill_progress_status;
+                $bill_temp_array['bill_proposal_date'] = (int)$bill_proposal_date;
+
+                array_push($bill_list,$bill_temp_array);
+            }
+
+            $for_idx = $for_idx + 1;
+        }
+
+        $response_data['bill_representative_data'] = $bill_list;
+
+        return json_encode($response_data, JSON_UNESCAPED_UNICODE);
+    }
+
+    // 공동 발의 법안 조회
+    public function getBillTogether($politician_idx,$bill_data_num,$page){
+        $response_data = array();
+        $bill_list = array();
+
+        // 정치인 인덱스로 공동 발의 법안의 인덱스를 구하기
+        $sql="select bill_idx from BillProposer where together_idx = ? ";
+        $bill_together_list_info = $this->db->query($sql,array((int)$politician_idx))->result();
+
+        // 사용자의 sql 및 id 등 로그 기록하기
+        $log_sql = "select bill_idx from BillProposer where together_idx = ? ";
+        $this->option_model->logRecode(
+            array(
+                'sql' => $log_sql)
+        );
+
+        $data_start_idx = $bill_data_num * ($page-1); // 0
+        $data_end_idx = $bill_data_num * $page; // 8
+        $for_idx = 0;
+
+
+        $response_data['total_bill_count'] = (int)count($bill_together_list_info);
+        $response_data['current_page'] = (int)$page;
+        $response_data['total_page'] = (int)ceil(count($bill_together_list_info) / $bill_data_num);
+
+        if ($page > $response_data['total_page'] or $page < 0){
+            header("HTTP/1.1 204 ");
+            return;
+        }
+
+        // 공동 발의 법안의 정보를 bill_list에 저장한다.
+        foreach ($bill_together_list_info as $bill_together){
+
+            if (($data_start_idx > $for_idx) or ($for_idx >= $data_end_idx)){
+                $for_idx = $for_idx + 1;
+                continue;
+            }
+            else{
+                $bill_temp_array = array();
+
+                $bill_idx = $bill_together->bill_idx;
+                $sql="select * from Bill where idx = ? ";
+                $bill_info = $this->db->query($sql,array((int)$bill_idx))->row();
+
+                $bill_title = $bill_info->title;
+                $bill_proposer = $bill_info->proposer;
+                $bill_progress_status = $bill_info->progress_status;
+                $bill_proposal_date = $bill_info->proposal_date;
+
+                $bill_temp_array['bill_idx'] = (int)$bill_idx;
+                $bill_temp_array['title'] = $bill_title;
+                $bill_temp_array['bill_proposer'] = $bill_proposer;
+                $bill_temp_array['bill_progress_status'] = $bill_progress_status;
+                $bill_temp_array['bill_proposal_date'] = (int)$bill_proposal_date;
+
+                array_push($bill_list,$bill_temp_array);
+            }
+
+            $for_idx = $for_idx + 1;
+        }
+
+        $response_data['bill_together_data'] = $bill_list;
+
+        return json_encode($response_data, JSON_UNESCAPED_UNICODE);
+    }
+    // 찬성 발의 법안 조회
+    public function getBillAgreement($politician_idx,$bill_data_num,$page){
+        $response_data = array();
+        $bill_list = array();
+
+        // 정치인 인덱스로 찬성법안의 인덱스를 구하기
+        $sql="select bill_idx from BillProposer where agreement_idx = ? ";
+        $bill_agreement_list_info = $this->db->query($sql,array((int)$politician_idx))->result();
+
+        // 사용자의 sql 및 id 등 로그 기록하기
+        $log_sql = "select bill_idx from BillProposer where agreement_idx = ? ";
+        $this->option_model->logRecode(
+            array(
+                'sql' => $log_sql)
+        );
+
+        $data_start_idx = $bill_data_num * ($page-1); // 0
+        $data_end_idx = $bill_data_num * $page; // 8
+        $for_idx = 0;
+
+
+        $response_data['total_bill_count'] = (int)count($bill_agreement_list_info);
+        $response_data['current_page'] = (int)$page;
+        $response_data['total_page'] = (int)ceil(count($bill_agreement_list_info) / $bill_data_num);
+
+        if ($page > $response_data['total_page'] or $page < 0){
+            header("HTTP/1.1 204 ");
+            return;
+        }
+
+        // 찬성법안의 정보를 bill_list에 저장한다.
+        foreach ($bill_agreement_list_info as $bill_agreement){
+
+            if (($data_start_idx > $for_idx) or ($for_idx >= $data_end_idx)){
+                $for_idx = $for_idx + 1;
+                continue;
+            }
+            else{
+                $bill_temp_array = array();
+
+                $bill_idx = $bill_agreement->bill_idx;
+                $sql="select * from Bill where idx = ? ";
+                $bill_info = $this->db->query($sql,array((int)$bill_idx))->row();
+
+                $bill_title = $bill_info->title;
+                $bill_proposer = $bill_info->proposer;
+                $bill_progress_status = $bill_info->progress_status;
+                $bill_proposal_date = $bill_info->proposal_date;
+
+                $bill_temp_array['bill_idx'] = (int)$bill_idx;
+                $bill_temp_array['title'] = $bill_title;
+                $bill_temp_array['bill_proposer'] = $bill_proposer;
+                $bill_temp_array['bill_progress_status'] = $bill_progress_status;
+                $bill_temp_array['bill_proposal_date'] = (int)$bill_proposal_date;
+
+                array_push($bill_list,$bill_temp_array);
+            }
+
+            $for_idx = $for_idx + 1;
+        }
+
+        $response_data['$bill_agreement_data'] = $bill_list;
+
+        return json_encode($response_data, JSON_UNESCAPED_UNICODE);
     }
 }
 

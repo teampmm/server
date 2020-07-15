@@ -75,11 +75,11 @@ class UserModel extends CI_Model
             if ($result == 1) {
                 header("HTTP/1.1 201");
                 $response_data['result'] = "회원가입 성공";
-                return json_encode($response_data);
+                return json_encode($response_data, JSON_UNESCAPED_UNICODE);
             } // 회원 정보 추가 실패
             else {
                 $response_data['result'] = "잠시후 다시 시도해주세요";
-                return json_encode($response_data);
+                return json_encode($response_data, JSON_UNESCAPED_UNICODE);
             }
         }
     }
@@ -125,11 +125,11 @@ class UserModel extends CI_Model
 
             $response_data['result'] = "로그인 성공";
             $response_data['token'] = $token;
-            return json_encode($response_data);
+            return json_encode($response_data, JSON_UNESCAPED_UNICODE);
         } // 사용자 정보가 불일치
         else {
             $response_data['result'] = "가입된 계정이 없거나, 비밀번호가 틀렸습니다";
-            return json_encode($response_data);
+            return json_encode($response_data, JSON_UNESCAPED_UNICODE);
         }
     }
 
@@ -156,11 +156,11 @@ class UserModel extends CI_Model
         // 닉네임 중복
         if ($query->count == 1) {
             $response_data['result'] = "닉네임중복-가입불가능";
-            return json_encode($response_data);
+            return json_encode($response_data, JSON_UNESCAPED_UNICODE);
         } // 닉네임 중복이 아님
         else {
             $response_data['result'] = "닉네임중복아님-가입가능";
-            return json_encode($response_data);
+            return json_encode($response_data, JSON_UNESCAPED_UNICODE);
         }
     }
 
@@ -185,11 +185,11 @@ class UserModel extends CI_Model
         // 닉네임 중복
         if ($query->count == 1) {
             $response_data['result'] = "아이디중복-가입불가능";
-            return json_encode($response_data);
+            return json_encode($response_data, JSON_UNESCAPED_UNICODE);
         } // 닉네임 중복이 아님
         else {
             $response_data['result'] = "아이디중복아님-가입가능";
-            return json_encode($response_data);
+            return json_encode($response_data, JSON_UNESCAPED_UNICODE);
         }
     }
 
@@ -242,7 +242,7 @@ class UserModel extends CI_Model
             //pmm자체 회원가입으로 넘어가야함 = 1
             if($result->nick_name ==null){
                 $result_json['response_code']=1;
-                return json_encode($result_json);
+                return json_encode($result_json, JSON_UNESCAPED_UNICODE);
             }
             //카카오 동의후 pmm회원가입까지 완료한 상태
             //카카오 로그인 완료 = 0
@@ -260,8 +260,7 @@ class UserModel extends CI_Model
                 $token = $pmm_jwt->createToken($user_info);
                 $result_json['response_code']=0;
                 $result_json['token']=$token;
-                return json_encode($result_json);
-
+                return json_encode($result_json, JSON_UNESCAPED_UNICODE);
             }
         }
         //첫가입
@@ -273,8 +272,7 @@ class UserModel extends CI_Model
             $this->db->query($sql, array($uid));
 
             $result_json['response_code']=2;
-            return json_encode($result_json);
-
+            return json_encode($result_json, JSON_UNESCAPED_UNICODE);
         }
 
     }
@@ -334,7 +332,7 @@ class UserModel extends CI_Model
 
         header("HTTP/1.1 201");
         $result_json['response_code']=(boolean)$result;
-        return json_encode($result_json,true);
+        return json_encode($result_json, JSON_UNESCAPED_UNICODE);
     }
 
     // 사용자 정보를 반환하는 메서드 NO API
@@ -370,12 +368,12 @@ class UserModel extends CI_Model
             );
 
             $response_data['result'] = "로그아웃 완료 토큰삭제바람";
-            return json_encode($response_data);
+            return json_encode($response_data, JSON_UNESCAPED_UNICODE);
         }
         else{
             header("HTTP/1.1 401");
             $response_data['result'] = "토큰값이 없습니다";
-            return json_encode($response_data);
+            return json_encode($response_data, JSON_UNESCAPED_UNICODE);
         }
 
     }

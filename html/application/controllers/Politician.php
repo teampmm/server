@@ -368,6 +368,18 @@ class Politician extends CI_Controller
         echo $result;
     }
 
+    // 정치인 정당 히스토리 조회
+    public function getHistory(){
+        $request_data = $this->input->get(null, True);
+        $error=$this->option->dataNullCheck($request_data,array('politician_idx'));
+        if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+
+        $politician_idx = $request_data['politician_idx'];
+        $this->load->model('PoliticianModel');
+        $result = $this->PoliticianModel->getHistory($politician_idx);
+        echo $result;
+    }
+
     // 클라이언트가 사용자에 대한 데이터를 요청할때
     // request url : {서버 ip}/politician/{data}
     public function requestData($client_data)
@@ -428,13 +440,19 @@ class Politician extends CI_Controller
             else if($client_data == "bill_representative"){
                 $this->getBillRepresentative();
             }
+
             // 공동 발의 법안 조회
             else if($client_data == "bill_together"){
                 $this->getBillTogether();
             }
+
             // 찬성 법안 조회
             else if($client_data == "bill_agreement"){
                 $this->getBillAgreement();
+            }
+
+            else if($client_data == "history"){
+                $this->getHistory();
             }
 
         } else if ($this->http_method == "POST") {

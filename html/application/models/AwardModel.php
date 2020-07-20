@@ -23,7 +23,7 @@ class AwardModel extends CI_Model
      * 발의왕에 대한 코드가 구현이 되어서 응답이 된다면, 아래 구현완료란에 발의왕이라고 작성해둔다.
      *
      * 구현 완료 :
-     *
+     * 발의왕
      */
 
     public function getAllKingInfo(){
@@ -82,6 +82,7 @@ class AwardModel extends CI_Model
             $bill_count = $bill_sort_data[$i]['bill_count']; # 법안 발의갯수
 
             $temp = array(
+                'king_type' => "발의왕",
                 'ranking' => (int)($i+1),
                 'politician_idx' => (int)$politician_idx,
                 'politician_kr_name' => $politician_kr_name,

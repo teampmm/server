@@ -2,6 +2,13 @@
 
 include_once 'OptionModel.php';
 
+// 로그 쌓는 코드
+//// 사용자의 sql 및 id 등 로그 기록하기
+//$log_sql = "SELECT * FROM Party where idx = $idx";
+//$this->option_model->logRecode(
+//    array(
+//        'sql'=>$log_sql)
+//);
 
 class PartyModel extends CI_Model
 {
@@ -25,12 +32,7 @@ class PartyModel extends CI_Model
         // 정당 정보 조회
         $party_s_result = $this->db->query($sql,array((int)$idx))->row();
 
-        // 사용자의 sql 및 id 등 로그 기록하기
-        $log_sql = "SELECT * FROM Party where idx = $idx";
-        $this->option_model->logRecode(
-            array(
-                'sql'=>$log_sql)
-        );
+
 
         if ($party_s_result == null){
             header("HTTP/1.1 204 ");
@@ -83,13 +85,6 @@ class PartyModel extends CI_Model
         // 정당 정보 조회
         $party_s_result = $this->db->query($sql)->result();
 
-        // 사용자의 sql 및 id 등 로그 기록하기
-        $log_sql = "SELECT * FROM Party";
-        $this->option_model->logRecode(
-            array(
-                'sql'=>$log_sql)
-        );
-
         $total_card = array();
 
         foreach ($party_s_result as $row){
@@ -132,5 +127,59 @@ class PartyModel extends CI_Model
 
     }
 
+    // 정당 공약 정보 반환
+    public function getPledge($party_idx){
+
+        // 클라이언트에게 응답 해줄 데이터
+        $response_data = array();
+        $pledge_data = array();
+
+        $sql = "SELECT count(*) as cnt FROM Party where idx = ?";
+
+        // 정당 정보가 존재하는지 확인
+        $is_empty_party = $this->db->query($sql,array((int)$party_idx))->row()->cnt;
+
+        // 정당 정보가 없음
+        if($is_empty_party == 0){
+            header("HTTP/1.1 204 ");
+            return;
+        }
+        else{
+            $sql = "SELECT * FROM PartyPledge where party_idx = ?";
+
+            // 정당 정보가 존재하는지 확인
+            $party_s_result = $this->db->query($sql,array((int)$party_idx))->result();
+
+            foreach ($party_s_result as $row){
+
+                $temp = array();
+
+                $title = $row->title;
+                $status = $row->pledge_implement_status;
+                $generation = (int)$row->generation;
+                $content = $row->content;
+
+                $temp['title'] = $title;
+                $temp['generation'] = $generation;
+                $temp['status'] = $status;
+                $temp['content'] = $content;
+
+                array_push($pledge_data, $temp);
+
+            }
+
+            $response_data['pledge_num'] = count($pledge_data);
+            $response_data['pledge_data'] = $pledge_data;
+
+            if(count($pledge_data) == 0){
+                header("HTTP/1.1 204 ");
+                return;
+            }
+
+        }
+
+        return json_encode($response_data,JSON_UNESCAPED_UNICODE);
+
+    }
 }
 

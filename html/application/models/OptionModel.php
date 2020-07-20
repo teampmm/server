@@ -35,5 +35,35 @@ class OptionModel extends CI_Model{
         log_message("error", $message);
     }
 
+    // 사용자가 홈페이지를 방문했을때 로그를 쌓는다.
+    // ip, id, visit_page, referer, user_agent, create_at
+    function visitLogCreate($log_data){
+
+        $sql = "insert into Log (
+                    ip, 
+                    id, 
+                    bot_name,
+                    visit_page, 
+                    referer, 
+                    user_agent, 
+                    device_os, 
+                    browser,
+                    yo_day,
+                    create_at) 
+                value (?,?,?,?,?,?,?,?,?,NOW())";
+        $this->db->query($sql,array(
+            $log_data['ip'],
+            $log_data['id'],
+            $log_data['bot_name'],
+            $log_data['visit_page'],
+            $log_data['referer'],
+            $log_data['user_agent'],
+            $log_data['device_os'],
+            $log_data['browser'],
+            $log_data['yo_day'],
+        ));
+
+    }
+
 
 }

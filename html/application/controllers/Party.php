@@ -69,6 +69,19 @@ class Party extends CI_Controller
         echo $result;
     }
 
+    // 정당 공약 정보 반환
+    public function getPledge(){
+        $key = $this->input->get(null, True);
+
+        $error=$this->option->dataNullCheck($key,array('party_idx'));
+        if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+
+        $this->load->model('PartyModel');
+        $result = $this->PartyModel->getPledge($key['party_idx']);
+
+        echo $result;
+    }
+
     // 날짜 형식 검사하는 메서드
     function date_check($date) {
 
@@ -114,6 +127,9 @@ class Party extends CI_Controller
             }
             else if ($client_data == "card"){
                 $this->getPartyCard();
+            }
+            else if ($client_data == "pledge"){
+                $this->getPledge();
             }
 
         } else if ($this->http_method == "POST") {

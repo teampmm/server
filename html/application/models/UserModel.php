@@ -276,6 +276,97 @@ class UserModel extends CI_Model
 
     }
 
+    // 패스워드 변경
+    public function pwChange($token_data, $current_pw, $update_pw){
+
+        $current_pw = (string)$current_pw;
+        $update_pw = (string)$update_pw;
+
+        $sql = "select count(idx) as cnt from User where idx = ? and pw = ?";
+        $sql_result = $this->db->query($sql, array((int)$token_data->idx, $current_pw))->row();
+
+        if ($sql_result->cnt == 0){
+            $response_data['result'] = "현재 비밀번호가 일치하지 않습니다";
+            return json_encode($response_data, JSON_UNESCAPED_UNICODE);
+        }
+        else{
+            if($token_data->idx != "토큰실패"){
+
+                $now_time = date("Y-m-d H:i:s");
+
+                $sql = "update User set pw = ?, update_at = ? where idx = ?";
+                $this->db->query($sql, array($update_pw, $now_time, (int)$token_data->idx));
+
+                $response_data['result'] = "비밀번호 변경완료";
+                return json_encode($response_data, JSON_UNESCAPED_UNICODE);
+            }
+            else{
+                header("HTTP/1.1 401");
+                $response_data['result'] = "토큰값이 없습니다";
+                return json_encode($response_data, JSON_UNESCAPED_UNICODE);
+            }
+        }
+    }
+
+    // 닉네임 변경
+    public function nickChange($token_data, $nickname){
+
+        $nickname = (string)$nickname;
+
+        if($token_data->idx != "토큰실패"){
+
+            $now_time = date("Y-m-d H:i:s");
+
+            $sql = "update User set nick_name = ?, update_at = ? where idx = ?";
+            $this->db->query($sql, array($nickname, $now_time, (int)$token_data->idx));
+
+            $response_data['result'] = "닉네임 변경완료";
+            return json_encode($response_data, JSON_UNESCAPED_UNICODE);
+        }
+        else{
+            header("HTTP/1.1 401");
+            $response_data['result'] = "토큰값이 없습니다";
+            return json_encode($response_data, JSON_UNESCAPED_UNICODE);
+        }
+
+    }
+
+    // 임시 비밀번호 발급
+    public function tempPw($id, $phone){
+
+        $response_data = array();
+
+        $sql = "select idx from User where id = ? and phone = ?";
+        $sql_result = $this->db->query($sql, array($id, $phone))->row();
+
+        // 사용자 정보가 있는경우,
+        // 임시 비밀번호를 해당 사용자 휴대폰 번호로 알려주고 비밀번호를 업데이트 시켜줘야함
+        if ($sql_result != null){
+            $response_data['result'] = "essential_pw_update!";
+        }
+        else{
+            $response_data['result'] = "일치하는 회원정보가 없습니다";
+        }
+
+        return $response_data;
+    }
+
+    public function tempPwChange($id, $phone, $temp_pw){
+
+        $temp_pw = (string)$temp_pw;
+
+        $hash_temp_pw = hash("sha256", $temp_pw);
+
+        $now_time = date("Y-m-d H:i:s");
+
+        $sql = "update User set pw = ?, update_at = ? where id = ? and phone = ?";
+        $this->db->query($sql, array($hash_temp_pw, $now_time, $id, $phone));
+
+        $response_data['result'] = "임시 비밀번호 발급완료";
+        return $response_data;
+
+    }
+
 }
 
 

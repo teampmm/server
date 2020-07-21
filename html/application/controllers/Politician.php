@@ -380,6 +380,26 @@ class Politician extends CI_Controller
         echo $result;
     }
 
+    // 구독한 정치인 조회
+    public function getSubscribe(){
+
+        // 클라이언트가 보낸 토큰 정보가 담겨있다.
+        $token_data = $this->headerData();
+
+        // 토큰이 유효한지 검사
+        $this->load->model('OptionModel');
+        $token_result = $this->OptionModel->blackListTokenCheck($this->token_str);
+        if($token_result != "유효한 토큰") {
+            $request_data['result'] = $token_result;
+            echo json_encode($request_data);
+            return;
+        }
+
+        $this->load->model('PoliticianModel');
+        $result = $this->PoliticianModel->getSubscribe($token_data);
+        echo $result;
+    }
+
     // 클라이언트가 사용자에 대한 데이터를 요청할때
     // request url : {서버 ip}/politician/{data}
     public function requestData($client_data)
@@ -451,8 +471,14 @@ class Politician extends CI_Controller
                 $this->getBillAgreement();
             }
 
+            // 정치인 정당 히스토리 조회
             else if($client_data == "history"){
                 $this->getHistory();
+            }
+
+            // 구독한 정치인 조회
+            else if($client_data == "subscribe"){
+                $this->getSubscribe();
             }
 
         } else if ($this->http_method == "POST") {

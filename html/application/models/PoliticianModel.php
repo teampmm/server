@@ -1201,7 +1201,7 @@ class PoliticianModel extends CI_Model
             $for_idx = $for_idx + 1;
         }
 
-        $response_data['$bill_agreement_data'] = $bill_list;
+        $response_data['bill_agreement_data'] = $bill_list;
 
         return json_encode($response_data, JSON_UNESCAPED_UNICODE);
     }
@@ -1257,6 +1257,34 @@ class PoliticianModel extends CI_Model
         $response_data['history'] = $history_array;
 
         return json_encode($response_data, JSON_UNESCAPED_UNICODE);
+    }
+
+    // 구독한 정치인 조회
+    public function getSubscribe($token_data){
+
+        $response_data = array();
+
+        $sql="select politician_idx from BookMark where user_idx = ?";
+        $user_politician_bookmark_result = $this->db->query($sql,array((int)$token_data->idx))->result();
+
+        if ($user_politician_bookmark_result != null){
+
+            $politician_idx_array = array();
+
+            foreach ($user_politician_bookmark_result as $row){
+
+                if ($row->politician_idx != null){
+                    array_push($politician_idx_array, (int)$row->politician_idx);
+                }
+            }
+            $response_data['subcribe_data'] = $politician_idx_array;
+
+            return json_encode($response_data, JSON_UNESCAPED_UNICODE);
+        }
+        else{
+            header("HTTP/1.1 204 ");
+            return;
+        }
     }
 }
 

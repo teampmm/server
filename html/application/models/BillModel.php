@@ -135,6 +135,7 @@ class BillModel extends CI_Model
         $data['proposal_date'] = (int)$bill_rows->proposal_date;
         $data['proposal_session'] = $bill_rows->proposal_session;
         $data['vote_date'] = (int)$bill_rows->vote_date;
+        $data['new_pre_document'] = (string)$bill_rows->new_pre_document;
         if ($token_data->idx == '토큰실패') {
             $data['bookmark'] = false;
         } else {
@@ -570,6 +571,32 @@ class BillModel extends CI_Model
         }
         else{
             return $bill_info->content;
+        }
+    }
+
+    public function getSubscribe($token_data){
+        $response_data = array();
+
+        $sql="select bill_idx from BookMark where user_idx = ?";
+        $user_bill_bookmark_result = $this->db->query($sql,array((int)$token_data->idx))->result();
+
+        if ($user_bill_bookmark_result != null){
+
+            $bill_idx_array = array();
+
+            foreach ($user_bill_bookmark_result as $row){
+
+                if ($row->bill_idx != null){
+                    array_push($bill_idx_array, (int)$row->bill_idx);
+                }
+            }
+            $response_data['subscribe_data'] = $bill_idx_array;
+
+            return json_encode($response_data, JSON_UNESCAPED_UNICODE);
+        }
+        else{
+            header("HTTP/1.1 204 ");
+            return;
         }
     }
 }

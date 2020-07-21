@@ -8,6 +8,7 @@ include 'DTO/PolicticsJwt.php';
 class Bill extends CI_Controller
 {
 	public $http_method;
+    public $token_str;
 
 	public function __construct()
 	{
@@ -25,22 +26,40 @@ class Bill extends CI_Controller
 	}
 
 	public function headerData(){
+        // Jwt 객체 생성 - PoliticsJwt 클래스는 3가지 기능을 한다.
+        // 1. 토큰을 생성(발급)하는 기능 - createToken() - 로그인 시에 토큰이 발급된다.
+        // 2. 토큰을 파싱하는 기능 - tokenParsing()
+        // controller - Politician 클래스 에서는 토큰을 파싱하는 기능만 사용한다.
         $pmm_jwt = new PolicticsJwt();
 
-        // 클라이언트가 header에 토큰정보를 담아 보낸걸 확인한다.
+        // 클라이언트의 Header 정보를 확인한다.
         $header_data = apache_request_headers();
+
+        // 클라이언트에서 보낸 토큰이 있는지 없는지 확인한다.
+        // 클라이언트는 key - value 형태로 인증키를 보낸다. key 값은 Authorization 이다.
+        // 클라이언트에서 보낸 토큰이 없는 경우 -> 로그인 안한 경우이다.
         if(empty($header_data['Authorization'])){
             return (object)$result=array("idx"=>"토큰실패");
-        }else{
-            $token_data = $pmm_jwt->tokenParsing($header_data['Authorization']);
-            return $token_data;
+        }
+        // 클라이언트에서 보낸 토큰이 있는 경우 -> 로그인 한 경우이다.
+        else{
+            // 토큰 문자열을 token_str에 저장한다.
+            // 토큰 문자열을 저장하는 이유는 모든 API요청시에 클라이언트가 보낸 토큰이 만료되었는지 확인하기 때문이다.
+            $this->token_str = $header_data['Authorization'];
 
+            // 클라이언트가 보낸 토큰을 해독한다.
+            // token_data에는 jwt의 payload정보가 들어가는데,
+            // payload 정보에는
+            // 사용자의 idx, id, nick_name, token issue time(토큰발급시간), token expiration time(토큰만료시간) 정보가 포함된다.
+            // 해당 데이터를 사용 할때는 $token_data->idx , $token_data->id 와 같이 사용하면된다.
+            $token_data = $pmm_jwt->tokenParsing($this->token_str);
+            return $token_data;
         }
     }
 
-
 	public function requestData($data){
-    if ($this->http_method=="GET") {
+        if ($this->http_method=="GET") {
+
 	        $token_data=$this->headerData();
             //법안 모아보기
             if ($data == 'card') {
@@ -66,7 +85,8 @@ class Bill extends CI_Controller
                     return;
                 }
                 $this->billInfo($input,$token_data);
-            }else if ($data=='get_bill_evaluation'){
+            }
+            else if ($data=='get_bill_evaluation'){
                 $token_data=$this->headerData();
                 $input = $this->input->get(null, true);
                 $error = $this->option->dataNullCheck($input, array('bill_idx'));
@@ -76,7 +96,8 @@ class Bill extends CI_Controller
                     return;
                 }
                 $this->getBillEvaluation($input,$token_data);
-            }else if ($data=='process'){
+            }
+            else if ($data=='process'){
 //                $token_data=$this->headerData();
                 $input = $this->input->get(null, true);
                 $error = $this->option->dataNullCheck($input, array('bill_idx','status'));
@@ -87,6 +108,29 @@ class Bill extends CI_Controller
                 }
                 $this->getBillProcessDetail($input);
             }
+            else if ($data=='subscribe'){
+
+                if ($token_data->idx != "토큰실패"){
+                    // 토큰이 유효한지 검사
+                    $this->load->model('OptionModel');
+                    $token_result = $this->OptionModel->blackListTokenCheck($this->token_str);
+                    if($token_result != "유효한 토큰") {
+                        $request_data['result'] = $token_result;
+                        echo json_encode($request_data);
+                        return;
+                    }
+                    else{
+                        $this->getSubscribe($token_data);
+                    }
+
+                }
+                else{
+                    $response_data = array();
+                    $response_data['result'] = "로그인 필요";
+                    echo json_encode($response_data, JSON_UNESCAPED_UNICODE);
+                    return;
+                }
+        }
 
             //커뮤니티 기능 일단 비활성화
 //            //법안 자체의 좋아요 싫어요 수
@@ -222,49 +266,50 @@ class Bill extends CI_Controller
 //
 //                echo $result;
 //            }
-        }else if ($this->http_method=="POST"){
-	        //북마크 추가,삭제 (북마크 쓰기)
-            if ($data =='put_bookmark'){
-                $token_data=$this->headerData();
-                if($token_data->idx=="토큰실패"){$result_json=array();$result_json['result']='로그인 필요';header("HTTP/1.1 401 ");echo json_encode($result_json); return;}
-                else{
-                    $input=$this->input->post(null,null);
-                    $error = $this->option->dataNullCheck($input, array('bill_idx'));
-                    if ($error != null) {
-                        header("HTTP/1.1 400 ");
-                        echo $error;
+        }
+        else if ($this->http_method=="POST"){
+                //북마크 추가,삭제 (북마크 쓰기)
+                if ($data =='put_bookmark'){
+                    $token_data=$this->headerData();
+                    if($token_data->idx=="토큰실패"){$result_json=array();$result_json['result']='로그인 필요';header("HTTP/1.1 401 ");echo json_encode($result_json); return;}
+                    else{
+                        $input=$this->input->post(null,null);
+                        $error = $this->option->dataNullCheck($input, array('bill_idx'));
+                        if ($error != null) {
+                            header("HTTP/1.1 400 ");
+                            echo $error;
+                            return;
+                        }
+                        $this->putBookmark($input,$token_data->idx);
                         return;
                     }
-                    $this->putBookmark($input,$token_data->idx);
-                    return;
-                }
-            }else if ($data=='put_bill_evaluation'){
-                $token_data=$this->headerData();
-                if($token_data->idx=="토큰실패"){$result_json=array();$result_json['result']='로그인 필요';header("HTTP/1.1 401 ");echo json_encode($result_json); return;}
-                else{
-                    $input=$this->input->post('evaluation_write',true);
-                    $input=json_decode($input,true);
-                    $error = $this->option->dataNullCheck($input, array('bill_idx','status'));
-                    if ($error != null) {
-                        header("HTTP/1.1 400 ");
-                        echo $error;
+                }else if ($data=='put_bill_evaluation'){
+                    $token_data=$this->headerData();
+                    if($token_data->idx=="토큰실패"){$result_json=array();$result_json['result']='로그인 필요';header("HTTP/1.1 401 ");echo json_encode($result_json); return;}
+                    else{
+                        $input=$this->input->post('evaluation_write',true);
+                        $input=json_decode($input,true);
+                        $error = $this->option->dataNullCheck($input, array('bill_idx','status'));
+                        if ($error != null) {
+                            header("HTTP/1.1 400 ");
+                            echo $error;
+                            return;
+                        }
+                        $this->putBillEvaluation($input,$token_data->idx);
                         return;
                     }
-                    $this->putBillEvaluation($input,$token_data->idx);
-                    return;
                 }
             }
         }
-    }
     //북마크 추가,삭제 (북마크 쓰기)
-    public function  putBookmark($input,$user_idx){
+    public function putBookmark($input,$user_idx){
 	    $this->load->model("BillModel");
 	    $result=$this->BillModel->putBookmark($input['bill_idx'],$user_idx);
 	    echo$result;
 }
 
     //사용자가 법안에 대해서 좋아요 혹은 싫어요 클릭
-    public function  putBillEvaluation($input,$user_idx){
+    public function putBillEvaluation($input,$user_idx){
         $this->load->model("BillModel");
         $result=$this->BillModel->putBillEvaluation($input['bill_idx'],$user_idx,$input['status']);
         echo$result;
@@ -300,6 +345,13 @@ class Bill extends CI_Controller
         $this->load->model('BillModel');
         $result = $this->BillModel->getBillProcessDetail($input['bill_idx'],$input['status']);
         echo  $result;
+    }
+
+    // 구독한 정치인 조회
+    public function getSubscribe($token_data){
+        $this->load->model('BillModel');
+        $result = $this->BillModel->getSubscribe($token_data);
+        echo $result;
     }
 //	//법안에 대한 좋아요 싫어요
 //	public function billUserEvaluation($index, $token_data)

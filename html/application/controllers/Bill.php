@@ -120,7 +120,25 @@ class Bill extends CI_Controller
                         return;
                     }
                     else{
-                        $this->getSubscribe($token_data);
+
+                        $request_data = $this->input->get(null, True);
+                        $error=$this->option->dataNullCheck($request_data,array('page','card_num'));
+                        if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+
+                        $page = (int)$request_data['page'];
+                        $card_num = (int)$request_data['card_num'];
+
+                        if ($page < 0){
+                            header("HTTP/1.1 400 ");
+                            echo "invalid_data : page";
+                            return;
+                        }
+                        elseif ($card_num < 0){
+                            header("HTTP/1.1 400 ");
+                            echo "invalid_data : card_num";
+                            return;
+                        }
+                        $this->getSubscribe($token_data, $page, $card_num);
                     }
 
                 }
@@ -314,6 +332,7 @@ class Bill extends CI_Controller
         $result=$this->BillModel->putBillEvaluation($input['bill_idx'],$user_idx,$input['status']);
         echo$result;
     }
+
 	//법안 모아보기
 	public function getBillCard($index,$token_data)
 	{
@@ -348,9 +367,9 @@ class Bill extends CI_Controller
     }
 
     // 구독한 정치인 조회
-    public function getSubscribe($token_data){
+    public function getSubscribe($token_data, $page, $card_num){
         $this->load->model('BillModel');
-        $result = $this->BillModel->getSubscribe($token_data);
+        $result = $this->BillModel->getSubscribe($token_data, $page, $card_num);
         echo $result;
     }
 //	//법안에 대한 좋아요 싫어요

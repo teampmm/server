@@ -86,13 +86,22 @@ class Politician extends CI_Controller
         // 클라이언트가 요청한 페이지
         $request_page = $request_data['page'];
 
-
         // 클라이언트가 요청한 덱 번호
         $random_card_idx = $request_data['random_card_idx'];
 
         // 클라이언트가 요청한 카드의 갯수
         $card_num = $request_data['card_num'];
-        if($card_num<1){header("HTTP/1.1 400 "); echo "요청할 카드의 개수가 1이상이어야 합니다";return;}
+
+        if ($request_page < 0){
+            header("HTTP/1.1 400 ");
+            echo "invalid_data : page";
+            return;
+        }
+        elseif ($card_num < 0){
+            header("HTTP/1.1 400 ");
+            echo "invalid_data : card_num";
+            return;
+        }
 
         // 클라이언트가 요청한 국회의원 대수
         $generation = $request_data['generation'];
@@ -287,6 +296,17 @@ class Politician extends CI_Controller
         $card_num = (int)$request_data['card_num'];
         $page = (int)$request_data['page'];
 
+        if ($page < 0){
+            header("HTTP/1.1 400 ");
+            echo "invalid_data : page";
+            return;
+        }
+        elseif ($card_num < 0){
+            header("HTTP/1.1 400 ");
+            echo "invalid_data : card_num";
+            return;
+        }
+
         $error=$this->option->dataNullCheck($request_data,array('card_num','page'));
         if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
 
@@ -316,6 +336,17 @@ class Politician extends CI_Controller
         $keyword = $request_data['keyword'];
         $page = $request_data['page'];
         $card_num = $request_data['card_num'];
+
+        if ($page < 0){
+            header("HTTP/1.1 400 ");
+            echo "invalid_data : page";
+            return;
+        }
+        elseif ($card_num < 0){
+            header("HTTP/1.1 400 ");
+            echo "invalid_data : card_num";
+            return;
+        }
 
         $error=$this->option->dataNullCheck($request_data,array('keyword','page','card_num'));
         if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
@@ -395,8 +426,26 @@ class Politician extends CI_Controller
             return;
         }
 
+        $request_data = $this->input->get(null, True);
+        $error=$this->option->dataNullCheck($request_data,array('page','card_num'));
+        if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+
+        $page = $request_data['page'];
+        $card_num = $request_data['card_num'];
+
+        if ($page < 0){
+            header("HTTP/1.1 400 ");
+            echo "invalid_data : page";
+            return;
+        }
+        elseif ($card_num < 0){
+            header("HTTP/1.1 400 ");
+            echo "invalid_data : card_num";
+            return;
+        }
+
         $this->load->model('PoliticianModel');
-        $result = $this->PoliticianModel->getSubscribe($token_data);
+        $result = $this->PoliticianModel->getSubscribe($token_data,$page,$card_num);
         echo $result;
     }
 

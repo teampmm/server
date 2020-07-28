@@ -2,6 +2,7 @@
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
+
 include_once 'OptionModel.php';
 
 class UserModel extends CI_Model
@@ -46,8 +47,8 @@ class UserModel extends CI_Model
             $user_agent = $data['user_agent'];
 
             $result = $this->db->query($sql, array($data['name'], $data['age'], $nick_name, $data['sex'],
-                                        $id, $pw, $phone, $data['residence'],
-                                        $data['social_login'], $now_time, $data['user_agent']));
+                $id, $pw, $phone, $data['residence'],
+                $data['social_login'], $now_time, $data['user_agent']));
 
             $response_data = array();
 
@@ -76,14 +77,14 @@ class UserModel extends CI_Model
         $sql = "select idx, count(idx) as 'count' from User where 
                     id = ? and pw = ?";
 
-        $query = $this->db->query($sql, array($id,$pw))->row();
+        $query = $this->db->query($sql, array($id, $pw))->row();
 
         // 사용자 정보가 일치
         if ($query->count == 1) {
 
             // 최근 로그인 시간 업데이트
             $sql = "update User set recently_login_at = ? where idx = ?";
-            $this->db->query($sql, array(date("Y-m-d H:i:s"),$query->idx));
+            $this->db->query($sql, array(date("Y-m-d H:i:s"), $query->idx));
 
             // jwt 토큰 객체 생성
             $pmm_jwt = new PolicticsJwt();
@@ -165,29 +166,30 @@ class UserModel extends CI_Model
     //경우 1 . 처음 회원가입
     //경우 2 . 카카오 동의만 받고 회원가입을 진행 하지 않음
     //경우 3 . 카카오 로그인으로 회원가입 진행
-    public function kakaoCheck($uid, $user_info){
+    public function kakaoCheck($uid, $user_info)
+    {
 
         $sql = "select *,count(idx)as `count` from User where id = ? and social_login='K'";
 
         $result = $this->db->query($sql, array($uid))->row();
 
         //이미 테이블에 카카오 uid가 저장되어있는경우
-        $result_json=array();
-        if ($result->count ==1){
+        $result_json = array();
+        if ($result->count == 1) {
             //카카오 동의만 받고 가입을 진행하지 않은 상태
             //pmm자체 회원가입 페이지로 넘어가야함
             //pmm자체 회원가입으로 넘어가야함 = 1
-            if($result->nick_name ==null){
-                $result_json['response_code']=1;
+            if ($result->nick_name == null) {
+                $result_json['response_code'] = 1;
                 return json_encode($result_json, JSON_UNESCAPED_UNICODE);
             }
             //카카오 동의후 pmm회원가입까지 완료한 상태
             //카카오 로그인 완료 = 0
-            else{
+            else {
 
                 // 최근 로그인 시간 업데이트
                 $sql = "update User set recently_login_at = ? where idx = ?";
-                $this->db->query($sql, array(date("Y-m-d H:i:s"),$result->idx));
+                $this->db->query($sql, array(date("Y-m-d H:i:s"), $result->idx));
 
                 // jwt 토큰 객체 생성
                 $pmm_jwt = new PolicticsJwt();
@@ -195,35 +197,37 @@ class UserModel extends CI_Model
                 // 사용자 id 값으로 토큰을 생성해서 client에게 전달해준다.
                 // 이제부터 클라이언트는 api 요청 시 서버로 부터 받은 토큰을 사용 하여 필요한 데이터를 주고 받는다.
                 $token = $pmm_jwt->createToken($user_info);
-                $result_json['response_code']=0;
-                $result_json['token']=$token;
+                $result_json['response_code'] = 0;
+                $result_json['token'] = $token;
                 return json_encode($result_json, JSON_UNESCAPED_UNICODE);
             }
         }
         //첫가입
         //카카오 정보 저장 완료 회원가입으로 넘어가야함 = 2
-        else{
+        else {
 
             $sql = "INSERT INTO User (social_login,id) VALUES ('K', ?)";
 
             $this->db->query($sql, array($uid));
 
-            $result_json['response_code']=2;
+            $result_json['response_code'] = 2;
             return json_encode($result_json, JSON_UNESCAPED_UNICODE);
         }
 
     }
+
     //카카오 동의후 회원가입을 위한 메서드
-    public function putKakaoUser($userinfo){
-        $name=$userinfo['name'];
-        $age=(int)$userinfo['age'];
-        $nick_name=$userinfo['nick_name'];
-        $sex=$userinfo['sex'];
-        $phone=$userinfo['phone'];
-        $residence=$userinfo['residence'];
-        $category=$userinfo['category'];
-        $user_agent=$userinfo['user_agent'];
-        $uid=$userinfo['kakao_uid'];
+    public function putKakaoUser($userinfo)
+    {
+        $name = $userinfo['name'];
+        $age = (int)$userinfo['age'];
+        $nick_name = $userinfo['nick_name'];
+        $sex = $userinfo['sex'];
+        $phone = $userinfo['phone'];
+        $residence = $userinfo['residence'];
+        $category = $userinfo['category'];
+        $user_agent = $userinfo['user_agent'];
+        $uid = $userinfo['kakao_uid'];
 
         $sql = "update User set `name` = ?, 
                                 age = ?, 
@@ -239,15 +243,16 @@ class UserModel extends CI_Model
         // 현재시간
         $now_time = date("Y-m-d H:i:s");
 
-        $result = $this->db->query($sql, array($name,$age,$nick_name,$sex,$phone,$residence,$category,$now_time,$user_agent,$uid));
+        $result = $this->db->query($sql, array($name, $age, $nick_name, $sex, $phone, $residence, $category, $now_time, $user_agent, $uid));
 
         header("HTTP/1.1 201");
-        $result_json['response_code']=(boolean)$result;
+        $result_json['response_code'] = (boolean)$result;
         return json_encode($result_json, JSON_UNESCAPED_UNICODE);
     }
 
     // 사용자 정보를 반환하는 메서드 NO API
-    public function getUserInfo($user_id){
+    public function getUserInfo($user_id)
+    {
 
         $sql = "select * from User where id = ?";
         $user_info = $this->db->query($sql, array($user_id))->row();
@@ -255,11 +260,12 @@ class UserModel extends CI_Model
     }
 
     // 로그아웃 요청 메서드
-    public function logOutRequest($token_data, $token_str){
+    public function logOutRequest($token_data, $token_str)
+    {
 
         $response_data = array();
 
-        if($token_data->idx != "토큰실패"){
+        if ($token_data->idx != "토큰실패") {
 
             $sql = "insert into BlackList VALUE (null , ? ,null ,null, ?,null ,null )";
             $now_time = date("Y-m-d H:i:s");
@@ -267,8 +273,7 @@ class UserModel extends CI_Model
 
             $response_data['result'] = "로그아웃 완료 토큰삭제바람";
             return json_encode($response_data, JSON_UNESCAPED_UNICODE);
-        }
-        else{
+        } else {
             header("HTTP/1.1 401");
             $response_data['result'] = "토큰값이 없습니다";
             return json_encode($response_data, JSON_UNESCAPED_UNICODE);
@@ -277,7 +282,8 @@ class UserModel extends CI_Model
     }
 
     // 패스워드 변경
-    public function pwChange($token_data, $current_pw, $update_pw){
+    public function pwChange($token_data, $current_pw, $update_pw)
+    {
 
         $current_pw = (string)$current_pw;
         $update_pw = (string)$update_pw;
@@ -285,12 +291,11 @@ class UserModel extends CI_Model
         $sql = "select count(idx) as cnt from User where idx = ? and pw = ?";
         $sql_result = $this->db->query($sql, array((int)$token_data->idx, $current_pw))->row();
 
-        if ($sql_result->cnt == 0){
+        if ($sql_result->cnt == 0) {
             $response_data['result'] = "현재 비밀번호가 일치하지 않습니다";
             return json_encode($response_data, JSON_UNESCAPED_UNICODE);
-        }
-        else{
-            if($token_data->idx != "토큰실패"){
+        } else {
+            if ($token_data->idx != "토큰실패") {
 
                 $now_time = date("Y-m-d H:i:s");
 
@@ -299,8 +304,7 @@ class UserModel extends CI_Model
 
                 $response_data['result'] = "비밀번호 변경완료";
                 return json_encode($response_data, JSON_UNESCAPED_UNICODE);
-            }
-            else{
+            } else {
                 header("HTTP/1.1 401");
                 $response_data['result'] = "토큰값이 없습니다";
                 return json_encode($response_data, JSON_UNESCAPED_UNICODE);
@@ -309,11 +313,12 @@ class UserModel extends CI_Model
     }
 
     // 닉네임 변경
-    public function nickChange($token_data, $nickname){
+    public function nickChange($token_data, $nickname)
+    {
 
         $nickname = (string)$nickname;
 
-        if($token_data->idx != "토큰실패"){
+        if ($token_data->idx != "토큰실패") {
 
             $now_time = date("Y-m-d H:i:s");
 
@@ -322,8 +327,7 @@ class UserModel extends CI_Model
 
             $response_data['result'] = "닉네임 변경완료";
             return json_encode($response_data, JSON_UNESCAPED_UNICODE);
-        }
-        else{
+        } else {
             header("HTTP/1.1 401");
             $response_data['result'] = "토큰값이 없습니다";
             return json_encode($response_data, JSON_UNESCAPED_UNICODE);
@@ -331,8 +335,38 @@ class UserModel extends CI_Model
 
     }
 
+    // 사용자 정보 조회
+    public function getInfo($token_data)
+    {
+        if ($token_data->idx != "토큰실패") {
+
+            $sql = "select * from User where idx = ? ";
+            $sql_result = $this->db->query($sql, array($token_data->idx))->row();
+
+            $user_info = array();
+
+            $user_info['idx'] = (int)$sql_result->idx;
+            $user_info['name'] = $sql_result->name;
+            $user_info['age'] = (int)$sql_result->age;
+            $user_info['nick_name'] = $sql_result->nick_name;
+            $user_info['sex'] = $sql_result->sex;
+            $user_info['id'] = $sql_result->id;
+            $user_info['phone'] = $sql_result->phone;
+            $user_info['residence'] = $sql_result->residence;
+            $user_info['category'] = $sql_result->category;
+
+            $response_data['user_info'] = $user_info;
+            return json_encode($response_data, JSON_UNESCAPED_UNICODE);
+        } else {
+            header("HTTP/1.1 401");
+            $response_data['result'] = "토큰값이 없습니다";
+            return json_encode($response_data, JSON_UNESCAPED_UNICODE);
+        }
+    }
+
     // 임시 비밀번호 발급
-    public function tempPw($id, $phone){
+    public function tempPw($id, $phone)
+    {
 
         $response_data = array();
 
@@ -341,17 +375,18 @@ class UserModel extends CI_Model
 
         // 사용자 정보가 있는경우,
         // 임시 비밀번호를 해당 사용자 휴대폰 번호로 알려주고 비밀번호를 업데이트 시켜줘야함
-        if ($sql_result != null){
+        if ($sql_result != null) {
             $response_data['result'] = "essential_pw_update!";
-        }
-        else{
+        } else {
             $response_data['result'] = "일치하는 회원정보가 없습니다";
         }
 
         return $response_data;
     }
 
-    public function tempPwChange($id, $phone, $temp_pw){
+    // 임시 비밀번호로 변경하는 메서드
+    public function tempPwChange($id, $phone, $temp_pw)
+    {
 
         $temp_pw = (string)$temp_pw;
 
@@ -367,6 +402,87 @@ class UserModel extends CI_Model
 
     }
 
+    // 휴대폰으로 인증코드를 발송하는 메서드
+    public function receiveCode($phone, $code)
+    {
+        $sql = "select count(idx) as cnt from User where phone = ? ";
+
+        $result = $this->db->query($sql, array($phone))->row()->cnt;
+
+        if ($result == 1){
+            $now_time = date("Y-m-d H:i:s");
+
+            $sql = "insert into PhoneCode (phone, code, create_at) 
+                value (?,?,?)";
+
+            $this->db->query($sql, array($phone, $code, $now_time));
+            return "회원정보 있음";
+        }
+        else{
+            return "일치하는 회원 정보가 없음";
+        }
+
+
+    }
+
+    public function getPhoneCodeCheck($phone, $code)
+    {
+        $response_data = array();
+
+        $sql = "select count(idx) as cnt from User where phone = ? ";
+
+        $result = $this->db->query($sql, array($phone))->row()->cnt;
+
+        if ($result == 0){
+            $response_data['result'] = "일치하는 회원 정보가 없음";
+            return $response_data;
+        }
+
+
+        $now_time = date("Y-m-d H:i:s");
+
+        $sql = "select * from PhoneCode where phone = ? and code = ?";
+
+        $result = $this->db->query($sql, array($phone, $code))->row();
+
+        if ($result == null) {
+            $response_data['result'] = "인증 코드가 맞지 않습니다";
+            return $response_data;
+        }
+
+        $now_time = explode(' ', $now_time)[1];
+        $now_time_hour = explode(':', $now_time)[0];
+        $now_time_minute = explode(':', $now_time)[1];
+        $now_time_sec = explode(':', $now_time)[2];
+
+        $create_at_time = explode(' ', $result->create_at)[1];
+        $create_at_hour = explode(':', $create_at_time)[0];
+        $create_at_minute = explode(':', $create_at_time)[1];
+        $create_at_sec = explode(':', $create_at_time)[2];
+
+
+        if ($now_time_hour != $create_at_hour) {
+            $response_data['result'] = "인증코드 시간이 유효하지 않습니다. 다시 인증해주세요";
+            return $response_data;
+        } else if ($now_time_minute > $create_at_minute + 5) {
+            $response_data['result'] = "인증코드 시간이 유효하지 않습니다. 다시 인증해주세요";
+            return $response_data;
+        }
+
+        if ($result != null) {
+
+            $sql = "delete from PhoneCode where phone = ?";
+            $this->db->query($sql, array($phone));
+
+            $sql = "select id from User where phone = ?";
+            $user_id = $this->db->query($sql, array($phone))->row()->id;
+
+            $response_data['result'] = "인증되었습니다";
+            $response_data['user_id'] = $user_id;
+            return $response_data;
+        }
+
+    }
 }
 
 

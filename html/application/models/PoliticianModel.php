@@ -20,7 +20,7 @@ class PoliticianModel extends CI_Model
         /** 현재는 20대 국회의원 데이터 밖에없다.
          * 19대, 21대 등등 데이터를 db에 저장하게 되면 그떄 풀어줌
          */
-        if ($elect_generation <= 17) {
+        if ($elect_generation <= 19) {
             header("HTTP/1.1 204 ");
             return;
         }
@@ -160,11 +160,11 @@ class PoliticianModel extends CI_Model
             $generation = substr($generation, 0, -1);
 
             $card_data['politician_idx'] = (int)$politician_idx;
-            $card_data['politician_image_url'] = $politician_image_url;
-            $card_data['politician_kr_name'] = $politician_kr_name;
+            $card_data['image_url'] = $politician_image_url;
+            $card_data['kr_name'] = $politician_kr_name;
             $card_data['party_name'] = $party_name;
-            $card_data['politician_committee'] = $politician_committee;
-            $card_data['politician_generation'] = $generation;
+            $card_data['committee'] = $politician_committee;
+            $card_data['generation'] = $generation;
 
             // 정치인 카드 리스트에 추가
             array_push($card_list, $card_data);
@@ -177,7 +177,7 @@ class PoliticianModel extends CI_Model
         // 현재 보고있는 페이지
         $response_data['current_page'] = (int)$request_page;
         // 총 페이지
-        $response_data['total_page'] = (int)floor(count($card_number) / $per_page_data);
+        $response_data['total_page'] = (int)ceil(count($card_number) / $per_page_data);
         // 카드 정보
         $response_data['card_list'] = $card_list;
 
@@ -951,7 +951,7 @@ class PoliticianModel extends CI_Model
 
 
         // 총 카드 갯수에 따라 전체 페이지 수 구하기 / 카드의 개수가 클라이언트가 요청한 카드보다 적다면 총 페이지는 1로 정의함
-        $total_page = (int)floor(count($politician_idx_array) / $card_num);
+        $total_page = (int)ceil(count($politician_idx_array) / $card_num);
         if ($total_page == 0) $total_page = 1;
 
         /**
@@ -1053,37 +1053,44 @@ class PoliticianModel extends CI_Model
         }
 
         // 대표법안의 정보를 bill_list에 저장한다.
-        foreach ($bill_representative_list_info as $bill_representative){
+        foreach ($bill_representative_list_info as $bill_represent){
 
+            $bill_temp_array = array();
+
+            $bill_idx = $bill_represent->bill_idx;
+            $sql="select * from Bill where idx = ? ";
+            $bill_info = $this->db->query($sql,array((int)$bill_idx))->row();
+
+            $bill_title = $bill_info->title;
+            $bill_proposer = $bill_info->proposer;
+            $bill_progress_status = $bill_info->progress_status;
+            $bill_proposal_date = $bill_info->proposal_date;
+
+            $bill_temp_array['bill_idx'] = (int)$bill_idx;
+            $bill_temp_array['title'] = $bill_title;
+            $bill_temp_array['bill_proposer'] = $bill_proposer;
+            $bill_temp_array['bill_progress_status'] = $bill_progress_status;
+            $bill_temp_array['bill_proposal_date'] = (int)$bill_proposal_date;
+
+            array_push($bill_list,$bill_temp_array);
+        }
+        $bill_list = $this->arrayKeySort($bill_list, 'bill_proposal_date','desc');
+
+        $response_bill_list = array();
+
+        // 정렬한 bill_list에서 클라이언트가 요구한 갯수만큼만 반환해준다.
+        foreach ($bill_list as $row){
             if (($data_start_idx > $for_idx) or ($for_idx >= $data_end_idx)){
                 $for_idx = $for_idx + 1;
                 continue;
             }
             else{
-                $bill_temp_array = array();
-
-                $bill_idx = $bill_representative->bill_idx;
-                $sql="select * from Bill where idx = ? ";
-                $bill_info = $this->db->query($sql,array((int)$bill_idx))->row();
-
-                $bill_title = $bill_info->title;
-                $bill_proposer = $bill_info->proposer;
-                $bill_progress_status = $bill_info->progress_status;
-                $bill_proposal_date = $bill_info->proposal_date;
-
-                $bill_temp_array['bill_idx'] = (int)$bill_idx;
-                $bill_temp_array['title'] = $bill_title;
-                $bill_temp_array['bill_proposer'] = $bill_proposer;
-                $bill_temp_array['bill_progress_status'] = $bill_progress_status;
-                $bill_temp_array['bill_proposal_date'] = (int)$bill_proposal_date;
-
-                array_push($bill_list,$bill_temp_array);
+                array_push($response_bill_list,$row);
             }
-
             $for_idx = $for_idx + 1;
         }
 
-        $response_data['bill_representative_data'] = $bill_list;
+        $response_data['bill_representative_data'] = $response_bill_list;
 
         return json_encode($response_data, JSON_UNESCAPED_UNICODE);
     }
@@ -1114,35 +1121,42 @@ class PoliticianModel extends CI_Model
         // 공동 발의 법안의 정보를 bill_list에 저장한다.
         foreach ($bill_together_list_info as $bill_together){
 
+            $bill_temp_array = array();
+
+            $bill_idx = $bill_together->bill_idx;
+            $sql="select * from Bill where idx = ? ";
+            $bill_info = $this->db->query($sql,array((int)$bill_idx))->row();
+
+            $bill_title = $bill_info->title;
+            $bill_proposer = $bill_info->proposer;
+            $bill_progress_status = $bill_info->progress_status;
+            $bill_proposal_date = $bill_info->proposal_date;
+
+            $bill_temp_array['bill_idx'] = (int)$bill_idx;
+            $bill_temp_array['title'] = $bill_title;
+            $bill_temp_array['bill_proposer'] = $bill_proposer;
+            $bill_temp_array['bill_progress_status'] = $bill_progress_status;
+            $bill_temp_array['bill_proposal_date'] = (int)$bill_proposal_date;
+
+            array_push($bill_list,$bill_temp_array);
+        }
+        $bill_list = $this->arrayKeySort($bill_list, 'bill_proposal_date','desc');
+
+        $response_bill_list = array();
+
+        // 정렬한 bill_list에서 클라이언트가 요구한 갯수만큼만 반환해준다.
+        foreach ($bill_list as $row){
             if (($data_start_idx > $for_idx) or ($for_idx >= $data_end_idx)){
                 $for_idx = $for_idx + 1;
                 continue;
             }
             else{
-                $bill_temp_array = array();
-
-                $bill_idx = $bill_together->bill_idx;
-                $sql="select * from Bill where idx = ? ";
-                $bill_info = $this->db->query($sql,array((int)$bill_idx))->row();
-
-                $bill_title = $bill_info->title;
-                $bill_proposer = $bill_info->proposer;
-                $bill_progress_status = $bill_info->progress_status;
-                $bill_proposal_date = $bill_info->proposal_date;
-
-                $bill_temp_array['bill_idx'] = (int)$bill_idx;
-                $bill_temp_array['title'] = $bill_title;
-                $bill_temp_array['bill_proposer'] = $bill_proposer;
-                $bill_temp_array['bill_progress_status'] = $bill_progress_status;
-                $bill_temp_array['bill_proposal_date'] = (int)$bill_proposal_date;
-
-                array_push($bill_list,$bill_temp_array);
+                array_push($response_bill_list,$row);
             }
-
             $for_idx = $for_idx + 1;
         }
 
-        $response_data['bill_together_data'] = $bill_list;
+        $response_data['bill_together_data'] = $response_bill_list;
 
         return json_encode($response_data, JSON_UNESCAPED_UNICODE);
     }
@@ -1170,38 +1184,45 @@ class PoliticianModel extends CI_Model
             return;
         }
 
-        // 찬성법안의 정보를 bill_list에 저장한다.
+        // 찬성법안의 정보를 bill_list에 저장 후 정렬한다.
         foreach ($bill_agreement_list_info as $bill_agreement){
 
+            $bill_temp_array = array();
+
+            $bill_idx = $bill_agreement->bill_idx;
+            $sql="select * from Bill where idx = ? ";
+            $bill_info = $this->db->query($sql,array((int)$bill_idx))->row();
+
+            $bill_title = $bill_info->title;
+            $bill_proposer = $bill_info->proposer;
+            $bill_progress_status = $bill_info->progress_status;
+            $bill_proposal_date = $bill_info->proposal_date;
+
+            $bill_temp_array['bill_idx'] = (int)$bill_idx;
+            $bill_temp_array['title'] = $bill_title;
+            $bill_temp_array['bill_proposer'] = $bill_proposer;
+            $bill_temp_array['bill_progress_status'] = $bill_progress_status;
+            $bill_temp_array['bill_proposal_date'] = (int)$bill_proposal_date;
+
+            array_push($bill_list,$bill_temp_array);
+        }
+        $bill_list = $this->arrayKeySort($bill_list, 'bill_proposal_date','desc');
+
+        $response_bill_list = array();
+
+        // 정렬한 bill_list에서 클라이언트가 요구한 갯수만큼만 반환해준다.
+        foreach ($bill_list as $row){
             if (($data_start_idx > $for_idx) or ($for_idx >= $data_end_idx)){
                 $for_idx = $for_idx + 1;
                 continue;
             }
             else{
-                $bill_temp_array = array();
-
-                $bill_idx = $bill_agreement->bill_idx;
-                $sql="select * from Bill where idx = ? ";
-                $bill_info = $this->db->query($sql,array((int)$bill_idx))->row();
-
-                $bill_title = $bill_info->title;
-                $bill_proposer = $bill_info->proposer;
-                $bill_progress_status = $bill_info->progress_status;
-                $bill_proposal_date = $bill_info->proposal_date;
-
-                $bill_temp_array['bill_idx'] = (int)$bill_idx;
-                $bill_temp_array['title'] = $bill_title;
-                $bill_temp_array['bill_proposer'] = $bill_proposer;
-                $bill_temp_array['bill_progress_status'] = $bill_progress_status;
-                $bill_temp_array['bill_proposal_date'] = (int)$bill_proposal_date;
-
-                array_push($bill_list,$bill_temp_array);
+                array_push($response_bill_list,$row);
             }
-
             $for_idx = $for_idx + 1;
         }
 
-        $response_data['bill_agreement_data'] = $bill_list;
+        $response_data['bill_agreement_data'] = $response_bill_list;
 
         return json_encode($response_data, JSON_UNESCAPED_UNICODE);
     }
@@ -1246,6 +1267,7 @@ class PoliticianModel extends CI_Model
                 $party_name = "정당정보가 없습니다";
             }
 
+            $history_data['party_idx'] = $party_idx;
             $history_data['party_name'] = $party_name;
             $history_data['start_day'] = $start_day;
             $history_data['end_day'] = $end_day;
@@ -1260,7 +1282,7 @@ class PoliticianModel extends CI_Model
     }
 
     // 구독한 정치인 조회
-    public function getSubscribe($token_data){
+    public function getSubscribe($token_data, $page, $card_num){
 
         $response_data = array();
 
@@ -1277,7 +1299,74 @@ class PoliticianModel extends CI_Model
                     array_push($politician_idx_array, (int)$row->politician_idx);
                 }
             }
-            $response_data['subcribe_data'] = $politician_idx_array;
+
+            // 총 카드 갯수에 따라 전체 페이지 수 구하기 / 카드의 개수가 클라이언트가 요청한 카드보다 적다면 총 페이지는 1로 정의함
+            $total_page = (int)ceil(count($politician_idx_array) / $card_num);
+            if ($total_page == 0) $total_page = 1;
+
+            /**
+             * 클라이언트가 요청한 카드의 개수 만큼 카드를 만드는 과정
+             * @var $card_list = 카드 한장, 한장의 카드 정보가 담길 리스트
+             * @var $card_data = 카드의 정보가 담길 변수
+             * @var $generation = 정치인의 대수 정보 ex) "20,19" 등과 같이 저장된다.
+             */
+            $card_list = array();
+
+            for ($i = $card_num * ($page - 1); $i < $card_num * ($page - 1) + $card_num; $i++) {
+                $card_data = array();
+                $generation = "";
+
+                if ($i >= count($politician_idx_array))
+                    break;
+
+                // 정치인의 대수 정보를 찾는 작업
+                $sql = "SELECT generation FROM PoliticianGeneration where politician_idx = ? order by generation desc";
+                $generation_array = $this->db->query($sql, array($politician_idx_array[$i]))->result();
+                foreach ($generation_array as $row)
+                    $generation = $generation . $row->generation . ',';
+                $generation = substr($generation, 0, -1);
+
+                // 정치인 인덱스로 정치인에 대한 정보 찾기
+                $sql = "SELECT * FROM Politician WHERE idx = ?";
+                $politician_info = $this->db->query($sql, array($politician_idx_array[$i]))->row();
+
+                // 정치인의 현재 정당의 인덱스를 가져온다. 정치인의 정당을 보여주기 위함
+                $sql = "SELECT party_idx FROM PoliticianPartyHistory where politician_idx = ? and end_day is ?";
+                $party_idx = $this->db->query($sql, array($politician_idx_array[$i], null))->row()->party_idx;
+
+                // 정당인덱스가 없다면 - DB에 값이 null인 경우임
+                if ($party_idx == null) {
+                    $party_name = null;
+                } // 정당인덱스가 있다면 정당의 이름정보를 가져와서 party_name을 초기화 시켜준다.
+                else {
+                    $sql = "SELECT name FROM Party where idx = ?";
+                    $party_name = $this->db->query($sql, array($party_idx))->row()->name;
+                }
+
+                $card_data['kr_name'] = $politician_info->kr_name;
+                $card_data['committee'] = $politician_info->committee;
+                $card_data['image_url'] = "http://politicsking.com/files/images/politician_thumbnail/" . (string)$politician_info->idx . ".jpg";
+                $card_data['politician_idx'] = (int)$politician_idx_array[$i];
+                $card_data['party_name'] = $party_name;
+                $card_data['generation'] = $generation;
+
+                array_push($card_list, $card_data);
+
+            }
+            if (count($card_list) == 0) {
+                // 클라이언트가 첫 페이지 요청할때, 덱 번호가 정해져 있지 않아서 -1값으로 요청이 들어온다.
+                header("HTTP/1.1 204 ");
+                return;
+            }
+
+            $response_data['card_num'] = (int)count($card_list);
+            $response_data['current_page'] = (int)$page;
+            $response_data['total_page'] = (int)$total_page;
+            $response_data['card_list'] = $card_list;
+            if (count($card_list) == 0) {
+                header("HTTP/1.1 204 ");
+                return;
+            }
 
             return json_encode($response_data, JSON_UNESCAPED_UNICODE);
         }
@@ -1286,6 +1375,29 @@ class PoliticianModel extends CI_Model
             return;
         }
     }
+
+    // array key값으로 정렬하는 메서드
+    function arrayKeySort($array, $subfield, $sort_type)
+    {
+        if ($sort_type == 'asc'){
+            $sort_type = SORT_ASC;
+        }
+        elseif ($sort_type == 'desc'){
+            $sort_type = SORT_DESC;
+        }
+
+        $sort_array = array();
+        foreach ($array as $key => $row)
+        {
+            $sort_array[$key] = $row[$subfield];
+        }
+
+        array_multisort($sort_array, $sort_type, $array);
+
+        return $array;
+    }
+
+
 }
 
 

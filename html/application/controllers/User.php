@@ -151,7 +151,8 @@ class User extends CI_Controller
         // 클라이언트가 보낸 토큰 정보가 담겨있다.
         $token_data = $this->headerData();
 
-        $request_data = $this->input->get(null, True);
+        $request_data = $this->input->input_stream("pw_info", True);
+        $request_data=json_decode($request_data,true);
 
         $error=$this->option->dataNullCheck($request_data,array('current_pw','update_pw'));
         if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
@@ -159,8 +160,6 @@ class User extends CI_Controller
         // 클라이언트의 암호화된 비밀번호
         $current_pw = $request_data['current_pw'];
         $update_pw = $request_data['update_pw'];
-
-        echo $token_data->idx;
 
         $this->load->model('UserModel');
         $result = $this->UserModel->pwChange($token_data, $current_pw, $update_pw);
@@ -172,7 +171,7 @@ class User extends CI_Controller
         // 클라이언트가 보낸 토큰 정보가 담겨있다.
         $token_data = $this->headerData();
 
-        $request_data = $this->input->get(null, True);
+        $request_data = $this->input->input_stream(null, True);
 
         $error=$this->option->dataNullCheck($request_data,array('nickname'));
         if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
@@ -185,11 +184,22 @@ class User extends CI_Controller
         echo $result;
     }
 
+    // 사용자 정보 조회
+    public function getInfo(){
+
+        // 클라이언트가 보낸 토큰 정보가 담겨있다.
+        $token_data = $this->headerData();
+
+        $this->load->model('UserModel');
+        $result = $this->UserModel->getInfo($token_data);
+        echo $result;
+    }
+
     // 임시 비밀번호 발급
     public function tempPw(){
 
         // 임시 비밀번호를 해당 사용자 휴대폰 번호로 알려주고 비밀번호를 업데이트 시켜줘야함
-        $request_data = $this->input->get(null, True);
+        $request_data = $this->input->post(null, True);
 
         $error=$this->option->dataNullCheck($request_data,array('phone','id'));
         if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
@@ -231,16 +241,82 @@ class User extends CI_Controller
 
                 $result = $this->UserModel->tempPwChange($id, $phone, $temp_pw);
 
-                echo json_encode($result);
+                echo json_encode($result, JSON_UNESCAPED_UNICODE);
             } else {
                 $response_code['result'] = '다음에 다시시도 서버에러';
-                echo json_encode($response_code);
+                echo json_encode($response_code,JSON_UNESCAPED_UNICODE);
             }
         }
         else{
             $response_code['result'] = '일치하는 회원 정보가 없습니다';
-            echo json_encode($response_code);
+            echo json_encode($response_code,JSON_UNESCAPED_UNICODE);
         }
+    }
+
+    // 휴대폰 인증 코드 발송
+    public function receiveCode(){
+
+        // 임시 비밀번호를 해당 사용자 휴대폰 번호로 알려주고 비밀번호를 업데이트 시켜줘야함
+        $request_data = $this->input->post(null, True);
+
+        $error=$this->option->dataNullCheck($request_data,array('phone'));
+        if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+
+        // 사용자의 휴대폰 번호
+        $phone = $request_data['phone'];
+
+        require_once "/home/ubuntu/db/sms/lib/lib.php";
+        require_once "/home/ubuntu/db/sms/class/Clientapi.class.php";
+//        error_reporting(E_ALL ^ E_DEPRECATED);
+        $smsobj = new Clientapi();
+        $smsobj->init();
+
+        $temp_pw = "";
+
+        // 인증코드는 4글자의 숫자 + 4글자의 문자
+        for($i=0;$i<4;$i++) { // 문자생성의 갯수 : 4개
+            $doc = rand()%26+65;
+            $temp_pw_str = chr($doc);
+            $temp_pw_int = rand(0, 9);
+            $temp_pw = $temp_pw.$temp_pw_str.$temp_pw_int;
+        }
+        $result_code = $smsobj->gd_sms_signal('sms', 'send',
+            $phone, '01077024277',
+            iconv('utf8', 'euckr', '[정치왕] 서비스 인증 코드는 ' . $temp_pw . ' 입니다'),
+            '', '', '', '', '4');
+        if ($result_code == 0000) {
+            $this->load->model('UserModel');
+            $result = $this->UserModel->receiveCode($phone, $temp_pw);
+
+            if ($result == "일치하는 회원 정보가 없음"){
+                $response_code['result'] = '일치하는 회원 정보가 없음';
+            }
+            else{
+                $response_code['result'] = 'SMS 전송 완료';
+            }
+
+        } else {
+            $response_code['result'] = '다음에 다시시도 서버에러';
+        }
+
+        echo json_encode($response_code,JSON_UNESCAPED_UNICODE);
+    }
+
+    public function getPhoneCodeCheck(){
+
+        // 임시 비밀번호를 해당 사용자 휴대폰 번호로 알려주고 비밀번호를 업데이트 시켜줘야함
+        $request_data = $this->input->get(null, True);
+
+        $error=$this->option->dataNullCheck($request_data,array('phone','code'));
+        if($error!=null){header("HTTP/1.1 400 "); echo $error;return;}
+
+        // 사용자의 휴대폰 번호
+        $phone = $request_data['phone'];
+        $code = $request_data['code'];
+
+        $this->load->model('UserModel');
+        $result = $this->UserModel->getPhoneCodeCheck($phone, $code);
+        echo json_encode($result, JSON_UNESCAPED_UNICODE);
     }
 
 	// 클라이언트가 사용자에 대한 데이터를 요청할때
@@ -258,6 +334,12 @@ class User extends CI_Controller
 				// 사용자 닉네임 중복체크
 				$this->getIdCheck();
 			}
+			else if ($client_data == 'info'){
+			    $this->getInfo();
+            }
+			else if($client_data == 'phone_code_check'){
+                $this->getPhoneCodeCheck();
+            }
 		}
 		else if($this->http_method == "POST"){
 			// 클라이언트가 로그인 요청
@@ -279,17 +361,22 @@ class User extends CI_Controller
 			else if ($client_data == "temp_pw"){
                 $this->tempPw();
             }
-		}
+
+			// 인증 코드 발송
+			else if ($client_data == "receive_phone_code"){
+                $this->receiveCode();
+            }
+
+        }
 		else if ($this->http_method == "PATCH" or $this->http_method=='patch'){
 			if ($client_data=='kakao_sign'){
 				$this->kakaoSign();
-
 			}
-			else if ($client_data == "pw_change"){
-                $this->pwChange();
-            }
 			else if ($client_data == "nick_change"){
                 $this->nickChange();
+            }
+            else if ($client_data == "pw_change"){
+                $this->pwChange();
             }
 		}
 		else if($this->http_method == "DELETE"){

@@ -72,7 +72,7 @@ class BillModel extends CI_Model
         $result = array();
 //        echo "2".microtime(true)-$time_start."\n";
 
-        $sql = "select  idx,bill_number,bill_type,title,proposer,progress_status,proposal_date from Bill " . $sql_add . " order by bill_number desc limit ?, ?";
+        $sql = "select idx,bill_number,bill_type,title,proposer,progress_status,proposal_date,keyword from Bill " . $sql_add . " order by bill_number desc limit ?, ?";
 //        echo $sql;
 //        var_dump( $injection_param);
 //        return;
@@ -98,7 +98,22 @@ class BillModel extends CI_Model
             $bill_data['proposer'] = $row->proposer;
             $bill_data['progress_status'] = $row->progress_status;
             $bill_data['proposal_date'] = (int)$row->proposal_date;
-//            echo "3-1".microtime(true)-$time_start."\n";
+            $keyword=explode(",",$row->keyword);
+            $count=0;
+            $result_keyword='';
+            foreach ($keyword as $key){
+                if ($count==5){
+                    break;
+                }else{
+                    if($count==0){
+                        $result_keyword=explode("@@",$key)[0];
+                    }else{
+                        $result_keyword=$result_keyword."@@".explode("@@",$key)[0];
+                    }
+                    $count=$count+1;
+                }
+            }
+            $bill_data['keyword']=$result_keyword;
             if ($token_data->idx == "토큰실패") {
                 $bill_data['bookmark'] = false;
             } else {
@@ -114,7 +129,7 @@ class BillModel extends CI_Model
         }
 //        echo "4".microtime(true)-$time_start;
         $result['info'] = $bill_array;
-        return json_encode($result);
+        return json_encode($result, JSON_UNESCAPED_UNICODE);
     }
 
     //법안 상세보기에 들어갈 데이터
@@ -129,8 +144,8 @@ class BillModel extends CI_Model
         $data['bill_type'] = $bill_rows->bill_type;
         $data['title'] = $bill_rows->title;
         $data['proposer'] = $bill_rows->proposer;
-        $data['progress_process'] = $bill_rows->progress_process;
-        $data['progress_status'] = $bill_rows->progress_status;
+        $data['progress_process'] = str_replace(" ", "", $bill_rows->progress_process);
+        $data['progress_status'] = str_replace(" ", "", $bill_rows->progress_status);
         $data['content'] = $bill_rows->content;
         $data['proposal_date'] = (int)$bill_rows->proposal_date;
         $data['proposal_session'] = $bill_rows->proposal_session;
@@ -151,7 +166,7 @@ class BillModel extends CI_Model
         $result['bill_info'] = $data;
 
 
-        return json_encode($result);
+        return json_encode($result, JSON_UNESCAPED_UNICODE);
 
     }
 
@@ -293,7 +308,7 @@ class BillModel extends CI_Model
         $result['comment_list'] = $sub_comment_array;
 
 
-        return json_encode($result);
+        return json_encode($result, JSON_UNESCAPED_UNICODE);
 
     }
 
@@ -343,7 +358,7 @@ class BillModel extends CI_Model
 
             $result_array['next_page'] = false;
         }
-        return json_encode($result_array);
+        return json_encode($result_array, JSON_UNESCAPED_UNICODE);
     }
 
     //사용자가 법안에 대해 댓글을 작성할 경우
@@ -368,7 +383,7 @@ class BillModel extends CI_Model
         $result_json['comment_idx'] = (int)$comment_idx;
 
 
-        return json_encode($result_json);
+        return json_encode($result_json, JSON_UNESCAPED_UNICODE);
     }
     //사용자가 댓글에 대한 답글을 작성 할 경우 (부보 인덱스가 없는경우)
     // or
@@ -389,7 +404,7 @@ class BillModel extends CI_Model
         }
         $result = array();
         $result['sub_comment_idx'] = $this->db->insert_id();
-        return json_encode($result);
+        return json_encode($result, JSON_UNESCAPED_UNICODE);
     }
 
     //사용자가 법안에 대해 좋아요 혹은 싫어요를 클릭함
@@ -429,7 +444,7 @@ class BillModel extends CI_Model
         }
         $result_array = array();
         $result_array['response_code'] = (boolean)$result;
-        return json_encode($result_array);
+        return json_encode($result_array, JSON_UNESCAPED_UNICODE);
     }
 
     public function commentEvaluationWrite($comment_check, $comment_idx, $status, $token_data)
@@ -462,7 +477,7 @@ class BillModel extends CI_Model
 
         $result_array = array();
         $result_array['response_code'] = (boolean)$result;
-        return json_encode($result_array);
+        return json_encode($result_array, JSON_UNESCAPED_UNICODE);
 
     }
 
@@ -504,7 +519,7 @@ class BillModel extends CI_Model
         $sql = "select count(idx) as count  from UserEvaluationBill where bill_idx=? and status=?";
         $result['opposition_count'] = (int)$this->db->query($sql, array( (int)$bill_idx, 0))->row()->count;
         $result['agreement_count'] = (int)$this->db->query($sql, array( (int)$bill_idx, 1))->row()->count;
-        return json_encode($result);
+        return json_encode($result, JSON_UNESCAPED_UNICODE);
 
     }
 
@@ -522,7 +537,7 @@ class BillModel extends CI_Model
             $this->db->query($sql, array($user_idx, $bill_idx));
             $result['result'] = '북마크 삭제';
         }
-        return json_encode($result);
+        return json_encode($result, JSON_UNESCAPED_UNICODE);
 
     }
 
@@ -555,14 +570,26 @@ class BillModel extends CI_Model
                 $result['result']=(int)$status;
             }
         }
-        return json_encode($result);
+        return json_encode($result, JSON_UNESCAPED_UNICODE);
     }
 
     // 법안 과정(status)에 대한 데이터를 가져와야한다.
     public function getBillProcessDetail($bill_idx, $status){
 
-        $sql = "select content from BillDetailInfo where bill_idx = ? and progress_status = ?";
-        $bill_info = $this->db->query($sql, array((int)$bill_idx, $status))->row();
+        $sql = "select bill_number from Bill where idx = ?";
+        $bill_number = $this->db->query($sql, array((int)$bill_idx))->row();
+
+        if ($bill_number != null){
+            $bill_number = $bill_number->bill_number;
+        }
+        else{
+            header("HTTP/1.1 400 ");
+            echo "invalid_data : bill_idx";
+            return;
+        }
+
+        $sql = "select content from BillDetailInfo where bill_number = ? and progress_status = ?";
+        $bill_info = $this->db->query($sql, array((int)$bill_number, $status))->row();
 
         // 법안 정보가 없을때, 요청은 성공했지만 반환데이터가 없다는 204응답을 준다.
         if($bill_info == null){
@@ -574,7 +601,8 @@ class BillModel extends CI_Model
         }
     }
 
-    public function getSubscribe($token_data){
+    // 구독한 법안 조회
+    public function getSubscribe($token_data, $page, $card_num){
         $response_data = array();
 
         $sql="select bill_idx from BookMark where user_idx = ?";
@@ -590,9 +618,72 @@ class BillModel extends CI_Model
                     array_push($bill_idx_array, (int)$row->bill_idx);
                 }
             }
-            $response_data['subscribe_data'] = $bill_idx_array;
 
-            return json_encode($response_data, JSON_UNESCAPED_UNICODE);
+            // 구독한 법안이 없는 경우 204 응답을 보내준다.
+            if (count($bill_idx_array) == 0) {
+                header("HTTP/1.1 204 ");
+                return;
+            }
+
+            $card_list = array();
+            $total_page = (int)ceil(count($bill_idx_array) / $card_num);
+
+            for ($i = $card_num * ($page - 1); $i < $card_num * ($page - 1) + $card_num; $i++) {
+
+                // 정치인 카드 갯수가 모자란다면 반복을 종료
+                if ($i >= count($bill_idx_array)) {
+                    break;
+                }
+
+                // 카드 하나에 들어있는 데이터
+                $card_data = array();
+
+                $sql = "SELECT * FROM Bill where idx = ?";
+                $sql_result = $this->db->query($sql, array($bill_idx_array[$i]))->row();
+
+                $keyword=explode(",",$sql_result->keyword);
+                $count=0;
+                $result_keyword='';
+                foreach ($keyword as $key){
+                    if ($count==5){
+                        break;
+                    }else{
+                        if($count==0){
+                            $result_keyword=explode("@@",$key)[0];
+                        }else{
+                            $result_keyword=$result_keyword."@@".explode("@@",$key)[0];
+                        }
+                        $count=$count+1;
+                    }
+                }
+
+                $card_data['idx'] = (int)$sql_result->idx;
+                $card_data['bill_number'] = (int)$sql_result->bill_number;
+                $card_data['bill_type'] = $sql_result->bill_type;
+                $card_data['title'] = $sql_result->title;
+                $card_data['keyword']= $result_keyword;
+                $card_data['proposer'] = $sql_result->proposer;
+                $card_data['progress_status'] = str_replace(" ", "", $sql_result->progress_status);
+                $card_data['proposal_date'] = (int)$sql_result->proposal_date;
+                $card_data['proposer'] = $sql_result->proposer;
+                $card_data['proposer_list'] = $this->billIndexToPoliticians($sql_result->idx);
+
+                // 정치인 카드 리스트에 추가
+                array_push($card_list, $card_data);
+            }
+
+            if (count($card_list) == 0){
+                header("HTTP/1.1 204 ");
+                return;
+            }
+            else{
+                $response_data['card_num'] = (int)count($card_list);
+                $response_data['current_page'] = (int)$page;
+                $response_data['total_page'] = (int)$total_page;
+                $response_data['card_list'] = $card_list;
+                $response_data['card_info'] = $card_list;
+                return json_encode($response_data, JSON_UNESCAPED_UNICODE);
+            }
         }
         else{
             header("HTTP/1.1 204 ");
